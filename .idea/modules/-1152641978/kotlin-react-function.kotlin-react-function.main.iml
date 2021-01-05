@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.system.module.type="sourceSet" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="kotlin-language" name="Kotlin">
+      <configuration version="3" platform="JavaScript " allPlatforms="JS []" useProjectSettings="false" isTestModule="false" externalProjectId="kotlin-react-function:kotlin-react-function" pureKotlinSourceFolders="C:\Users\jimne\Desktop\OtherStuff\kotlin-react-function\kotlin-react-function\src\test\kotlin;C:\Users\jimne\Desktop\OtherStuff\kotlin-react-function\kotlin-react-function\src\main\kotlin;C:\Users\jimne\Desktop\OtherStuff\kotlin-react-function\kotlin-react-function\build\externals\kotlin-react-function\src;C:\Users\jimne\Desktop\OtherStuff\kotlin-react-function\kotlin-react-function\src\main\kotlin;C:\Users\jimne\Desktop\OtherStuff\kotlin-react-function\kotlin-react-function\build\externals\kotlin-react-function\src;C:\Users\jimne\Desktop\OtherStuff\kotlin-react-function\kotlin-react-function\src\test\kotlin">
+        <newMppModelJpsModuleKind>COMPILATION_AND_SOURCE_SET_HOLDER</newMppModelJpsModuleKind>
+        <productionOutputPath>$USER_HOME$/Desktop/OtherStuff/kotlin-react-function/kotlin-react-function/build/classes/kotlin/main/kotlin-react-function.js</productionOutputPath>
+        <compilerSettings>
+          <option name="additionalArguments" value="-Xir-module-name=com.bnorm.react:kotlin-react-function -Xir-only -Xir-produce-klib-dir" />
+        </compilerSettings>
+        <compilerArguments>
+          <option name="outputFile" value="$USER_HOME$/Desktop/OtherStuff/kotlin-react-function/kotlin-react-function/build/classes/kotlin/main/kotlin-react-function.js" />
+          <option name="noStdlib" value="true" />
+          <option name="sourceMap" value="true" />
+          <option name="metaInfo" value="true" />
+          <option name="target" value="v5" />
+          <option name="moduleKind" value="umd" />
+          <option name="main" value="call" />
+          <option name="languageVersion" value="1.4" />
+          <option name="apiVersion" value="1.4" />
+          <option name="pluginOptions">
+            <array />
+          </option>
+          <option name="pluginClasspaths">
+            <array />
+          </option>
+          <option name="multiPlatform" value="true" />
+          <option name="errors">
+            <ArgumentParseErrors />
+          </option>
+        </compilerArguments>
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager">
+    <output url="file://$USER_HOME$/Desktop/OtherStuff/kotlin-react-function/kotlin-react-function/build/classes/kotlin/main" />
+    <exclude-output />
+    <content url="file://$USER_HOME$/Desktop/OtherStuff/kotlin-react-function/kotlin-react-function/build/externals/kotlin-react-function/src" />
+    <content url="file://$USER_HOME$/Desktop/OtherStuff/kotlin-react-function/kotlin-react-function/src/main">
+      <sourceFolder url="file://$USER_HOME$/Desktop/OtherStuff/kotlin-react-function/kotlin-react-function/src/main/kotlin" type="kotlin-source" isTestSource="false" />
+    </content>
+    <orderEntry type="jdk" jdkName="Kotlin SDK" jdkType="KotlinSDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-js:1.4.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.4.0" level="project" />
+  </component>
+</module>
