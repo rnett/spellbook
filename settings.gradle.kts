@@ -11,12 +11,15 @@ pluginManagement {
         jcenter()
         maven("https://dl.bintray.com/kotlin/kotlinx")
         maven("https://kotlin.bintray.com/kotlinx")
+        maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
     }
 }
 
 enableFeaturePreview("GRADLE_METADATA")
 
-rootProject.name = "spellbook"
+rootProject.name = "com.rnett.spellbook"
+
+include("common", "web", "desktop")
 
 
 
