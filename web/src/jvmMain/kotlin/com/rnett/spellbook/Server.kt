@@ -22,7 +22,7 @@ fun HTML.index() {
         div {
             id = "root"
         }
-        script(src = "/static/com.rnett.spellbook.js") {}
+        script(src = "/static/spellbook.js") {}
     }
 }
 //
@@ -33,7 +33,7 @@ fun HTML.index() {
 //}
 
 fun Application.server() {
-    SpellbookDB.init()
+    SpellbookDB.initPostgres()
     MyKrosstalk.defineKtor(this)
     routing {
         get("/") {

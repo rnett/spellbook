@@ -5,6 +5,8 @@ import com.bnorm.react.RKey
 import com.rnett.spellbook.Rarity
 import com.rnett.spellbook.School
 import com.rnett.spellbook.Spell
+import com.rnett.spellbook.TagColors
+import com.rnett.spellbook.asCSS
 import com.rnett.spellbook.debugColor
 import com.rnett.spellbook.spellBodyColor
 import com.rnett.spellbook.spellBorderColor
@@ -57,7 +59,7 @@ fun RBuilder.SpellHeader(spell: Spell, @RKey key: String = spell.name) {
             Col(20.pct, JustifyContent.flexStart) {
                 css {
                     justifySelf = JustifyContent.flexStart
-                    debugColor = Color.red
+                    debugColor = Color("#ff0000")
                 }
 
                 builtinA("https://2e.aonprd.com/Spells.aspx?ID=${spell.aonId}", style = {
@@ -101,7 +103,7 @@ fun RBuilder.SpellHeader(spell: Spell, @RKey key: String = spell.name) {
                 }
 
                 spell.lists.sorted().forEach {
-                    SpellTag(it.name, "Spell List: $it", TagColors.SpellList(it))
+                    SpellTag(it.name, "Spell List: $it", TagColors.SpellList(it).asCSS())
 
                 }
             }
@@ -109,7 +111,7 @@ fun RBuilder.SpellHeader(spell: Spell, @RKey key: String = spell.name) {
             Col(20.pct, JustifyContent.center) {
                 css {
                     justifySelf = JustifyContent.flexStart
-                    debugColor = Color.gold
+                    debugColor = Color("#ffd700")
                     marginLeft = 10.px
                 }
                 SchoolTag(spell.school)
@@ -117,7 +119,7 @@ fun RBuilder.SpellHeader(spell: Spell, @RKey key: String = spell.name) {
 
             Col(30.pct, grow = 0.5) {
                 css {
-                    debugColor = Color.red
+                    debugColor = Color("#ff0000")
                 }
                 if (spell.requiresAttackRoll)
                     AttackTag()
@@ -128,7 +130,7 @@ fun RBuilder.SpellHeader(spell: Spell, @RKey key: String = spell.name) {
 
             Col(grow = 0.5) {
                 css {
-                    debugColor = Color.royalBlue
+                    debugColor = Color("#4169e1")
                 }
                 spell.conditions.forEach {
                     if (it.name !in uninterestingConditions)
@@ -181,7 +183,7 @@ fun RBuilder.SpellHeader(spell: Spell, @RKey key: String = spell.name) {
             Col(justifyContent = JustifyContent.flexStart) {
                 css {
                     justifySelf = JustifyContent.flexStart
-                    debugColor = Color.green
+                    debugColor = Color("#008000")
                     marginLeft = -20.px
                     "> *"{
                         marginLeft = 20.px

@@ -22,3 +22,19 @@ sealed class Actions {
     val isFreeAction get() = this is Constant && actions == 0
     val hasTrigger get() = trigger != null
 }
+
+expect val resourcePrefix: String
+
+fun actionStr(actions: Int) = when (actions) {
+    0 -> "Free Action"
+    1 -> "1 Action"
+    else -> "$actions Actions"
+}
+
+fun constantActionImg(actions: Int) = when (actions) {
+    0 -> "${resourcePrefix}static/freeaction.png"
+    1 -> "${resourcePrefix}static/1action.png"
+    2 -> "${resourcePrefix}static/2actions.png"
+    3 -> "${resourcePrefix}static/3actions.png"
+    else -> error("Not a valid number of constant actions: $actions")
+}

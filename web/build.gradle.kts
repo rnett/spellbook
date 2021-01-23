@@ -9,8 +9,6 @@ plugins {
     //TODO this is not updated either
 //    id("com.rnett.krosstalk")
 }
-group = "com.rnett.com.rnett.spellbook"
-version = "1.0-SNAPSHOT"
 
 val ktor_version: String by project
 
@@ -76,7 +74,9 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2")
             }
 
-            resources.srcDirs += project(":common").kotlin.sourceSets["jvmMain"].resources
+            tasks.processResources{
+                from(project(":common").kotlin.sourceSets["jvmMain"].resources)
+            }
         }
         val jvmTest by getting {
             dependencies {
@@ -127,11 +127,11 @@ tasks.create<JavaExec>("runImport") {
 
     classpath = compilation.runtimeDependencyFiles + compilation.output.allOutputs
 
-    main = "com.rnett.com.rnett.spellbook.load.LoadKt"
+    main = "com.rnett.spellbook.load.LoadKt"
 }
 
 tasks.getByName<KotlinWebpack>("jsBrowserProductionWebpack") {
-    outputFileName = "com.rnett.spellbook.js"
+    outputFileName = "spellbook.js"
 }
 tasks.getByName<Jar>("jvmJar") {
     dependsOn(tasks.getByName("jsBrowserProductionWebpack"))

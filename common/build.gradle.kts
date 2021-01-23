@@ -2,8 +2,6 @@ plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
 }
-group = "com.rnett.com.rnett.spellbook"
-version = "1.0-SNAPSHOT"
 
 val serialization_version: String by project
 val ktor_version: String by project
@@ -12,8 +10,6 @@ val exposed_version: String by project
 val pgjdbc_ng_version: String by project
 
 val jsoup_version: String by project
-
-val krosstalk_version: String by project
 
 repositories {
     mavenCentral()
@@ -66,7 +62,7 @@ kotlin {
                 implementation("com.impossibl.pgjdbc-ng:pgjdbc-ng:$pgjdbc_ng_version")
 
                 api("io.ktor:ktor-client-apache:$ktor_version")
-                implementation("org.jsoup:jsoup:$jsoup_version")
+                api("org.jsoup:jsoup:$jsoup_version")
                 implementation("me.tongfei:progressbar:0.9.0")
             }
         }

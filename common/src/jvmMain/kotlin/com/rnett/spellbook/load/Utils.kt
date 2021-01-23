@@ -8,6 +8,7 @@ import com.rnett.spellbook.db.SpellbookDB
 import com.rnett.spellbook.db.Spells
 import com.rnett.spellbook.db.Traits
 import kotlinx.coroutines.CoroutineDispatcher
+import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Slf4jSqlDebugLogger
 import org.jetbrains.exposed.sql.Transaction
@@ -41,7 +42,7 @@ fun adjustAonHtml(html: String): String {
     return html
 }
 
-inline fun <R> loggedTransaction(crossinline block: Transaction.() -> R) = transaction {
+inline fun <R> loggedTransaction(database: Database? = null, crossinline block: Transaction.() -> R) = transaction(database) {
     addLogger(Slf4jSqlDebugLogger)
     block()
 }
@@ -52,13 +53,6 @@ suspend inline fun <R> newSuspendedLoggedTransaction(
 ) = newSuspendedTransaction(context) {
     addLogger(Slf4jSqlDebugLogger)
     block()
-}
-
-fun initializeDatabase() {
-    SpellbookDB.init()
-    loggedTransaction {
-        SchemaUtils.createMissingTablesAndColumns(Traits, SpellLists, SpellTraits, Conditions, SpellConditions, Spells)
-    }
 }
 
 //TODO check db against https://gitlab.com/jrmiller82/pathfinder-2-sqlite  Maybe just use?

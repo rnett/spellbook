@@ -17,7 +17,7 @@ pluginManagement {
 
 enableFeaturePreview("GRADLE_METADATA")
 
-rootProject.name = "com.rnett.spellbook"
+rootProject.name = "spellbook"
 
 include("common", "web", "desktop")
 

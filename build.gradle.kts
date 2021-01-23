@@ -1,15 +1,16 @@
 plugins {
-    kotlin("multiplatform") version "1.4.20" apply false
-    kotlin("plugin.serialization") version "1.4.20" apply false
+    kotlin("multiplatform") version "1.4.21" apply false
+    kotlin("plugin.serialization") version "1.4.21" apply false
     id("com.bnorm.react.kotlin-react-function") version "0.2.1" apply false
 //    id("atomicfu-gradle-plugin") version "0.14.4"
     id("com.rnett.krosstalk") version "1.0.3-ALPHA" apply false
 }
-group = "com.rnett.com.rnett.spellbook"
-version = "1.0-SNAPSHOT"
 
 
 allprojects {
+    group = "com.rnett.spellbook"
+    version = "1.0-SNAPSHOT"
+
     repositories {
         mavenCentral()
         jcenter()

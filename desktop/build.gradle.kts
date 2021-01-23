@@ -4,11 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.compose") version "0.2.0-build132"
+    id("org.jetbrains.compose") version "0.3.0-build141"
 }
-
-group = "com.rnett.desktoptest"
-version = "1.0"
 
 repositories {
     jcenter()
@@ -16,15 +13,23 @@ repositories {
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
 }
 
+val h2_version: String by project
+
 dependencies {
     testImplementation(kotlin("test-junit"))
     implementation(compose.desktop.currentOs)
 
     implementation(project(":common"))
+
+    implementation("com.h2database:h2:$h2_version")
 }
 
-kotlin.sourceSets.main {
-    resources.srcDirs += project(":common").extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>().sourceSets["jvmMain"].resources
+tasks.processResources{
+    val resources = project(":common").extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>().sourceSets["jvmMain"].resources
+    from(resources.srcDirs.first()){
+        includeEmptyDirs = false
+        exclude("application.conf")
+    }
 }
 
 tasks.test {
@@ -37,7 +42,7 @@ tasks.withType<KotlinCompile>() {
 
 compose.desktop {
     application {
-        mainClass = "com.rnett.com.rnett.spellbook.MainKt"
+        mainClass = "com.rnett.spellbook.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Spellbook"

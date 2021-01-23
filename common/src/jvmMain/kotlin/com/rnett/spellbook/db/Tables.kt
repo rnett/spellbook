@@ -7,6 +7,8 @@ import kotlinx.serialization.builtins.ListSerializer
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
 
+val allTables = listOf(Traits, Conditions, Spells, SpellTraits, SpellLists, SpellConditions)
+
 object Traits : StringIdTable("traits", "name", 50)
 
 class DbTrait(id: EntityID<String>) : StringEntity(id) {

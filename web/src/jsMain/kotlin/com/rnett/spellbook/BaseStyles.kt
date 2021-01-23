@@ -38,10 +38,10 @@ var debugByDefault = false
 
 object BaseStyles : StyleSheet("Base") {
     val global by css {
-        outsideColor = Color("#424242")
-        spellBorderColor = Color("#563B3B")
-        spellBodyColor = Color("#634a45")
-        textColor = Color.white
+        outsideColor = MainColors.outsideColor.asCSS()
+        spellBorderColor = MainColors.spellBodyColor.asCSS()
+        spellBodyColor = MainColors.spellBodyColor.asCSS()
+        textColor = MainColors.textColor.asCSS()
         font = "Helvetica"
 
         ".debug"{

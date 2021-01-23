@@ -18,6 +18,7 @@ import com.rnett.spellbook.db.DbTrait
 import com.rnett.spellbook.db.SpellConditions
 import com.rnett.spellbook.db.SpellLists
 import com.rnett.spellbook.db.SpellTraits
+import com.rnett.spellbook.db.SpellbookDB
 import com.rnett.spellbook.db.Spells
 import com.rnett.spellbook.db.Traits
 import com.rnett.spellbook.invoke
@@ -513,8 +514,13 @@ suspend fun loadSpells(spells: Collection<String>, conditions: Set<String>, buff
     }
 }
 
-fun main(): Unit = runBlocking {
-    initializeDatabase()
+fun main(args: Array<String>): Unit = runBlocking {
+    if (args.size < 1 || args[0].toLowerCase().let { it != "pg" && it != "postgres" })
+        SpellbookDB.initH2()
+    else
+        SpellbookDB.initPostgres()
+
+    SpellbookDB.initTables()
     loggedTransaction {
         Spells.deleteAll()
     }
