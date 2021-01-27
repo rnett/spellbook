@@ -13,7 +13,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.rnett.spellbook.Color
 import com.rnett.spellbook.asCompose
@@ -29,8 +28,8 @@ fun SpellTag(color: Color, modifier: Modifier = Modifier, content: @Composable (
 
 @Composable
 fun SpellTag(color: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Surface(modifier, shape = RoundedCornerShape(8.dp), color = color) {
-        Box(Modifier.padding(5.dp, 3.dp)) {
+    Surface(shape = RoundedCornerShape(8.dp), color = color) {
+        Box(modifier.padding(5.dp, 3.dp)) {
             Providers(AmbientTextStyle provides TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)) {
                 content()
             }

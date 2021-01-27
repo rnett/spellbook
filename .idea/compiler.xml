@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="14" />
+    <bytecodeTargetLevel target="14">
+      <module name="spellbook.common.commonMain" target="13" />
+      <module name="spellbook.common.commonTest" target="13" />
+      <module name="spellbook.common.jvmMain" target="13" />
+      <module name="spellbook.common.jvmTest" target="13" />
+      <module name="spellbook.web.commonMain" target="13" />
+      <module name="spellbook.web.commonTest" target="13" />
+      <module name="spellbook.web.jvmMain" target="13" />
+      <module name="spellbook.web.jvmTest" target="13" />
+    </bytecodeTargetLevel>
   </component>
 </project>
