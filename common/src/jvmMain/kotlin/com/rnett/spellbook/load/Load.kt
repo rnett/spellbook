@@ -158,22 +158,22 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         val actionValues = actionsElements.filterIsInstance<Element>().filter { it.className() == "actiondark" }
             .map { actionNumForText(it.attr("alt")) }
 
-        val text = (
+        val actionsText = (
                 if (actionsElements.filterIsInstance<Element>().count { it.className() == "actiondark" } > 1)
                     actionsElements.takeLastWhile { it !is Element || !it.className().startsWith("action") }
                 else
                     actionsElements).textWithNewlines(false).replace("\n", " ").trim(' ', ';').ifBlank { null }
 
-        var actionTypes: List<CastActionType>? = if (!actionValues.isEmpty() || (text != null && '(' in text && ')' in text))
-            text?.substringAfter("(")?.substringBefore(")")?.split(",", " or ")
+        var actionTypes: List<CastActionType>? = if (!actionValues.isEmpty() || (actionsText != null && '(' in actionsText && ')' in actionsText))
+            actionsText?.substringAfter("(")?.substringBefore(")")?.split(",", " or ")
                 ?.map { CastActionType.valueOf(it.trim().enumFormat()) }
         else
             null
 
         val actions: Actions = when {
             actionValues.isEmpty() -> {
-                text!!
-                Actions.Time(text.substringBefore("(").trim(), trigger)
+                actionsText!!
+                Actions.Time(actionsText.substringBefore("(").trim(), trigger)
             }
             actionValues.size > 1 -> {
                 assert(actionValues.size == 2) { "More than 2 action values" }
@@ -188,7 +188,7 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
                         Actions.Reaction(trigger)
                     }
                     else -> {
-                        if (text != null && "or more" in text)
+                        if (actionsText != null && "or more" in actionsText)
                             Actions.Variable(action, 3, trigger)
                         else
                             Actions.Constant(action, trigger)

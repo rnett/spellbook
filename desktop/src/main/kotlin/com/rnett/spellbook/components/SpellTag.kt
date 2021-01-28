@@ -131,7 +131,7 @@ fun ActionsTag(actions: Actions) {
                 }
             }
 
-            Spacer(Modifier.preferredWidth(1.dp))
+            Spacer(Modifier.preferredWidth(3.dp))
 
             if (actions.hasTrigger) {
                 Row {
