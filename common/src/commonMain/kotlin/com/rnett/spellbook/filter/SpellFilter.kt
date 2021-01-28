@@ -1,12 +1,10 @@
 package com.rnett.spellbook.filter
 
 import com.rnett.spellbook.CastActionType
-import com.rnett.spellbook.Rarity
 import com.rnett.spellbook.Save
-import com.rnett.spellbook.School
 import com.rnett.spellbook.SpellList
 import com.rnett.spellbook.SpellType
-import com.rnett.spellbook.Trait
+import com.rnett.spellbook.TraitKey
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -56,7 +54,7 @@ data class SpellFilter(
     val attackTypes: Filter.Or<AttackType>? = null,
     val level: LevelFilter? = null,
     val types: Filter.Or<SpellType>? = null,
-    val traits: Filter.OrAnd<Trait>? = null,
+    val traits: Filter.OrAnd<TraitKey>? = null,
     val actions: Filter.Or<ActionFilter>? = null,
     val hasActionTypes: Set<CastActionType>? = null,
     val doesntHaveActionTypes: Set<CastActionType>? = null,
@@ -64,8 +62,8 @@ data class SpellFilter(
     val hasSummons: Boolean? = null,
     val hasHeightening: Boolean? = null,
     val conditions: Filter.OrAnd<String>? = null,
-    val schools: Filter.Or<School>? = null,
-    val rarity: Filter.Or<Rarity>? = null,
+    val schools: Filter.Or<TraitKey>? = null,
+    val rarity: Filter.Or<TraitKey>? = null,
     val hasManipulate: Boolean? = null
 ) {
     @Transient

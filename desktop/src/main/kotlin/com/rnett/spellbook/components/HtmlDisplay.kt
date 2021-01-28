@@ -1,12 +1,12 @@
 package com.rnett.spellbook.components
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import com.rnett.spellbook.load.normalTagName
@@ -65,6 +65,16 @@ class HtmlContext(val builder: AnnotatedString.Builder, private val cont: () -> 
 
             if (it.normalTagName == "u" || it.style("text-decoration") == "underline") {
                 builder.pushStyle(SpanStyle(textDecoration = TextDecoration.Underline))
+                pushed++
+            }
+
+            if (it.normalTagName == "sup") {
+                builder.pushStyle(SpanStyle(baselineShift = BaselineShift.Superscript))
+                pushed++
+            }
+
+            if (it.normalTagName == "sub") {
+                builder.pushStyle(SpanStyle(baselineShift = BaselineShift.Subscript))
                 pushed++
             }
 

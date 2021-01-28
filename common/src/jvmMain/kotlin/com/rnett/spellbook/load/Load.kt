@@ -5,12 +5,14 @@ import com.rnett.spellbook.CastActionType
 import com.rnett.spellbook.Condition
 import com.rnett.spellbook.Creature
 import com.rnett.spellbook.Heightening
+import com.rnett.spellbook.Rarity
 import com.rnett.spellbook.Save
 import com.rnett.spellbook.Spell
 import com.rnett.spellbook.SpellList
 import com.rnett.spellbook.SpellType
 import com.rnett.spellbook.Summons
 import com.rnett.spellbook.Trait
+import com.rnett.spellbook.TraitKey
 import com.rnett.spellbook.db.Conditions
 import com.rnett.spellbook.db.DbCondition
 import com.rnett.spellbook.db.DbSpell
@@ -26,14 +28,17 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -48,15 +53,16 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 import java.util.concurrent.atomic.AtomicInteger
 
-suspend fun loadPage(url: String): Document {
-    return Jsoup.parse(HttpClient() {
+val client = HttpClient() {
+}
 
-    }.get<String>(url)).also {
+suspend fun loadPage(url: String): Document {
+    return Jsoup.parse(client.get<String>(url)).also {
         it.setBaseUri(url)
     }
 }
 
-class SpellData(val spell: Spell, val conditionNames: Set<String>)
+class SpellData(val spell: Spell, val conditionNames: Set<String>, val traits: Set<TraitKey>)
 
 fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): SpellData? {
     val name = doc.select("h1.title").textNodes().single().text()
@@ -105,7 +111,12 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
 
         val traits = doc.select("#ctl00_MainContent_DetailedOutput > span")
             .filter { it.classNames().any { it.startsWith("trait") } }
-            .map { Trait(it.text()) }
+            .map { TraitKey(it.text()) }
+            .toMutableSet()
+
+        if (traits.none { it in Rarity }) {
+            traits += Rarity.Common
+        }
 
         var basicSave: Boolean = false
         var save: Save? = null
@@ -132,7 +143,7 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         val Bs = statblock.elements().filter { it.normalTagName == "b" }
 
         val requiresAttackRoll =
-            "spell attack" in fullTextLower || "spell attack roll" in fullTextLower || traits.any { it is Trait.Attack }
+            "spell attack" in fullTextLower || "spell attack roll" in fullTextLower || traits.any { it == Trait.Attack }
 
         val sourceElement = Bs.single { it.text() == "Source" }.nextElementSibling()
         assert(sourceElement.attr("href").startsWith("https://paizo.com")) { "Didn't find source?" }
@@ -147,38 +158,36 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         val actionValues = actionsElements.filterIsInstance<Element>().filter { it.className() == "actiondark" }
             .map { actionNumForText(it.attr("alt")) }
 
-        var actionTypes: List<CastActionType>? = null
+        val text = (
+                if (actionsElements.filterIsInstance<Element>().count { it.className() == "actiondark" } > 1)
+                    actionsElements.takeLastWhile { it !is Element || !it.className().startsWith("action") }
+                else
+                    actionsElements).textWithNewlines(false).replace("\n", " ").trim(' ', ';').ifBlank { null }
+
+        var actionTypes: List<CastActionType>? = if (!actionValues.isEmpty() || (text != null && '(' in text && ')' in text))
+            text?.substringAfter("(")?.substringBefore(")")?.split(",", " or ")
+                ?.map { CastActionType.valueOf(it.trim().enumFormat()) }
+        else
+            null
 
         val actions: Actions = when {
             actionValues.isEmpty() -> {
-                val text = (actionsElements[0] as TextNode).text()
-                if ('(' in text && ')' in text)
-                    actionTypes = text.substringAfter("(").substringBefore(")").split(", ")
-                        .map { CastActionType.valueOf(it.enumFormat()) }
+                text!!
                 Actions.Time(text.substringBefore("(").trim(), trigger)
             }
             actionValues.size > 1 -> {
                 assert(actionValues.size == 2) { "More than 2 action values" }
                 assert(actionValues.all { it > 0 }) { "Variable actions with free actions or reactions" }
 
-                val text = (actionsElements.last() as? TextNode)?.text()
-                actionTypes = text?.substringAfter("(")?.substringBefore(")")?.split(", ")
-                    ?.map { CastActionType.valueOf(it.enumFormat()) }
-
                 Actions.Variable(actionValues[0], actionValues[1], trigger)
             }
             else -> {
                 when (val action = actionValues[0]) {
                     -1 -> {
+                        actionTypes = null
                         Actions.Reaction(trigger)
                     }
                     else -> {
-                        val text = (actionsElements.last() as? TextNode)?.text()
-
-                        val typeStr = if (text != null && '(' in text) text.substringAfter("(").substringBefore(")") else text
-                        actionTypes = typeStr?.split(", ")
-                            ?.map { CastActionType.valueOf(it.enumFormat()) }
-
                         if (text != null && "or more" in text)
                             Actions.Variable(action, 3, trigger)
                         else
@@ -307,7 +316,7 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
                 aonId,
                 type,
                 lists.toSet(),
-                traits.toSet(),
+                emptySet(),
                 save,
                 basicSave,
                 requiresAttackRoll,
@@ -327,7 +336,8 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
                 spoilers,
                 emptySet()
             ),
-            spellConditions
+            spellConditions,
+            traits.toSet()
         )
     } catch (e: Throwable) {
         System.err.println("Error on spell: $name @ ${doc.baseUri()}")
@@ -336,23 +346,10 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
 }
 
 suspend fun doInserts(spells: List<SpellData>) {
-    val knownTraits = newSuspendedTransaction {
-        DbTrait.all().map { it.name }.toSet()
-    }
-
-    val traits = spells.flatMap { it.spell.traits }.toSet().filter { it.name !in knownTraits }
-
-    newSuspendedTransaction {
-        Traits.run {
-            batchInsert(traits, shouldReturnGeneratedValues = false) {
-                this[id] = it.name
-            }
-        }
-    }
-
     newSuspendedTransaction {
 
-        spells.map { it.spell }.forEach {
+        spells.forEach { spell ->
+            val it = spell.spell
             DbSpell.new(it.name) {
                 this.level = it.level
                 this.aonId = it.aonId
@@ -375,7 +372,7 @@ suspend fun doInserts(spells: List<SpellData>) {
                 this.postfix = it.postfix
                 this.spoilers = it.spoilersFor
 
-                setSpecialTraits(it.traits)
+                setSpecialTraits(spell.traits)
             }
         }
     }
@@ -390,7 +387,7 @@ suspend fun doInserts(spells: List<SpellData>) {
         }
 
         SpellTraits.batchInsert(
-            spells.flatMap { spell -> spell.spell.traits.map { spell.spell.name to it.name } },
+            spells.flatMap { spell -> spell.traits.map { spell.spell.name to it.name } },
             shouldReturnGeneratedValues = false
         ) { (spell, trait) ->
             this[SpellTraits.spell] = spell
@@ -429,7 +426,7 @@ suspend fun insertConditions(conditions: Iterable<Condition>) {
     newSuspendedTransaction {
         val newConditions = conditions.filter { DbCondition.findById(it.name) == null }
         val oldConditions = conditions - newConditions
-        Conditions.batchInsert(newConditions, shouldReturnGeneratedValues = true) {
+        Conditions.batchInsert(newConditions, shouldReturnGeneratedValues = false) {
             this[Conditions.id] = it.name
             this[Conditions.conditionSource] = it.source
             this[Conditions.description] = it.description
@@ -448,13 +445,54 @@ suspend fun insertConditions(conditions: Iterable<Condition>) {
     }
 }
 
+suspend fun loadTrait(url: String): Trait {
+    val doc = loadPage(url)
+    val name = doc.select("#ctl00_MainContent_DetailedOutput > h1 > a").text()
+    val aonId = url.substringAfter("?ID=").toInt()
+
+    val body = doc.select("#ctl00_MainContent_DetailedOutput").single()
+
+    val descStart = body.childNodes().first { it is TextNode }
+
+    val description = descStart.siblingsUntilElement { it.normalTagName == "h2" }.textWithNewlines()
+    return Trait(name, aonId, description)
+}
+
+@OptIn(FlowPreview::class)
+suspend fun loadTraits(url: String = "https://2e.aonprd.com/Traits.aspx"): Set<Trait> {
+    val doc = loadPage(url)
+    val urls = doc.select("#ctl00_MainContent_DetailedOutput > span.trait > a").map {
+        "https://2e.aonprd.com/" + it.attr("href")
+    }
+
+    return urls.asFlow().flatMapMerge(100) { flowOf(loadTrait(it)) }.flowOn(Dispatchers.IO).toList().toSet()
+}
+
+suspend fun insertTraits(traits: Iterable<Trait>) {
+    newSuspendedTransaction {
+        val newTraits = traits.filter { DbTrait.findById(it.name) == null }
+        val oldTraits = traits - newTraits
+        Traits.batchInsert(newTraits, shouldReturnGeneratedValues = true) {
+            this[Traits.id] = it.name
+            this[Traits.description] = it.description
+            this[Traits.aonId] = it.aonId
+        }
+        oldTraits.forEach {
+            DbTrait[it.name].apply {
+                this.description = it.description
+                this.aonId = it.aonId
+            }
+        }
+    }
+}
+
 suspend fun spellsFromPage(url: String) = loadPage(url).select("a")
     .map { it.attr("href") }
     .filter { it.startsWith("Spells.aspx?ID=") }
     .map { "https://2e.aonprd.com/$it" }
 
 //TODO track conditions
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
 suspend fun loadSpells(spells: Collection<String>, conditions: Set<String>, bufferPages: Int = 500, batchUpdates: Int = 50) {
 //    val spellBar = Mutexed(ProgressBar("Spells", spells.size.toLong()))
     val pagesBar = Mutexed(ProgressBar("Spells", spells.size.toLong()))
@@ -470,7 +508,7 @@ suspend fun loadSpells(spells: Collection<String>, conditions: Set<String>, buff
     val seenSpells = newSuspendedTransaction { Spells.slice(Spells.id).selectAll().map { it[Spells.id].value }.toMutableSet() }
 
     coroutineScope {
-        val spellPages = spells.asFlow().map { loadPage(it) }
+        val spellPages = spells.asFlow().flatMapMerge(200) { flowOf(loadPage(it)) }
             .flowOn(Dispatchers.IO)
             .onEach {
                 pagesBar.withLock { pages ->
@@ -515,10 +553,13 @@ suspend fun loadSpells(spells: Collection<String>, conditions: Set<String>, buff
 }
 
 fun main(args: Array<String>): Unit = runBlocking {
-    if (args.size < 1 || args[0].toLowerCase().let { it != "pg" && it != "postgres" })
+    if (args.isEmpty() || args[0].toLowerCase().let { it != "pg" && it != "postgres" }) {
+        println("Loading to H2")
         SpellbookDB.initH2()
-    else
+    } else {
+        println("Loading to Postgres")
         SpellbookDB.initPostgres()
+    }
 
     SpellbookDB.initTables()
     loggedTransaction {
@@ -527,6 +568,9 @@ fun main(args: Array<String>): Unit = runBlocking {
 
     val conditions = loadConditions()
     insertConditions(conditions)
+
+    val traits = loadTraits()
+    insertTraits(traits)
 
 //    parse(loadPage("https://2e.aonprd.com/Spells.aspx?ID=508"), emptySet())
     val pages = listOf(

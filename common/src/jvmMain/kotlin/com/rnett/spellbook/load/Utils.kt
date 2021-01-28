@@ -1,15 +1,7 @@
 package com.rnett.spellbook.load
 
-import com.rnett.spellbook.db.Conditions
-import com.rnett.spellbook.db.SpellConditions
-import com.rnett.spellbook.db.SpellLists
-import com.rnett.spellbook.db.SpellTraits
-import com.rnett.spellbook.db.SpellbookDB
-import com.rnett.spellbook.db.Spells
-import com.rnett.spellbook.db.Traits
 import kotlinx.coroutines.CoroutineDispatcher
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Slf4jSqlDebugLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.addLogger
@@ -101,10 +93,15 @@ fun List<Node>.elements() = filterIsInstance<Element>()
 
 val Element.normalTagName get() = tag().normalName()
 
-fun List<Node>.textWithNewlines(): String = joinToString("") {
+fun List<Node>.textWithNewlines(trim: Boolean = true): String = joinToString("") {
     when (it) {
         is Element -> if (it.tagName() == "br") "\n" else it.childNodes().textWithNewlines() + "\n"
-        is TextNode -> it.text().trim()
+        is TextNode -> it.text().let {
+            if (trim)
+                it.trim()
+            else
+                it.trim('\t', '\n')
+        }
         else -> it.outerHtml()
     }
 }

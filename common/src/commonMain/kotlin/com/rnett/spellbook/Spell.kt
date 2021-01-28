@@ -116,9 +116,9 @@ data class Spell(
     val spoilersFor: String?,
     val conditions: Set<Condition>
 ) {
-    val school: School? by lazy { traits.singleOrNull { it is School } as School? }
-    val rarity: Rarity by lazy { traits.singleOrNull { it is Rarity } as Rarity? ?: Rarity.Common }
-    val attackTrait: Boolean by lazy { Trait.Attack in traits }
+    val school: Trait? by lazy { traits.singleOrNull { it in School } }
+    val rarity: Trait by lazy { traits.single { it in Rarity } }
+    val attackTrait: Boolean by lazy { traits.any { it eq Trait.Attack } }
     val hasManipulate by lazy { actionTypes?.any { it == CastActionType.Material || it == CastActionType.Somatic || it == CastActionType.Focus } == true }
     val hasTrigger by lazy { actions.hasTrigger }
 

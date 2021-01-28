@@ -13,15 +13,11 @@ repositories {
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
 }
 
-val h2_version: String by project
-
 dependencies {
     testImplementation(kotlin("test-junit"))
     implementation(compose.desktop.currentOs)
 
     implementation(project(":common"))
-
-    implementation("com.h2database:h2:$h2_version")
 }
 
 tasks.processResources{

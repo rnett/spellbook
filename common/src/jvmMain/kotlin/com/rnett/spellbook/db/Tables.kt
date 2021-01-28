@@ -1,22 +1,49 @@
 package com.rnett.spellbook.db
 
-import com.rnett.spellbook.*
+import com.rnett.spellbook.Actions
+import com.rnett.spellbook.CastActionType
+import com.rnett.spellbook.Condition
+import com.rnett.spellbook.Heightening
+import com.rnett.spellbook.Rarity
+import com.rnett.spellbook.Save
+import com.rnett.spellbook.School
+import com.rnett.spellbook.Spell
+import com.rnett.spellbook.SpellList
+import com.rnett.spellbook.SpellType
+import com.rnett.spellbook.Summons
+import com.rnett.spellbook.Trait
+import com.rnett.spellbook.TraitKey
 import com.rnett.spellbook.filter.ActionFilter
 import com.rnett.spellbook.filter.AttackType
+import com.rnett.spellbook.ifLet
 import kotlinx.serialization.builtins.ListSerializer
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.batchInsert
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.not
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 
 val allTables = listOf(Traits, Conditions, Spells, SpellTraits, SpellLists, SpellConditions)
 
-object Traits : StringIdTable("traits", "name", 50)
+object Traits : StringIdTable("traits", "name", 50) {
+    val aonId = integer("aon_id")
+    val description = text("description")
+}
 
 class DbTrait(id: EntityID<String>) : StringEntity(id) {
     companion object : StringEntityClass<DbTrait>(Traits)
 
     val name get() = id.value
+    var aonId by Traits.aonId
+    var description by Traits.description
 
-    fun toTrait() = Trait(name)
+    fun toTrait() = Trait(name, aonId, description)
 }
 
 object SpellTraits : Table("spell_traits") {
@@ -34,7 +61,7 @@ object SpellLists : Table("spell_lists") {
 }
 
 object Conditions : StringIdTable("conditions", "name", 50) {
-    val conditionSource = varchar("source", 50)
+    val conditionSource = varchar("source", 100)
     val description = text("description")
     val aonId = integer("aon_id")
     val positive = bool("positive").nullable()
@@ -68,7 +95,7 @@ object Spells : StringIdTable("spells", "name", 200) {
     val save = enumeration("save", Save::class).nullable().index()
     val basicSave = bool("basic_save")
     val requiresAttackRoll = bool("required_attack_roll").index()
-    val spellSource = varchar("source", 50)
+    val spellSource = varchar("source", 100)
     val minActions = integer("min_actions").index()
     val maxActions = integer("max_actions").index()
     val variableActions = bool("variable_actions").index()
@@ -187,16 +214,16 @@ class DbSpell(id: EntityID<String>) : StringEntity(id) {
 //        }
 
     var traits
-        get() = traitsSI.map { Trait(it.name) }.toSet()
+        get() = traitsSI.map { Trait(it.name, it.aonId, it.description) }.toSet()
         @Deprecated("Will force a flush, you probably want to use batch updates")
         set(value) {
-            setSpecialTraits(value)
+            setSpecialTraits(value.map { it.key })
             traitsSI = SizedCollection(value.map { DbTrait[it.name] })
         }
 
-    fun setSpecialTraits(traits: Iterable<Trait>) {
-        rarity = (traits.singleOrNull { it is Rarity } as Rarity? ?: Rarity.Common).name
-        school = (traits.singleOrNull { it is School } as School?)?.name
+    fun setSpecialTraits(traits: Iterable<TraitKey>) {
+        rarity = (traits.singleOrNull { it in Rarity })?.name ?: Rarity.Common.name
+        school = (traits.singleOrNull { it in School })?.name
     }
 
     var spellLists

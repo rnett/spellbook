@@ -2,8 +2,6 @@ package com.rnett.spellbook.components
 
 import com.bnorm.react.RFunction
 import com.bnorm.react.RKey
-import com.rnett.spellbook.Rarity
-import com.rnett.spellbook.School
 import com.rnett.spellbook.Spell
 import com.rnett.spellbook.TagColors
 import com.rnett.spellbook.asCSS
@@ -190,7 +188,7 @@ fun RBuilder.SpellHeader(spell: Spell, @RKey key: String = spell.name) {
                     }
                 }
                 spell.traits.forEach {
-                    if (it.name !in uninterestingConditions && it !is School && it !is Rarity)
+                    if (it.isInteresting)
                         TraitTag(it)
                 }
             }

@@ -1,6 +1,10 @@
 package com.rnett.spellbook
 
-data class Color(val hexString: String)
+data class Color(val hexString: String) {
+    companion object {
+        val Transparent = Color("transparent")
+    }
+}
 
 object MainColors{
     val outsideColor = Color("#424242")
@@ -33,6 +37,14 @@ object TagColors {
         val Rare = Color("#0c1466")
         val Uncommon = Color("#c45500")
         val Common = Color("transparent")
+
+        operator fun invoke(rarity: Trait) = when (rarity.key) {
+            com.rnett.spellbook.Rarity.Common -> Common
+            com.rnett.spellbook.Rarity.Uncommon -> Uncommon
+            com.rnett.spellbook.Rarity.Rare -> Rare
+            com.rnett.spellbook.Rarity.Unique -> Unique
+            else -> error("Unknown rarity $rarity")
+        }
     }
 
     val School = Color("#9400d3")

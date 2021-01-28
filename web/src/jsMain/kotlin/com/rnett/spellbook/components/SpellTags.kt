@@ -11,6 +11,7 @@ import com.rnett.spellbook.TargetingType
 import com.rnett.spellbook.Trait
 import com.rnett.spellbook.actionStr
 import com.rnett.spellbook.asCSS
+import com.rnett.spellbook.assertIn
 import com.rnett.spellbook.constantActionImg
 import kotlinx.css.Align
 import kotlinx.css.CSSBuilder
@@ -59,7 +60,6 @@ import styled.styledSpan
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
-
 
 
 object SpellTagStyle : StyleSheet("SpellTag") {
@@ -173,9 +173,10 @@ fun RBuilder.ConditionTag(condition: Condition) {
 }
 
 @RFunction
-fun RBuilder.RarityTag(rarity: Rarity) {
+fun RBuilder.RarityTag(rarity: Trait) {
+    rarity assertIn Rarity
     SpellTag(
-        if (rarity == Rarity.Common) "" else rarity.name, "Rarity: ${rarity.name}", when (rarity) {
+        if (rarity.key == Rarity.Common) "" else rarity.name, "Rarity: ${rarity.name}", when (rarity.key) {
             Rarity.Common -> TagColors.Rarity.Common.asCSS()
             Rarity.Uncommon -> TagColors.Rarity.Uncommon.asCSS()
             Rarity.Rare -> TagColors.Rarity.Rare.asCSS()
@@ -186,7 +187,9 @@ fun RBuilder.RarityTag(rarity: Rarity) {
 }
 
 @RFunction
-fun RBuilder.SchoolTag(school: School?) {
+fun RBuilder.SchoolTag(school: Trait?) {
+    if (school != null)
+        school assertIn School
     SpellTag(
         school?.name
             ?: "", "School: ${school?.name ?: "None"}", if (school != null) TagColors.School.asCSS() else Color("transparent")
@@ -330,28 +333,32 @@ fun RBuilder.DurationTag(rawDuration: String?, sustained: Boolean) {
 @RFunction
 fun RBuilder.TargetingTag(targeting: TargetingType) {
     SpellTag("Targeting: $targeting.", TagColors.Targeting(targeting).asCSS()) {
-        if (targeting == TargetingType.Other) {
-            +"Other"
-        } else if (targeting == TargetingType.Area.Other) {
-            +"Area"
-        } else {
-
-            val name = when (targeting) {
-                TargetingType.SingleTarget -> "target"
-                TargetingType.MultiTarget -> "multitarget"
-                TargetingType.Area.Cone -> "cone"
-                TargetingType.Area.Line -> "line"
-                TargetingType.Area.Emanation -> "emanation"
-                TargetingType.Area.Burst -> "burst"
-                TargetingType.Area.Wall -> "wall"
-                else -> error("Impossible")
+        when (targeting) {
+            TargetingType.Other -> {
+                +"Other"
             }
+            TargetingType.Area.Other -> {
+                +"Area"
+            }
+            else -> {
 
-            styledImg(targeting.name, "/static/$name.png") {
-                css {
-                    height = 22.px
-                    verticalAlign = VerticalAlign.middle
-                    margin(vertical = -2.px)
+                val name = when (targeting) {
+                    TargetingType.SingleTarget -> "target"
+                    TargetingType.MultiTarget -> "multitarget"
+                    TargetingType.Area.Cone -> "cone"
+                    TargetingType.Area.Line -> "line"
+                    TargetingType.Area.Emanation -> "emanation"
+                    TargetingType.Area.Burst -> "burst"
+                    TargetingType.Area.Wall -> "wall"
+                    else -> error("Impossible")
+                }
+
+                styledImg(targeting.name, "/static/$name.png") {
+                    css {
+                        height = 22.px
+                        verticalAlign = VerticalAlign.middle
+                        margin(vertical = -2.px)
+                    }
                 }
             }
         }

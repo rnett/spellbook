@@ -2,6 +2,7 @@ package com.rnett.spellbook.components
 
 import androidx.compose.foundation.ClickableText
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,7 +21,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Providers
+import androidx.compose.runtime.ambientOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,14 +33,42 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.rnett.spellbook.Condition
 import com.rnett.spellbook.MainColors
+import com.rnett.spellbook.Trait
 import com.rnett.spellbook.asCompose
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
 import io.ktor.client.request.get
 import org.jsoup.Jsoup
 import java.util.*
 
-val client = HttpClient()
+typealias SidebarNavigator = (SidebarData<*>) -> Unit
+
+object SidebarNav {
+    val Ambient = ambientOf<SidebarNavigator> { {} }
+
+    @Composable
+    val currentSidebar: SidebarNavigator
+        get() = Ambient.current
+
+    @Composable
+    fun withNew(sidebarState: SidebarState, content: @Composable () -> Unit) {
+        Providers(Ambient provides sidebarState::new) {
+            content()
+        }
+    }
+
+    @Composable
+    fun withGoto(sidebarState: SidebarState, content: @Composable () -> Unit) {
+        Providers(Ambient provides sidebarState::goto) {
+            content()
+        }
+    }
+
+}
+
+val client = HttpClient(Apache)
 
 private suspend fun getAonDana(url: String): Pair<String, AnnotatedString> {
     val document = Jsoup.parse(client.get(url))
@@ -52,50 +82,129 @@ private suspend fun getAonDana(url: String): Pair<String, AnnotatedString> {
     return title.text() to HtmlText(body)
 }
 
-class SidebarState(){
-    private val backstack = Stack<String>()
+sealed class SidebarData<D> {
+    abstract suspend fun load(): D
 
-    var current: String? by mutableStateOf(null)
+    @Composable
+    abstract fun BoxScope.title(data: D)
+
+    @Composable
+    abstract fun BoxScope.display(data: D)
+}
+
+class SidebarState() {
+    private val backstack = Stack<SidebarData<*>>()
+
+    var current: SidebarData<*>? by mutableStateOf(null)
         private set
 
     val active get() = current != null
     val hasStack get() = backstack.isNotEmpty()
 
-    fun new(url: String){
+    fun new(url: SidebarData<*>) {
         backstack.clear()
         current = url
     }
 
-    fun newFromSidebar(url: String){
+    fun goto(url: SidebarData<*>) {
         current?.let(backstack::push)
         current = url
     }
 
-    fun back(){
-        if(backstack.isNotEmpty()) {
+    fun back() {
+        if (backstack.isNotEmpty()) {
             current = backstack.pop()
         } else {
             close()
         }
     }
 
-    fun close(){
+    fun close() {
         backstack.clear()
         current = null
+    }
+
+    @Composable
+    fun withNew(content: @Composable() () -> Unit) {
+        SidebarNav.withNew(this, content)
+    }
+
+    @Composable
+    fun withGoto(content: @Composable() () -> Unit) {
+        SidebarNav.withNew(this, content)
+    }
+}
+
+class AonUrl(url: String) : SidebarData<Pair<String, AnnotatedString>>() {
+    val url: String
+
+    init {
+        var url = url.trim('/')
+        if (url.startsWith("http://")) {
+            url = url.replace("http://", "https://")
+        }
+
+        if (!url.startsWith("https://2e.aonprd.com/")) {
+            if (url.startsWith("https://"))
+                error("Url is not to AON: $url")
+
+            url = "https://2e.aonprd.com/$url"
+        }
+        this.url = url
+    }
+
+    constructor(trait: Trait) : this("Traits.aspx?ID=${trait.aonId}")
+    constructor(condition: Condition) : this("Conditions.aspx?ID=${condition.aonId}")
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AonUrl) return false
+
+        if (url != other.url) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return url.hashCode()
+    }
+
+    override suspend fun load(): Pair<String, AnnotatedString> {
+        return getAonDana(url)
+    }
+
+    @Composable
+    override fun BoxScope.title(data: Pair<String, AnnotatedString>) {
+        Text(data.first, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.CenterStart))
+    }
+
+    @Composable
+    override fun BoxScope.display(data: Pair<String, AnnotatedString>) {
+        val sidebar = SidebarNav.currentSidebar
+        ClickableText(
+            data.second,
+            style = TextStyle(color = MainColors.textColor.asCompose())
+        ) {
+            val link = data.second.getStringAnnotations("URL", it, it).firstOrNull()?.item
+            if (link != null) {
+
+                sidebar(AonUrl(link))
+            }
+        }
     }
 }
 
 @Composable
-fun InfoListSidebar(aonUrl: String, showBack: Boolean, onClose: () -> Unit, onBack: ()  -> Unit, setSidebar: (String) -> Unit) {
+fun <D> SidebarDisplay(dataLoader: SidebarData<D>, sidebarState: SidebarState) {
     Surface(contentColor = MainColors.textColor.asCompose(), color = MainColors.infoBoxColor.asCompose()) {
         Column(Modifier.fillMaxSize().padding(12.dp)) {
 
-            var data by remember { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
+            var data by remember { mutableStateOf<D?>(null) }
 
-            LaunchedEffect(aonUrl) {
+            LaunchedEffect(dataLoader) {
                 try {
-                    data = getAonDana(aonUrl)
-                } catch (e: Exception){
+                    data = dataLoader.load()
+                } catch (e: Exception) {
 
                 }
             }
@@ -103,40 +212,30 @@ fun InfoListSidebar(aonUrl: String, showBack: Boolean, onClose: () -> Unit, onBa
             if (data == null) {
                 CircularProgressIndicator()
             } else {
-                Surface(
-                    Modifier.fillMaxWidth(),
-                    color = MainColors.infoHeaderColor.asCompose(),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Box(Modifier.padding(vertical = 4.dp, horizontal = 20.dp)) {
-                        Text(data!!.first, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.CenterStart))
+                sidebarState.withGoto {
+                    Surface(
+                        Modifier.fillMaxWidth(),
+                        color = MainColors.infoHeaderColor.asCompose(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Box(Modifier.padding(vertical = 4.dp, horizontal = 20.dp)) {
+                            dataLoader.apply { title(data!!) }
 
-                        Row(Modifier.align(Alignment.CenterEnd)) {
-                            if(showBack) {
-                                IconButton(onBack) {
-                                    Icon(Icons.Filled.ArrowBack)
+                            Row(Modifier.align(Alignment.CenterEnd)) {
+                                if (sidebarState.hasStack) {
+                                    IconButton(sidebarState::back) {
+                                        Icon(Icons.Filled.ArrowBack)
+                                    }
                                 }
-                            }
-                            IconButton(onClose) {
-                                Icon(Icons.Filled.Close)
+                                IconButton(sidebarState::close) {
+                                    Icon(Icons.Filled.Close)
+                                }
                             }
                         }
                     }
-                }
-                Spacer(Modifier.preferredHeight(20.dp))
-                Row(Modifier.fillMaxSize()) {
-                    ClickableText(
-                        data!!.second,
-                        style = TextStyle(color = MainColors.textColor.asCompose())
-                    ) {
-                        val link = data!!.second.getStringAnnotations("URL", it, it).firstOrNull()?.item
-                        if (link != null) {
-                            if (link.startsWith("https://2e.aonprd.com/")) {
-                                setSidebar(link)
-                            } else if("/" !in link){
-                                setSidebar("https://2e.aonprd.com/$link")
-                            }
-                        }
+                    Spacer(Modifier.preferredHeight(20.dp))
+                    Box(Modifier.fillMaxSize()) {
+                        dataLoader.apply { display(data!!) }
                     }
                 }
             }

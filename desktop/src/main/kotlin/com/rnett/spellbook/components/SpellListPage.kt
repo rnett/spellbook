@@ -32,6 +32,7 @@ import com.rnett.spellbook.filter.LevelFilter
 import com.rnett.spellbook.filter.SpellFilter
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
+
 @Composable
 fun SpellListPage() {
     DesktopMaterialTheme() {
@@ -57,28 +58,30 @@ fun SpellListPage() {
             val sidebarState = remember { SidebarState() }
 
             Row {
-                if (spells != null) {
-                    val scrollState = rememberScrollState()
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(if(sidebarState.active) 0.7f else 1f)) {
-                        Box(Modifier.padding(top = 10.dp, start = 10.dp, end = 20.dp)) {
-                            ScrollableColumn(scrollState = scrollState) {
-                                spells!!.forEach {
-                                    Box(Modifier.padding(bottom = 10.dp)) {
-                                        SpellView(it, sidebarState::new)
+                sidebarState.withNew {
+                    if (spells != null) {
+                        val scrollState = rememberScrollState()
+                        Box(Modifier.fillMaxHeight().fillMaxWidth(if (sidebarState.active) 0.7f else 1f)) {
+                            Box(Modifier.padding(top = 10.dp, start = 10.dp, end = 20.dp)) {
+                                ScrollableColumn(scrollState = scrollState) {
+                                    spells!!.forEach {
+                                        Box(Modifier.padding(bottom = 10.dp)) {
+                                            SpellDisplay(it)
+                                        }
                                     }
                                 }
                             }
-                        }
-                        val scrollStyle = ScrollbarStyleAmbient.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
-                        Providers(ScrollbarStyleAmbient provides scrollStyle) {
-                            VerticalScrollbar(scrollState, Modifier.align(Alignment.CenterEnd))
+                            val scrollStyle = ScrollbarStyleAmbient.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
+                            Providers(ScrollbarStyleAmbient provides scrollStyle) {
+                                VerticalScrollbar(scrollState, Modifier.align(Alignment.CenterEnd))
+                            }
                         }
                     }
                 }
 
-                if(sidebarState.active){
-                    Box(Modifier.fillMaxSize()){
-                        InfoListSidebar(sidebarState.current!!, sidebarState.hasStack, sidebarState::close, sidebarState::back, sidebarState::newFromSidebar)
+                if (sidebarState.active) {
+                    Box(Modifier.fillMaxSize()) {
+                        SidebarDisplay(sidebarState.current!!, sidebarState)
                     }
                 }
 

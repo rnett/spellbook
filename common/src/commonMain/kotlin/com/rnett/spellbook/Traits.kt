@@ -1,97 +1,78 @@
 package com.rnett.spellbook
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.properties.PropertyDelegateProvider
 
 @Serializable
-@SerialName("BaseTrait")
-sealed class Trait() {
-    abstract val name: String
+data class TraitKey(val name: String) {
+    infix fun eq(trait: Trait) = trait.name == name
+}
 
-    @Serializable
-    @SerialName("Attack")
-    object Attack : Trait() {
-        override val name: String = "Attack"
+infix fun Trait.eq(key: TraitKey) = key eq this
+
+abstract class TraitFamily(val familyName: String) {
+    private val _definedTraits = mutableSetOf<TraitKey>()
+
+    val traits get() = _definedTraits.toSet()
+
+    protected fun trait() = PropertyDelegateProvider<Any?, Lazy<TraitKey>> { _, prop ->
+        val key = TraitKey(prop.name).also { _definedTraits += it }
+        lazy { key }
     }
 
-    @Serializable
-    @SerialName("Trait")
-    class Other
-    @Deprecated("Use Companion.invoke on JVM", level = DeprecationLevel.WARNING)
-    internal constructor(override val name: String) : Trait()
-
-    companion object {
-        val definedTraits by lazy { (School.schools + Rarity.rarities + Attack).associateBy { it.name } }
+    protected fun trait(name: String) = PropertyDelegateProvider<Any?, Lazy<TraitKey>> { _, _ ->
+        val key = TraitKey(name).also { _definedTraits += it }
+        lazy { key }
     }
 
-    override fun toString(): String {
-        return "Trait($name)"
-    }
+    operator fun contains(trait: Trait) = trait.key in _definedTraits
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Trait) return false
+    operator fun contains(trait: TraitKey) = trait in _definedTraits
 
-        if (name != other.name) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return name.hashCode()
+    infix fun assertIn(trait: Trait): Trait = trait.also {
+        require(trait in this) { "Trait $trait is not in $familyName trait family" }
     }
 }
 
+infix fun Trait.assertIn(traitFamily: TraitFamily) = traitFamily assertIn this
+
 @Serializable
-@SerialName("School")
-class School private constructor(override val name: String) : Trait() {
+data class Trait(val name: String, val aonId: Int, val description: String) {
 
     companion object {
-
-        val Abjuration = School("Abjuration")
-
-        val Conjuration = School("Conjuration")
-
-        val Divination = School("Divination")
-
-        val Enchantment = School("Enchantment")
-
-        val Evocation = School("Evocation")
-
-        val Illusion = School("Illusion")
-
-        val Necromancy = School("Necromancy")
-
-        val Transmutation = School("Transmutation")
-
-        val schools = setOf(Abjuration, Conjuration, Divination, Enchantment, Evocation, Illusion, Necromancy, Transmutation)
+        val Attack = TraitKey("Attack")
     }
 
-    override fun toString(): String {
-        return "School($name)"
-    }
+    val isInteresting by lazy { name !in uninterestingConditions && this !in School && this !in Rarity }
+
+    val key by lazy { TraitKey(name) }
 }
 
-@Serializable
-@SerialName("Rarity")
-class Rarity private constructor(override val name: String, val index: Int) : Trait() {
+object School : TraitFamily("School") {
+    val Abjuration by trait()
 
-    operator fun compareTo(other: Rarity) = index - other.index
+    val Conjuration by trait()
 
-    companion object {
+    val Divination by trait()
 
-        val Common = Rarity("Common", 0)
+    val Enchantment by trait()
 
-        val Uncommon = Rarity("Uncommon", 1)
+    val Evocation by trait()
 
-        val Rare = Rarity("Rare", 2)
+    val Illusion by trait()
 
-        val Unique = Rarity("Unique", 3)
+    val Necromancy by trait()
 
-        val rarities = setOf(Common, Uncommon, Rare, Unique)
-    }
+    val Transmutation by trait()
 
-    override fun toString(): String {
-        return "Rarity($name)"
-    }
+    val schools get() = traits
+}
+
+object Rarity : TraitFamily("Rarity") {
+    val Common by trait()
+    val Uncommon by trait()
+    val Rare by trait()
+    val Unique by trait()
+
+    val rarities get() = traits
 }
