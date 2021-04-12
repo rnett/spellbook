@@ -11,17 +11,27 @@ enum class AreaType {
 sealed class SpellArea {
     abstract val text: String
 
-    @Serializable
-    data class Untyped(override val text: String) : SpellArea()
+    abstract fun hasType(type: AreaType): Boolean
 
     @Serializable
-    data class PartiallyTyped(override val text: String, val type: AreaType) : SpellArea()
+    data class Untyped(override val text: String) : SpellArea() {
+        override fun hasType(type: AreaType) = false
+    }
 
     @Serializable
-    data class Typed(override val text: String, val size: Int, val type: AreaType) : SpellArea()
+    data class PartiallyTyped(override val text: String, val type: AreaType) : SpellArea() {
+        override fun hasType(type: AreaType) = this.type == type
+    }
 
     @Serializable
-    data class Multiple(override val text: String, val parts: List<SpellArea>) : SpellArea()
+    data class Typed(override val text: String, val size: Int, val type: AreaType) : SpellArea() {
+        override fun hasType(type: AreaType): Boolean = this.type == type
+    }
+
+    @Serializable
+    data class Multiple(override val text: String, val parts: List<SpellArea>) : SpellArea() {
+        override fun hasType(type: AreaType): Boolean = parts.any { it.hasType(type) }
+    }
 
     companion object {
 

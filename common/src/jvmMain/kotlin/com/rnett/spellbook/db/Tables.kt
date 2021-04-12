@@ -13,9 +13,7 @@ import com.rnett.spellbook.SpellType
 import com.rnett.spellbook.Summons
 import com.rnett.spellbook.Trait
 import com.rnett.spellbook.TraitKey
-import com.rnett.spellbook.filter.ActionFilter
-import com.rnett.spellbook.filter.AttackType
-import com.rnett.spellbook.ifLet
+import com.rnett.spellbook.filter.AttackTypeFilter
 import kotlinx.serialization.builtins.ListSerializer
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Op
@@ -140,28 +138,28 @@ object Spells : StringIdTable("spells", "name", 200) {
 
     fun allSpoilers() = Spells.slice(Spells.spoilers).selectAll().withDistinct(true).mapNotNull { it[spoilers] }
 
-    fun isAttackType(attackType: AttackType): Op<Boolean> = sqlExpression {
+    fun isAttackType(attackType: AttackTypeFilter): Op<Boolean> = sqlExpression {
         when (attackType) {
-            is AttackType.TargetSave -> this@Spells.save eq attackType.save
-            AttackType.Attack -> this@Spells.requiresAttackRoll eq true
+            is AttackTypeFilter.TargetSave -> this@Spells.save eq attackType.save
+            AttackTypeFilter.Attack -> this@Spells.requiresAttackRoll eq true
         }
     }
 
-    fun hasActions(actions: ActionFilter): Op<Boolean> = sqlExpression {
-        when (actions) {
-            ActionFilter.Reaction -> this@Spells.isReaction
-            ActionFilter.Duration -> this@Spells.isTimeActions
-            is ActionFilter.Actions -> {
-                (isNormalOrFreeActions and (maxActions greaterEq actions.min) and (minActions lessEq actions.max))
-                    .ifLet(!actions.acceptVariable) {
-                        it and not(isVariableActions)
-                    }
-                    .ifLet(actions.atWill) {
-                        not(hasTrigger)
-                    }
-            }
-        }
-    }
+//    fun hasActions(actions: ActionFilter): Op<Boolean> = sqlExpression {
+//        when (actions) {
+//            ActionFilter.Reaction -> this@Spells.isReaction
+//            ActionFilter.Duration -> this@Spells.isTimeActions
+//            is ActionFilter.ActionRange -> {
+//                (isNormalOrFreeActions and (maxActions greaterEq actions.min) and (minActions lessEq actions.max))
+//                    .ifLet(!actions.acceptVariable) {
+//                        it and not(isVariableActions)
+//                    }
+//                    .ifLet(actions.atWill) {
+//                        not(hasTrigger)
+//                    }
+//            }
+//        }
+//    }
 
 }
 
@@ -311,13 +309,17 @@ class DbSpell(id: EntityID<String>) : StringEntity(id) {
             }
         }
 
-    fun toSpell(spellLists: Set<SpellList>, traits: Iterable<DbTrait>, conditions: Iterable<DbCondition>) = Spell(
+    fun toSpell(
+        spellLists: Iterable<SpellList> = this.spellLists,
+        traits: Iterable<Trait> = this.traits,
+        conditions: Iterable<Condition> = this.conditions,
+    ) = Spell(
         name,
         level,
         aonId,
         type,
-        spellLists,
-        traits.map { it.toTrait() }.toSet(),
+        spellLists.toSet(),
+        traits.toSet(),
         save,
         basicSave,
         requiresAttackRoll,
@@ -335,6 +337,6 @@ class DbSpell(id: EntityID<String>) : StringEntity(id) {
         summons,
         postfix,
         spoilers,
-        conditions.map { it.toCondition() }.toSet()
+        conditions.toSet()
     )
 }

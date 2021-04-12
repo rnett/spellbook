@@ -19,7 +19,7 @@ enableFeaturePreview("GRADLE_METADATA")
 
 rootProject.name = "spellbook"
 
-include("common", "web", "desktop")
+include("common", /*"web", */"desktop")
 
 
 

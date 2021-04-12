@@ -4,18 +4,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredHeight
-import androidx.compose.foundation.layout.preferredWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AmbientTextStyle
 import androidx.compose.material.Icon
+import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Providers
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.imageFromResource
@@ -27,18 +28,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rnett.spellbook.Actions
+import com.rnett.spellbook.CastActionType
 import com.rnett.spellbook.Color
 import com.rnett.spellbook.Condition
 import com.rnett.spellbook.Rarity
 import com.rnett.spellbook.Save
 import com.rnett.spellbook.School
 import com.rnett.spellbook.SpellList
+import com.rnett.spellbook.SpellType
 import com.rnett.spellbook.TagColors
 import com.rnett.spellbook.TargetingType
 import com.rnett.spellbook.Trait
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.constantActionImg
 
+//TODO school and tag colors should be less bright
+
 @Composable
 fun SpellTag(
     content: String,
@@ -47,8 +52,9 @@ fun SpellTag(
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
+    textColor: Color? = null,
 ) =
-    SpellTag(color.asCompose(), tooltip, modifier, sidebarInfo, noVerticalPadding) { Text(content) }
+    SpellTag(content, color.asCompose(), tooltip, modifier, sidebarInfo, noVerticalPadding, textColor?.asCompose())
 
 @Composable
 fun SpellTag(
@@ -58,7 +64,11 @@ fun SpellTag(
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
-) = SpellTag(color, tooltip, modifier, sidebarInfo, noVerticalPadding) { Text(content) }
+    textColor: androidx.compose.ui.graphics.Color? = null,
+) = SpellTag(color, tooltip, modifier, sidebarInfo, noVerticalPadding, textColor) {
+    Text(content,
+        color = textColor ?: androidx.compose.ui.graphics.Color.Unspecified)
+}
 
 @Composable
 fun SpellTag(
@@ -67,8 +77,9 @@ fun SpellTag(
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
-    content: @Composable () -> Unit
-): Unit = SpellTag(color.asCompose(), tooltip, modifier, sidebarInfo, noVerticalPadding, content)
+    textColor: Color? = null,
+    content: @Composable () -> Unit,
+): Unit = SpellTag(color.asCompose(), tooltip, modifier, sidebarInfo, noVerticalPadding, textColor?.asCompose(), content)
 
 @Composable
 fun SpellTag(
@@ -77,12 +88,13 @@ fun SpellTag(
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
-    content: @Composable () -> Unit
+    textColor: androidx.compose.ui.graphics.Color?,
+    content: @Composable () -> Unit,
 ) {
     var myModifier = modifier
 
     if (sidebarInfo != null) {
-        val sidebar = SidebarNav.currentSidebar
+        val sidebar = SidebarNav.currentSidebar()
         myModifier = myModifier.clickable(role = Role.Button, onClickLabel = "Open info sidebar") {
             sidebar(sidebarInfo)
         }
@@ -91,9 +103,9 @@ fun SpellTag(
 
     val vertPadding = if (noVerticalPadding) 0.dp else 3.dp
 
-    Surface(shape = RoundedCornerShape(8.dp), color = color) {
+    Surface(shape = RoundedCornerShape(8.dp), color = color, contentColor = textColor ?: contentColorFor(color)) {
         Box(myModifier.padding(5.dp, vertPadding)) {
-            Providers(AmbientTextStyle provides TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)) {
+            ProvideTextStyle(TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)) {
                 content()
             }
         }
@@ -101,37 +113,46 @@ fun SpellTag(
 }
 
 @Composable
+fun TypeTag(type: SpellType) {
+    SpellTag(TagColors.SpellType(type), type.name) {
+        Text(type.name)
+    }
+}
+
+//TODO flag manipulate (mini cross instead of *?)
+@Composable
 fun ActionsTag(actions: Actions) {
     val tooptip = when (actions) {
         is Actions.Constant -> if (actions.actions == 1) "1 Action" else "${actions.actions} Actions"
         is Actions.Variable -> "${actions.min} to ${actions.max} Actions"
         is Actions.Reaction -> "Reaction"
         is Actions.Time -> "Time"
+        else -> error("Unknown actions $actions")
     } + if (actions.hasTrigger) ", With Trigger" else ""
     SpellTag(Color.Transparent, tooptip, noVerticalPadding = true) {
         Row {
             Row {
                 when (actions) {
                     is Actions.Constant -> {
-                        Icon(imageFromResource(constantActionImg(actions.actions)))
+                        Icon(imageFromResource(constantActionImg(actions.actions)), actions.actions.toString())
                     }
                     is Actions.Variable -> {
                         Row {
-                            Icon(imageFromResource(constantActionImg(actions.min)))
-                            Icon(Icons.Default.ArrowForward, Modifier.padding(horizontal = 3.dp))
-                            Icon(imageFromResource(constantActionImg(actions.max)))
+                            Icon(imageFromResource(constantActionImg(actions.min)), actions.min.toString())
+                            Icon(Icons.Default.ArrowForward, "to", Modifier.padding(horizontal = 3.dp))
+                            Icon(imageFromResource(constantActionImg(actions.max)), actions.max.toString())
                         }
                     }
                     is Actions.Reaction -> {
-                        Icon(imageFromResource("static/reaction.png"))
+                        Icon(imageFromResource("static/reaction.png"), "Reaction")
                     }
                     is Actions.Time -> {
-                        Icon(imageFromResource("static/time.png"))
+                        Icon(imageFromResource("static/time.png"), "Duration")
                     }
                 }
             }
 
-            Spacer(Modifier.preferredWidth(3.dp))
+            Spacer(Modifier.width(3.dp))
 
             if (actions.hasTrigger) {
                 Row {
@@ -139,7 +160,7 @@ fun ActionsTag(actions: Actions) {
                         "*",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        style = AmbientTextStyle.current.copy(baselineShift = BaselineShift.Superscript)
+                        style = LocalTextStyle.current.copy(baselineShift = BaselineShift.Superscript)
                     )
                 }
             }
@@ -148,7 +169,16 @@ fun ActionsTag(actions: Actions) {
 }
 
 @Composable
-fun SpellListTag(spellList: SpellList) = SpellTag(spellList.name, TagColors.SpellList(spellList), "Spell List: ${spellList.name}")
+fun ActionTypeTag(type: CastActionType) {
+    SpellTag(type.name, TagColors.ActionType(type), type.name)
+}
+
+@Composable
+fun SpellListTag(spellList: SpellList, placeholder: Boolean = false) =
+    if (!placeholder)
+        SpellTag(spellList.name, TagColors.SpellList(spellList), "Spell List: ${spellList.name}")
+    else
+        SpellTag(spellList.name, Color.Transparent, "Not in ${spellList.name}", textColor = Color.Transparent)
 
 @Composable
 fun TargetingTag(targeting: TargetingType) = SpellTag(TagColors.Targeting(targeting), "Targeting: $targeting") {
@@ -171,7 +201,7 @@ fun TargetingTag(targeting: TargetingType) = SpellTag(TagColors.Targeting(target
                 else -> error("Impossible targeting type: $targeting")
             }
 
-            Icon(imageFromResource("static/$name.png"), Modifier.preferredHeight(18.dp).preferredWidth(20.dp))
+            Icon(imageFromResource("static/$name.png"), name, Modifier.height(18.dp).width(20.dp))
         }
     }
 }
@@ -187,11 +217,11 @@ fun SaveTag(save: Save, isBasicSave: Boolean) {
 }
 
 @Composable
-fun ConditionTag(condition: Condition) = SpellTag(
+fun ConditionTag(condition: Condition, sidebar: Boolean = true) = SpellTag(
     condition.name,
     if (condition.positive == true) TagColors.Condition.Positive else TagColors.Condition.Negative,
     "Condition: ${condition.name} - ${condition.description}",
-    sidebarInfo = AonUrl("Conditions.aspx?ID=${condition.aonId}")
+    sidebarInfo = if (sidebar) AonUrl("Conditions.aspx?ID=${condition.aonId}") else null
 )
 
 @Composable
@@ -204,7 +234,7 @@ fun DurationTag(duration: String?, isSustained: Boolean) {
         if (isSustained) {
             if (duration == "Sustained") {
                 SpellTag(TagColors.Duration.Sustained, "Duration: Sustained") {
-                    Icon(imageFromResource("static/sustained.png"), Modifier.preferredHeight(20.dp))
+                    Icon(imageFromResource("static/sustained.png"), "Sustained", Modifier.height(20.dp))
                 }
             } else {
                 SpellTag(TagColors.Duration.Sustained, "Duration: $duration") {
@@ -219,7 +249,7 @@ fun DurationTag(duration: String?, isSustained: Boolean) {
                         parts.forEachIndexed { idx, it ->
                             if (it == "||") {
 
-                                Icon(imageFromResource("static/sustained.png"), Modifier.preferredHeight(16.dp))
+                                Icon(imageFromResource("static/sustained.png"), "Sustained", Modifier.width(16.dp))
                                 Text("(${times.removeFirst()})")
                             } else
                                 Text(it)
@@ -234,15 +264,15 @@ fun DurationTag(duration: String?, isSustained: Boolean) {
 }
 
 @Composable
-fun TraitTag(trait: Trait, specialTraits: Boolean = true) {
-    val sidebarInfo = AonUrl("Traits.aspx?ID=${trait.aonId}")
+fun TraitTag(trait: Trait, specialTraits: Boolean = true, sidebar: Boolean = true) {
+    val sidebarInfo = if (sidebar) AonUrl("Traits.aspx?ID=${trait.aonId}") else null
     if (specialTraits) {
         val (color, prefix) = when (trait) {
             in Rarity -> TagColors.Rarity(trait) to "Rarity"
             in School -> TagColors.School to "School"
             else -> TagColors.Trait to "Trait"
         }
-        SpellTag(trait.name, color, "$prefix: ${trait.name}", sidebarInfo = sidebarInfo)
+        SpellTag(trait.name, color.asCompose(), "$prefix: ${trait.name}", sidebarInfo = sidebarInfo)
     } else {
         SpellTag(trait.name, TagColors.Trait, "Trait: ${trait.name}", sidebarInfo = sidebarInfo)
     }

@@ -1,6 +1,5 @@
 package com.rnett.spellbook.components
 
-import androidx.compose.foundation.ClickableText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -8,9 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -20,9 +20,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Providers
-import androidx.compose.runtime.ambientOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,22 +46,21 @@ import java.util.*
 typealias SidebarNavigator = (SidebarData<*>) -> Unit
 
 object SidebarNav {
-    val Ambient = ambientOf<SidebarNavigator> { {} }
+    val Ambient = compositionLocalOf<SidebarNavigator> { {} }
 
     @Composable
-    val currentSidebar: SidebarNavigator
-        get() = Ambient.current
+    fun currentSidebar() = Ambient.current
 
     @Composable
     fun withNew(sidebarState: SidebarState, content: @Composable () -> Unit) {
-        Providers(Ambient provides sidebarState::new) {
+        CompositionLocalProvider(Ambient provides sidebarState::new) {
             content()
         }
     }
 
     @Composable
     fun withGoto(sidebarState: SidebarState, content: @Composable () -> Unit) {
-        Providers(Ambient provides sidebarState::goto) {
+        CompositionLocalProvider(Ambient provides sidebarState::goto) {
             content()
         }
     }
@@ -131,7 +130,7 @@ class SidebarState() {
 
     @Composable
     fun withGoto(content: @Composable() () -> Unit) {
-        SidebarNav.withNew(this, content)
+        SidebarNav.withGoto(this, content)
     }
 }
 
@@ -180,7 +179,7 @@ class AonUrl(url: String) : SidebarData<Pair<String, AnnotatedString>>() {
 
     @Composable
     override fun BoxScope.display(data: Pair<String, AnnotatedString>) {
-        val sidebar = SidebarNav.currentSidebar
+        val sidebar = SidebarNav.currentSidebar()
         ClickableText(
             data.second,
             style = TextStyle(color = MainColors.textColor.asCompose())
@@ -224,16 +223,16 @@ fun <D> SidebarDisplay(dataLoader: SidebarData<D>, sidebarState: SidebarState) {
                             Row(Modifier.align(Alignment.CenterEnd)) {
                                 if (sidebarState.hasStack) {
                                     IconButton(sidebarState::back) {
-                                        Icon(Icons.Filled.ArrowBack)
+                                        Icon(Icons.Filled.ArrowBack, "Back")
                                     }
                                 }
                                 IconButton(sidebarState::close) {
-                                    Icon(Icons.Filled.Close)
+                                    Icon(Icons.Filled.Close, "Close")
                                 }
                             }
                         }
                     }
-                    Spacer(Modifier.preferredHeight(20.dp))
+                    Spacer(Modifier.height(20.dp))
                     Box(Modifier.fillMaxSize()) {
                         dataLoader.apply { display(data!!) }
                     }

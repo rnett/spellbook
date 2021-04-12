@@ -54,7 +54,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("com.rnett.krosstalk:krosstalk:$krosstalk_version")
+//                implementation("com.rnett.krosstalk:krosstalk:$krosstalk_version")
 
                 implementation(project(":common"))
             }
@@ -68,7 +68,7 @@ kotlin {
         val jvmMain by getting {
             dependencies {
 //                implementation("com.rnett.krosstalk:krosstalk:$krosstalk_version")
-                implementation("com.rnett.krosstalk:krosstalk-ktor-server:$krosstalk_version")
+//                implementation("com.rnett.krosstalk:krosstalk-ktor-server:$krosstalk_version")
                 implementation("io.ktor:ktor-server-netty:$ktor_version")
                 implementation("io.ktor:ktor-html-builder:$ktor_version")
                 implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2")
@@ -86,7 +86,7 @@ kotlin {
         val jsMain by getting {
             dependencies {
 //                implementation("com.rnett.krosstalk:krosstalk:$krosstalk_version")
-                implementation("com.rnett.krosstalk:krosstalk-ktor-client:$krosstalk_version")
+//                implementation("com.rnett.krosstalk:krosstalk-ktor-client:$krosstalk_version")
                 implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.2")
                 implementation("org.jetbrains:kotlin-react:$react_version")
                 implementation("org.jetbrains:kotlin-react-dom:$react_version")

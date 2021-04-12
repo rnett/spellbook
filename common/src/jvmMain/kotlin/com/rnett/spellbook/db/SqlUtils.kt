@@ -1,14 +1,10 @@
 package com.rnett.spellbook.db
 
-import com.rnett.spellbook.filter.Filter
-import org.jetbrains.exposed.sql.Database
+import com.rnett.spellbook.filter.Operation
 import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.compoundAnd
 import org.jetbrains.exposed.sql.compoundOr
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.transactions.transactionScope
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -22,8 +18,14 @@ inline fun <T> sqlExpression(block: SqlExpressionBuilder.() -> T): T {
     return SqlExpressionBuilder.run(block)
 }
 
-fun <T> Filter<T>.compound(condition: (T) -> Op<Boolean>): Op<Boolean> = when (this) {
-    is Filter.And -> map(condition).compoundAnd()
-    is Filter.Or -> map(condition).compoundOr()
-    is Filter.OrAnd -> map { it.compound(condition) }.compoundOr()
+fun List<Op<Boolean>>.compound(operation: Operation) = when (operation) {
+    Operation.AND -> compoundAnd()
+    Operation.OR -> compoundOr()
 }
+
+//fun <T> Filter<T>.compound(condition: (T) -> Op<Boolean>): Op<Boolean> {
+//    val meaningfulClauses = clauses.filter { it.isNotEmpty() }
+//    if(meaningfulClauses.isEmpty())
+//        return Op.TRUE
+//    return meaningfulClauses.map { it.map(condition).compound(clauseOperation) }.compound(outerOperation)
+//}

@@ -1,5 +1,6 @@
 package com.rnett.spellbook
 
+import com.rnett.spellbook.filter.SpellFilterPart
 import kotlinx.serialization.Serializable
 
 //TODO differentiate between area types.
@@ -62,13 +63,15 @@ sealed class TargetingType(val name: String) {
 //}
 
 @Serializable
-enum class SpellList(val normalList: Boolean) {
+enum class SpellList(val normalList: Boolean) : SpellFilterPart {
     Arcane(true),
     Divine(true),
     Occult(true),
     Primal(true),
     Focus(true),
     Other(false);
+
+    override fun matches(spell: Spell): Boolean = this in spell.lists
 
     companion object {
         val lists by lazy { values().toSet() }
@@ -81,8 +84,10 @@ enum class CastActionType {
 }
 
 @Serializable
-enum class SpellType {
+enum class SpellType : SpellFilterPart {
     Cantrip, Spell, Focus;
+
+    override fun matches(spell: com.rnett.spellbook.Spell): Boolean = this == spell.type
 }
 
 //TODO track conditions
@@ -114,19 +119,32 @@ data class Spell(
     val summons: Summons?,
     val postfix: String?,
     val spoilersFor: String?,
-    val conditions: Set<Condition>
-) {
+    val conditions: Set<Condition>,
+) : Comparable<Spell> {
+    val isFocus: Boolean by lazy { SpellList.Focus in lists || type == SpellType.Focus }
     val school: Trait? by lazy { traits.singleOrNull { it in School } }
     val rarity: Trait by lazy { traits.single { it in Rarity } }
     val attackTrait: Boolean by lazy { traits.any { it eq Trait.Attack } }
     val hasManipulate by lazy { actionTypes?.any { it == CastActionType.Material || it == CastActionType.Somatic || it == CastActionType.Focus } == true }
     val hasTrigger by lazy { actions.hasTrigger }
+    val persistentDamage: Boolean by lazy { description.contains("persistent", ignoreCase = true) }
 
     //TODO store this?  To unreliable to do much filtering by.
     val typedArea by lazy { area?.let { SpellArea(it) } }
     val targeting by lazy {
         TargetingType(area, targets)
     }
+
+    override fun compareTo(other: Spell): Int {
+        return level.compareTo(other.level) * 10000 + type.compareTo(other.type) * 100 + name.compareTo(other.name)
+    }
+}
+
+object SpellComparator : Comparator<Spell> {
+    override fun compare(a: Spell, b: Spell): Int {
+        TODO("Not yet implemented")
+    }
+
 }
 
 

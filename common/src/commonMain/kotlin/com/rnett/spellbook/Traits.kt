@@ -1,11 +1,14 @@
 package com.rnett.spellbook
 
+import com.rnett.spellbook.filter.SpellFilterPart
 import kotlinx.serialization.Serializable
 import kotlin.properties.PropertyDelegateProvider
 
 @Serializable
-data class TraitKey(val name: String) {
+data class TraitKey(val name: String) : SpellFilterPart {
     infix fun eq(trait: Trait) = trait.name == name
+
+    override fun matches(spell: Spell): Boolean = spell.traits.any { it.name == this.name }
 }
 
 infix fun Trait.eq(key: TraitKey) = key eq this

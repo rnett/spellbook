@@ -1,12 +1,46 @@
 package com.rnett.spellbook
 
-data class Color(val hexString: String) {
+private const val TRANSPARENT = "transparent"
+
+class Color(private val _hexString: String, val alpha: Float = 1f) {
+    val isTransparent by lazy { _hexString.isBlank() || _hexString.toLowerCase() == TRANSPARENT }
+
+    val hexString by lazy {
+        if (!_hexString.startsWith("#") && !isTransparent)
+            "#" + _hexString.toLowerCase()
+        else
+            _hexString
+    }
+
     companion object {
-        val Transparent = Color("transparent")
+        val Transparent = Color(TRANSPARENT, 0f)
+    }
+
+    fun withAlpha(alpha: Float): Color = if (hexString != "transparent")
+        Color(hexString, alpha)
+    else
+        Color.Transparent
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Color
+
+        if (hexString != other.hexString) return false
+        if (alpha != other.alpha) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = hexString.hashCode()
+        result = 31 * result + alpha.hashCode()
+        return result
     }
 }
 
-object MainColors{
+object MainColors {
     val outsideColor = Color("#424242")
     val spellBorderColor = Color("#563B3B")
     val spellBodyColor = Color("#634a45")
@@ -15,9 +49,17 @@ object MainColors{
     val infoHeaderColor = Color("#522e2c")
 }
 
+object FilterColors {
+    val dividerColor = Color("#AAAAAA")
+    val adderSpaceColor = Color("#555454")
+    val typeButtonColor = Color("#6C6C6C")
+    val checkboxRequired = Color("#445945")
+    val checkboxForbidden = Color("#6C575C")
+}
+
 object TagColors {
     object Attack {
-        fun Save(save: Save) = when(save){
+        fun Save(save: Save) = when (save) {
             Save.Fortitude -> Color("#008000")
             Save.Reflex -> Color("#4682b4")
             Save.Will -> Color("#ffd700")
@@ -47,7 +89,7 @@ object TagColors {
         }
     }
 
-    val School = Color("#9400d3")
+    val School = Color("#9400d3", 0.6f)
 
     fun SpellList(spellList: SpellList): Color = when (spellList) {
         SpellList.Arcane -> Color("#4169e1")
@@ -58,7 +100,7 @@ object TagColors {
         SpellList.Other -> Color("#696969")
     }
 
-    val Trait = Color("#a52a2a")
+    val Trait = Color("#a52a2a", 0.6f)
 
     object Duration {
         val Sustained = Color("#08AE58")
@@ -88,5 +130,18 @@ object TagColors {
         TargetingType.Area.Burst -> Color("#ff0000")
         TargetingType.Area.Wall -> Color("#2f4f4f")
         TargetingType.Area.Other -> Color("#8F5C5C")
+    }
+
+    fun SpellType(type: SpellType): Color = when (type) {
+        SpellType.Cantrip -> Color("#7C9BA9")
+        SpellType.Spell -> Color("#A9709C")
+        SpellType.Focus -> SpellList(SpellList.Focus)
+    }
+
+    fun ActionType(type: CastActionType): Color = when (type) {
+        CastActionType.Material -> Color("#797926")
+        CastActionType.Somatic -> Color("#604B6C")
+        CastActionType.Verbal -> Color("#476C59")
+        CastActionType.Focus -> SpellList(SpellList.Focus)
     }
 }
