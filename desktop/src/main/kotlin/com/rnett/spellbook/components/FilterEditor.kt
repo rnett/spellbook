@@ -30,11 +30,6 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.HorizontalRule
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -156,26 +151,21 @@ fun <T> SetEditor(
     current: Set<T>,
     allOptions: Set<T>,
     set: (Set<T>) -> Unit,
-    expandedStates: MutableList<MutableState<Boolean>>,
+    expanded: ExpansionManager.Component,
     title: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     render: @Composable (T) -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false).also { expandedStates += it } }
-
     Column(modifier.fillMaxWidth()) {
         Box(Modifier.fillMaxWidth()) {
             Box(Modifier.align(Alignment.CenterStart)) {
                 title()
             }
 
-            IconToggleButton(expanded, {
-                if (it) {
-                    expandedStates.forEach { it.value = false }
-                }
-                expanded = it
+            IconToggleButton(expanded.expanded, {
+                expanded.expand(it)
             }, Modifier.align(Alignment.TopEnd).size(30.dp)) {
-                if (expanded) {
+                if (expanded.expanded) {
                     Icon(Icons.Default.Done, "Finish Edit")
                 } else {
                     Icon(Icons.Default.Edit, "Edit")
@@ -187,7 +177,7 @@ fun <T> SetEditor(
 
         FlowRow(Modifier.fillMaxWidth(), verticalGap = 8.dp, horizontalGap = 10.dp) {
             current.forEach {
-                Box(Modifier.clickable(enabled = expanded) {
+                Box(Modifier.clickable(enabled = expanded.expanded) {
                     set(current - it)
                 }) {
                     render(it)
@@ -196,10 +186,10 @@ fun <T> SetEditor(
         }
 
 
-        if (expanded)
+        if (expanded.expanded)
             Spacer(Modifier.height(8.dp))
 
-        AnimatedVisibility(expanded) {
+        AnimatedVisibility(expanded.expanded) {
             Surface(shape = RoundedCornerShape(10.dp),
                 color = FilterColors.adderSpaceColor.asCompose(),
                 border = BorderStroke(Dp.Hairline, FilterColors.dividerColor.asCompose())) {
@@ -218,7 +208,7 @@ fun <T> SetEditor(
         }
 
 
-        if (expanded)
+        if (expanded.expanded)
             Spacer(Modifier.height(8.dp))
         EndSpacer()
     }
@@ -230,13 +220,11 @@ fun <T : SpellFilterPart> FilterEditor(
     current: Filter<T>,
     allOptions: Set<T>,
     set: (Filter<T>) -> Unit,
-    expandedStates: MutableList<MutableState<Boolean>>,
+    expanded: ExpansionManager.Component,
     title: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     render: @Composable (T) -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false).also { expandedStates += it } }
-
     Column(modifier.fillMaxWidth()) {
         Box(Modifier.fillMaxWidth()) {
             Box(Modifier.align(Alignment.CenterStart)) {
@@ -253,13 +241,10 @@ fun <T : SpellFilterPart> FilterEditor(
                 OperationButton(current.clauseOperation) { set(current.copy(clauseOperation = it)) }
 
                 Spacer(Modifier.width(8.dp))
-                IconToggleButton(expanded, {
-                    if (it) {
-                        expandedStates.forEach { it.value = false }
-                    }
-                    expanded = it
+                IconToggleButton(expanded.expanded, {
+                    expanded.expand(it)
                 }, Modifier.size(30.dp)) {
-                    if (expanded) {
+                    if (expanded.expanded) {
                         Icon(Icons.Default.Done, "Finish Edit")
                     } else {
                         Icon(Icons.Default.Edit, "Edit")
@@ -274,7 +259,7 @@ fun <T : SpellFilterPart> FilterEditor(
             if (idx != 0)
                 ClauseDivider(current.outerOperation)
 
-            Clause(it, current.clauseOperation, allOptions, expanded, { new ->
+            Clause(it, current.clauseOperation, allOptions, expanded.expanded, { new ->
                 set(current.copy(clauses = current.clauses.mapIndexed { index, old ->
                     if (index == idx)
                         new
@@ -283,11 +268,11 @@ fun <T : SpellFilterPart> FilterEditor(
                 }))
             }, render)
         }
-        if (expanded) {
+        if (expanded.expanded) {
             if (current.clauses.isNotEmpty())
                 ClauseDivider(current.outerOperation)
 
-            Clause(FilterClause(), current.clauseOperation, allOptions, expanded, { new ->
+            Clause(FilterClause(), current.clauseOperation, allOptions, expanded.expanded, { new ->
                 set(current.copy(clauses = current.clauses.plusElement(new)))
             }, render)
         }

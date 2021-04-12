@@ -25,7 +25,7 @@ kotlin {
     jvm {
         compilations.all {
             kotlinOptions {
-                jvmTarget = "13"
+                jvmTarget = "11"
                 useIR = true
             }
         }

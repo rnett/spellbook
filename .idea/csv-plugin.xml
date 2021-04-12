@@ -24,6 +24,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\desktop\src\main\kotlin\com\rnett\spellbook\components\SavedSearchPage.kt">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\desktop\src\main\kotlin\com\rnett\spellbook\components\SpellDisplay.kt">
           <value>
             <Attribute>

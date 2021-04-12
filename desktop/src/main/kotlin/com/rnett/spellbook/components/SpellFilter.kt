@@ -1,6 +1,7 @@
 package com.rnett.spellbook.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.ScrollbarStyleAmbient
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Box
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
@@ -22,7 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,7 +38,7 @@ import com.rnett.spellbook.SpellType
 import com.rnett.spellbook.data.interestingSpellConditions
 import com.rnett.spellbook.data.nonSpecialSpellTraits
 import com.rnett.spellbook.data.spellConditionsByName
-import com.rnett.spellbook.data.spellTraitsByName
+import com.rnett.spellbook.data.traitsByName
 import com.rnett.spellbook.filter.ActionFilter
 import com.rnett.spellbook.filter.AttackTypeFilter
 import com.rnett.spellbook.filter.LevelFilter
@@ -53,16 +53,42 @@ private val pickableAttackTypes = (Save.values().map { AttackTypeFilter.TargetSa
 private val pickableActionTypes =
     setOf(ActionFilter.Free, ActionFilter.Single, ActionFilter.Double, ActionFilter.Triple, ActionFilter.Reaction, ActionFilter.Duration)
 
+class ExpansionManager {
+    val components: MutableList<Boolean> = mutableStateListOf<Boolean>()
+
+    fun closeAll() {
+        components.indices.forEach {
+            components[it] = false
+        }
+    }
+
+    @Composable
+    fun component(): Component = remember {
+        components.add(false)
+        Component(components.size - 1)
+    }
+
+    inner class Component(val idx: Int) {
+        inline fun expand(expanded: Boolean) {
+            closeAll()
+            components[idx] = expanded
+        }
+
+        inline val expanded get() = components[idx]
+    }
+}
+
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, update: (SpellFilter) -> Unit) {
+fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, showReset: Boolean = true, update: (SpellFilter) -> Unit) {
     Box {
-        val scrollState = rememberScrollState()
+        val scrollState = remember { ScrollState(0) }
         Column(Modifier.padding(top = 10.dp, bottom = 10.dp, start = 10.dp, end = 20.dp).verticalScroll(scrollState)) {
-            val expandedStates = remember { mutableListOf<MutableState<Boolean>>() }
+            val expandedStates = remember { ExpansionManager() }
 
             if (!presetSlot) {
-                FilterEditor(filter.lists, SpellList.lists, { update(filter.copy(lists = it)) }, expandedStates,
+                FilterEditor(filter.lists, SpellList.lists, { update(filter.copy(lists = it)) }, expandedStates.component(),
                     { Text("Spell Lists") }) {
                     SpellListTag(it)
                 }
@@ -71,7 +97,7 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, update: 
                     Text("Focus")
                 }
 
-                FilterEditor(filter.types, SpellType.values().toSet(), { update(filter.copy(types = it)) }, expandedStates,
+                FilterEditor(filter.types, SpellType.values().toSet(), { update(filter.copy(types = it)) }, expandedStates.component(),
                     { Text("Spell Type") }) {
                     TypeTag(it)
                 }
@@ -113,7 +139,7 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, update: 
                 FilterDivider(true)
             }
 
-            FilterEditor(filter.attackTypes, pickableAttackTypes, { update(filter.copy(attackTypes = it)) }, expandedStates,
+            FilterEditor(filter.attackTypes, pickableAttackTypes, { update(filter.copy(attackTypes = it)) }, expandedStates.component(),
                 { Text("Attack Type") }) {
                 when (it) {
                     AttackTypeFilter.Attack -> AttackTag()
@@ -128,14 +154,14 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, update: 
             FilterEditor(filter.conditions,
                 interestingSpellConditions.map { it.filter }.toSet(),
                 { update(filter.copy(conditions = it)) },
-                expandedStates,
+                expandedStates.component(),
                 { Text("Conditions") }) {
                 Box(Modifier.height(24.dp)) {
                     ConditionTag(spellConditionsByName.getValue(it.name), sidebar = false)
                 }
             }
 
-            FilterEditor(filter.actions, pickableActionTypes, { update(filter.copy(actions = it)) }, expandedStates,
+            FilterEditor(filter.actions, pickableActionTypes, { update(filter.copy(actions = it)) }, expandedStates.component(),
                 { Text("Actions") }) {
                 Box(Modifier.height(24.dp)) {
                     ActionsTag(it.toActions())
@@ -153,7 +179,7 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, update: 
             SetEditor(filter.hasActionTypes.orEmpty(),
                 CastActionType.values().toSet(),
                 { update(filter.copy(hasActionTypes = it.ifEmpty { null })) },
-                expandedStates,
+                expandedStates.component(),
                 { Text("Required Cast Actions") }) {
                 ActionTypeTag(it)
             }
@@ -161,22 +187,22 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, update: 
             SetEditor(filter.doesntHaveActionTypes.orEmpty(),
                 CastActionType.values().toSet(),
                 { update(filter.copy(doesntHaveActionTypes = it.ifEmpty { null })) },
-                expandedStates,
+                expandedStates.component(),
                 { Text("Forbidden Cast Actions") }) {
                 ActionTypeTag(it)
             }
 
-            FilterEditor(filter.rarity, Rarity.traits, { update(filter.copy(rarity = it)) }, expandedStates,
+            FilterEditor(filter.rarity, Rarity.traits, { update(filter.copy(rarity = it)) }, expandedStates.component(),
                 { Text("Rarity") }) {
                 Box(Modifier.height(24.dp)) {
-                    TraitTag(spellTraitsByName.getValue(it.name), sidebar = false)
+                    TraitTag(traitsByName.getValue(it.name), sidebar = false)
                 }
             }
 
-            FilterEditor(filter.schools, School.schools, { update(filter.copy(schools = it)) }, expandedStates,
+            FilterEditor(filter.schools, School.schools, { update(filter.copy(schools = it)) }, expandedStates.component(),
                 { Text("School") }) {
                 Box(Modifier.height(24.dp)) {
-                    TraitTag(spellTraitsByName.getValue(it.name), sidebar = false)
+                    TraitTag(traitsByName.getValue(it.name), sidebar = false)
                 }
             }
 
@@ -188,22 +214,27 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, update: 
                 Text("Heightenable")
             }
 
-            FilterEditor(filter.traits, nonSpecialSpellTraits.map { it.key }.toSet(), { update(filter.copy(traits = it)) }, expandedStates,
+            FilterEditor(filter.traits,
+                nonSpecialSpellTraits.map { it.key }.toSet(),
+                { update(filter.copy(traits = it)) },
+                expandedStates.component(),
                 { Text("Traits") }) {
-                TraitTag(spellTraitsByName.getValue(it.name), sidebar = false)
+                TraitTag(traitsByName.getValue(it.name), sidebar = false)
             }
 
-            Spacer(Modifier.height(10.dp))
+            if (showReset) {
+                Spacer(Modifier.height(10.dp))
 
-            Button(
-                {
-                    expandedStates.forEach { it.value = false }
-                    update(SpellFilter())
-                },
-                Modifier.fillMaxWidth().align(Alignment.CenterHorizontally),
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red.copy(alpha = 0.4f))
-            ) {
-                Text("RESET", textAlign = TextAlign.Center)
+                Button(
+                    {
+                        expandedStates.closeAll()
+                        update(SpellFilter())
+                    },
+                    Modifier.fillMaxWidth().align(Alignment.CenterHorizontally),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red.copy(alpha = 0.4f))
+                ) {
+                    Text("RESET", textAlign = TextAlign.Center)
+                }
             }
 
         }

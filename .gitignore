@@ -1,4 +1,5 @@
 common/src/jvmMain/resources/data
+/data/
 
 # Project exclude paths
 /.gradle/

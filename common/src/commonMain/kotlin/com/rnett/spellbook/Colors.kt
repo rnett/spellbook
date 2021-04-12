@@ -49,6 +49,10 @@ object MainColors {
     val infoHeaderColor = Color("#522e2c")
 }
 
+object SavedSearchColors {
+    val searchButtonColor = Color("#3153AF")
+}
+
 object FilterColors {
     val dividerColor = Color("#AAAAAA")
     val adderSpaceColor = Color("#555454")
