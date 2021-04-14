@@ -1,5 +1,6 @@
-package com.rnett.spellbook
+package com.rnett.spellbook.spell
 
+import com.rnett.spellbook.resourcePrefix
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -31,8 +32,6 @@ sealed class Actions {
         else -> false
     }
 }
-
-expect val resourcePrefix: String
 
 fun actionStr(actions: Int) = when (actions) {
     0 -> "Free Action"

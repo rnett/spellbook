@@ -1,4 +1,4 @@
-package com.rnett.spellbook
+package com.rnett.spellbook.spell
 
 import com.rnett.spellbook.filter.SpellFilterPart
 import kotlinx.serialization.Serializable

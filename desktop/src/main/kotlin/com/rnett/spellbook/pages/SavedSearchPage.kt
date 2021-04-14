@@ -1,4 +1,4 @@
-package com.rnett.spellbook.components
+package com.rnett.spellbook.pages
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -57,6 +57,8 @@ import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.SavedSearchColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.SmallTextField
+import com.rnett.spellbook.components.SpellFilterEditor
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.newName
@@ -103,8 +105,13 @@ fun SavedSearchPage(
                         }
                         .focusRequester(focusRequester)
                         .onFocusChanged {
-                            if (it == FocusState.Inactive)
-                                editingName = null
+                            if (it == FocusState.Inactive) {
+                                editingName?.let {
+                                    if (it !in knownNames)
+                                        rename(idx, it)
+                                    editingName = null
+                                }
+                            }
                         }
                         .focusModifier()
                         .combinedClickable(

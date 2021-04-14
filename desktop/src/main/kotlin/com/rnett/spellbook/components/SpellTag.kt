@@ -27,21 +27,21 @@ import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rnett.spellbook.Actions
-import com.rnett.spellbook.CastActionType
 import com.rnett.spellbook.Color
-import com.rnett.spellbook.Condition
-import com.rnett.spellbook.Rarity
-import com.rnett.spellbook.Save
-import com.rnett.spellbook.School
-import com.rnett.spellbook.SpellList
-import com.rnett.spellbook.SpellType
 import com.rnett.spellbook.TagColors
-import com.rnett.spellbook.TargetingType
-import com.rnett.spellbook.Trait
 import com.rnett.spellbook.asCompose
-import com.rnett.spellbook.constantActionImg
-import com.rnett.spellbook.eq
+import com.rnett.spellbook.spell.Actions
+import com.rnett.spellbook.spell.CastActionType
+import com.rnett.spellbook.spell.Condition
+import com.rnett.spellbook.spell.Rarity
+import com.rnett.spellbook.spell.Save
+import com.rnett.spellbook.spell.School
+import com.rnett.spellbook.spell.SpellList
+import com.rnett.spellbook.spell.SpellType
+import com.rnett.spellbook.spell.TargetingType
+import com.rnett.spellbook.spell.Trait
+import com.rnett.spellbook.spell.constantActionImg
+import com.rnett.spellbook.spell.eq
 
 //TODO school and tag colors should be less bright
 

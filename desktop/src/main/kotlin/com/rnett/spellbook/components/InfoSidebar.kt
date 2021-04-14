@@ -33,11 +33,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.rnett.spellbook.Condition
 import com.rnett.spellbook.MainColors
-import com.rnett.spellbook.Trait
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.core.HtmlText
+import com.rnett.spellbook.spell.Condition
+import com.rnett.spellbook.spell.Trait
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.request.get

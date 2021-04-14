@@ -1,14 +1,14 @@
 package com.rnett.spellbook.filter
 
-import com.rnett.spellbook.Actions
-import com.rnett.spellbook.CastActionType
-import com.rnett.spellbook.Condition
-import com.rnett.spellbook.Save
-import com.rnett.spellbook.Spell
-import com.rnett.spellbook.SpellList
-import com.rnett.spellbook.SpellType
-import com.rnett.spellbook.TargetingType
-import com.rnett.spellbook.TraitKey
+import com.rnett.spellbook.spell.Actions
+import com.rnett.spellbook.spell.CastActionType
+import com.rnett.spellbook.spell.Condition
+import com.rnett.spellbook.spell.Save
+import com.rnett.spellbook.spell.Spell
+import com.rnett.spellbook.spell.SpellList
+import com.rnett.spellbook.spell.SpellType
+import com.rnett.spellbook.spell.TargetingType
+import com.rnett.spellbook.spell.TraitKey
 import kotlinx.serialization.Serializable
 
 interface SpellFilterPart {
@@ -95,6 +95,8 @@ sealed class ActionFilter : SpellFilterPart {
     }
 }
 
+fun <T : SpellFilterPart> singleOrClauseFilter(clause: Set<T>): Filter<T> = Filter(listOf(FilterClause(clause)), Operation.AND, Operation.OR, false)
+
 fun <T : SpellFilterPart> defaultOrFilter(): Filter<T> = Filter(emptyList(), Operation.OR, Operation.OR, false)
 
 fun <T : SpellFilterPart> defaultAndFilter(): Filter<T> = Filter(emptyList(), Operation.AND, Operation.OR, false)
@@ -128,7 +130,7 @@ data class SpellFilter(
     val lists: Filter<SpellList> = defaultOrFilter(),
     val isFocus: Boolean? = false,
     val attackTypes: Filter<AttackTypeFilter> = defaultOrFilter(),
-    val level: LevelFilter = LevelFilter(1, 10),
+    val level: LevelFilter = LevelFilter(),
     val types: Filter<SpellType> = defaultAndFilter(),
     val traits: Filter<TraitKey> = defaultOrFilter(),
     val actions: Filter<ActionFilter> = defaultOrFilter(),

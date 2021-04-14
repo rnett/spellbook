@@ -1,10 +1,10 @@
 package com.rnett.spellbook.data
 
-import com.rnett.spellbook.Rarity
-import com.rnett.spellbook.School
-import com.rnett.spellbook.Spell
-import com.rnett.spellbook.Trait
 import com.rnett.spellbook.filter.DURATION_IN_DESCRIPTION
+import com.rnett.spellbook.spell.Rarity
+import com.rnett.spellbook.spell.School
+import com.rnett.spellbook.spell.Spell
+import com.rnett.spellbook.spell.Trait
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 

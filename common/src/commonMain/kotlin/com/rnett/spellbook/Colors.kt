@@ -1,5 +1,13 @@
 package com.rnett.spellbook
 
+import com.rnett.spellbook.spell.AreaType
+import com.rnett.spellbook.spell.CastActionType
+import com.rnett.spellbook.spell.Save
+import com.rnett.spellbook.spell.SpellList
+import com.rnett.spellbook.spell.SpellType
+import com.rnett.spellbook.spell.TargetingType
+import com.rnett.spellbook.spell.Trait
+
 private const val TRANSPARENT = "transparent"
 
 class Color(private val _hexString: String, val alpha: Float = 1f) {
@@ -59,6 +67,7 @@ object FilterColors {
     val typeButtonColor = Color("#6C6C6C")
     val checkboxRequired = Color("#496E4C")
     val checkboxForbidden = Color("#7B3D3C")
+    val cancelReset = Color("#FF0000", 0.4f)
 }
 
 object TagColors {
@@ -85,10 +94,10 @@ object TagColors {
         val Common = Color("transparent")
 
         operator fun invoke(rarity: Trait) = when (rarity.key) {
-            com.rnett.spellbook.Rarity.Common -> Common
-            com.rnett.spellbook.Rarity.Uncommon -> Uncommon
-            com.rnett.spellbook.Rarity.Rare -> Rare
-            com.rnett.spellbook.Rarity.Unique -> Unique
+            com.rnett.spellbook.spell.Rarity.Common -> Common
+            com.rnett.spellbook.spell.Rarity.Uncommon -> Uncommon
+            com.rnett.spellbook.spell.Rarity.Rare -> Rare
+            com.rnett.spellbook.spell.Rarity.Unique -> Unique
             else -> error("Unknown rarity $rarity")
         }
     }

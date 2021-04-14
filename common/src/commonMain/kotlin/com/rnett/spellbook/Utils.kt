@@ -16,3 +16,5 @@ inline fun <T> T.ifLet(condition: Boolean, block: (T) -> T): T {
             it
     }
 }
+
+expect val resourcePrefix: String

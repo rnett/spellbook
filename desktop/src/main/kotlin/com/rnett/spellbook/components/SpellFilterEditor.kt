@@ -26,15 +26,10 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.rnett.spellbook.CastActionType
-import com.rnett.spellbook.Rarity
-import com.rnett.spellbook.Save
-import com.rnett.spellbook.School
-import com.rnett.spellbook.SpellList
-import com.rnett.spellbook.SpellType
+import com.rnett.spellbook.FilterColors
+import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.data.allDurations
 import com.rnett.spellbook.data.allTargeting
 import com.rnett.spellbook.data.interestingSpellConditions
@@ -47,6 +42,13 @@ import com.rnett.spellbook.filter.DurationFilter
 import com.rnett.spellbook.filter.LevelFilter
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.filter.filter
+import com.rnett.spellbook.spell.CastActionType
+import com.rnett.spellbook.spell.Rarity
+import com.rnett.spellbook.spell.Save
+import com.rnett.spellbook.spell.School
+import com.rnett.spellbook.spell.SpellList
+import com.rnett.spellbook.spell.SpellType
+import com.rnett.spellbook.spellbook.LevelSlot
 import kotlin.math.max
 import kotlin.math.min
 
@@ -83,13 +85,13 @@ class ExpansionManager {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, showReset: Boolean = true, update: (SpellFilter) -> Unit) {
+fun SpellFilterEditor(filter: SpellFilter, presetSlot: LevelSlot? = null, showReset: Boolean = true, update: (SpellFilter) -> Unit) {
     Box {
         val scrollState = remember { ScrollState(0) }
         Column(Modifier.padding(top = 10.dp, bottom = 10.dp, start = 10.dp, end = 20.dp).verticalScroll(scrollState)) {
             val expandedStates = remember { ExpansionManager() }
 
-            if (!presetSlot) {
+            if (presetSlot == null) {
                 FilterEditor(filter.lists, SpellList.lists, { update(filter.copy(lists = it)) }, expandedStates.component(),
                     { Text("Spell Lists") }) {
                     SpellListTag(it)
@@ -249,7 +251,7 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, showRese
                         update(SpellFilter())
                     },
                     Modifier.fillMaxWidth().align(Alignment.CenterHorizontally),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red.copy(alpha = 0.4f))
+                    colors = ButtonDefaults.buttonColors(backgroundColor = FilterColors.cancelReset.asCompose())
                 ) {
                     Text("RESET", textAlign = TextAlign.Center)
                 }

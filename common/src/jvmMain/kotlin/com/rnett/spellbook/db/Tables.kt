@@ -1,19 +1,19 @@
 package com.rnett.spellbook.db
 
-import com.rnett.spellbook.Actions
-import com.rnett.spellbook.CastActionType
-import com.rnett.spellbook.Condition
-import com.rnett.spellbook.Heightening
-import com.rnett.spellbook.Rarity
-import com.rnett.spellbook.Save
-import com.rnett.spellbook.School
-import com.rnett.spellbook.Spell
-import com.rnett.spellbook.SpellList
-import com.rnett.spellbook.SpellType
-import com.rnett.spellbook.Summons
-import com.rnett.spellbook.Trait
-import com.rnett.spellbook.TraitKey
 import com.rnett.spellbook.filter.AttackTypeFilter
+import com.rnett.spellbook.spell.Actions
+import com.rnett.spellbook.spell.CastActionType
+import com.rnett.spellbook.spell.Condition
+import com.rnett.spellbook.spell.Heightening
+import com.rnett.spellbook.spell.Rarity
+import com.rnett.spellbook.spell.Save
+import com.rnett.spellbook.spell.School
+import com.rnett.spellbook.spell.Spell
+import com.rnett.spellbook.spell.SpellList
+import com.rnett.spellbook.spell.SpellType
+import com.rnett.spellbook.spell.Summons
+import com.rnett.spellbook.spell.Trait
+import com.rnett.spellbook.spell.TraitKey
 import kotlinx.serialization.builtins.ListSerializer
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Op
@@ -142,6 +142,7 @@ object Spells : StringIdTable("spells", "name", 200) {
         when (attackType) {
             is AttackTypeFilter.TargetSave -> this@Spells.save eq attackType.save
             AttackTypeFilter.Attack -> this@Spells.requiresAttackRoll eq true
+            else -> error("Unknown attack type $attackType")
         }
     }
 
@@ -194,7 +195,6 @@ class DbSpell(id: EntityID<String>) : StringEntity(id) {
     private var summonsJson by Spells.summonsJson
     var postfix by Spells.postfix
     var spoilers by Spells.spoilers
-
 
     private var traitsSI by DbTrait via SpellTraits
     private var conditionsSI by DbCondition via SpellConditions

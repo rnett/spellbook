@@ -1,9 +1,9 @@
 package com.rnett.spellbook.db
 
-import com.rnett.spellbook.Spell
 import com.rnett.spellbook.data.allSpells
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.load.loggedTransaction
+import com.rnett.spellbook.spell.Spell
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database

@@ -1,4 +1,4 @@
-package com.rnett.spellbook
+package com.rnett.spellbook.spell
 
 import com.rnett.spellbook.filter.SpellFilterPart
 import kotlinx.serialization.SerialName
@@ -108,7 +108,7 @@ enum class CastActionType {
 enum class SpellType : SpellFilterPart {
     Cantrip, Spell, Focus;
 
-    override fun matches(spell: com.rnett.spellbook.Spell): Boolean = this == spell.type
+    override fun matches(spell: com.rnett.spellbook.spell.Spell): Boolean = this == spell.type
 }
 
 //TODO track conditions

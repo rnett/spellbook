@@ -20,9 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
-import com.rnett.spellbook.Spell
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.core.HtmlText
+import com.rnett.spellbook.spell.Spell
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable

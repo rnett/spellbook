@@ -17,9 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
-import com.rnett.spellbook.Spell
-import com.rnett.spellbook.SpellList
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.spell.Spell
+import com.rnett.spellbook.spell.SpellList
 
 @Composable
 fun SpellHeader(spell: Spell, modifier: Modifier = Modifier) {
