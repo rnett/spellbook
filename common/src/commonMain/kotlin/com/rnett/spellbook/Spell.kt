@@ -1,29 +1,48 @@
 package com.rnett.spellbook
 
 import com.rnett.spellbook.filter.SpellFilterPart
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 //TODO differentiate between area types.
 
 @Serializable
-sealed class TargetingType(val name: String) {
+sealed class TargetingType(open val name: String) : SpellFilterPart {
+
+    override fun matches(spell: Spell): Boolean = spell.targeting?.contains(this) ?: false
+
+    @Serializable
     object SingleTarget : TargetingType("Single Target")
+
+    @Serializable
     object MultiTarget : TargetingType("Multi-Target")
 
     override fun toString(): String {
         return name
     }
 
-    sealed class Area(name: String) : TargetingType(name) {
+    @Serializable
+    sealed class Area(@SerialName("areaName") override val name: String) : TargetingType(name) {
+        @Serializable
         object Cone : Area("Cone")
+
+        @Serializable
         object Line : Area("Line")
+
+        @Serializable
         object Emanation : Area("Emanation")
+
+        @Serializable
         object Burst : Area("Burst")
+
+        @Serializable
         object Wall : Area("Wall")
+
+        @Serializable
         object Other : Area("Area")
 
         companion object {
-            val knownTypes = setOf(Cone, Line, Emanation, Burst, Wall)
+            val knownTypes by lazy { setOf(Cone, Line, Emanation, Burst, Wall) }
             operator fun invoke(area: String): List<Area> {
                 val found = knownTypes.filter { it.name.toLowerCase() in area.toLowerCase() }
 
@@ -35,24 +54,26 @@ sealed class TargetingType(val name: String) {
         }
     }
 
+    @Serializable
     object Other : TargetingType("Other")
 
     companion object {
-        operator fun invoke(area: String?, targets: String?): List<TargetingType>? {
-            return if (area != null)
-                Area(area)
-            else if (targets != null) {
-                listOf(
-                    if ("creature" in targets || "ally" in targets)
-                        if ("1 " in targets)
-                            SingleTarget
+        fun targetingTypes(area: String?, targets: String?): List<TargetingType>? {
+            return when {
+                area != null -> Area(area)
+                targets != null -> {
+                    listOf(
+                        if ("creature" in targets || "ally" in targets)
+                            if ("1 " in targets)
+                                SingleTarget
+                            else
+                                MultiTarget
                         else
-                            MultiTarget
-                    else
-                        Other
-                )
-            } else
-                null
+                            Other
+                    )
+                }
+                else -> null
+            }
         }
     }
 }
@@ -124,15 +145,16 @@ data class Spell(
     val isFocus: Boolean by lazy { SpellList.Focus in lists || type == SpellType.Focus }
     val school: Trait? by lazy { traits.singleOrNull { it in School } }
     val rarity: Trait by lazy { traits.single { it in Rarity } }
-    val attackTrait: Boolean by lazy { traits.any { it eq Trait.Attack } }
+    val attackTrait: Boolean by lazy { Trait.Attack in traits }
     val hasManipulate by lazy { actionTypes?.any { it == CastActionType.Material || it == CastActionType.Somatic || it == CastActionType.Focus } == true }
     val hasTrigger by lazy { actions.hasTrigger }
     val persistentDamage: Boolean by lazy { description.contains("persistent", ignoreCase = true) }
+    val incapacitation: Boolean by lazy { Trait.Incapacitation in traits }
 
     //TODO store this?  To unreliable to do much filtering by.
     val typedArea by lazy { area?.let { SpellArea(it) } }
     val targeting by lazy {
-        TargetingType(area, targets)
+        TargetingType.targetingTypes(area, targets)
     }
 
     override fun compareTo(other: Spell): Int {

@@ -1,4 +1,4 @@
-package com.rnett.spellbook.components
+package com.rnett.spellbook.components.core
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle

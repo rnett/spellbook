@@ -35,12 +35,15 @@ import com.rnett.spellbook.Save
 import com.rnett.spellbook.School
 import com.rnett.spellbook.SpellList
 import com.rnett.spellbook.SpellType
+import com.rnett.spellbook.data.allDurations
+import com.rnett.spellbook.data.allTargeting
 import com.rnett.spellbook.data.interestingSpellConditions
 import com.rnett.spellbook.data.nonSpecialSpellTraits
 import com.rnett.spellbook.data.spellConditionsByName
 import com.rnett.spellbook.data.traitsByName
 import com.rnett.spellbook.filter.ActionFilter
 import com.rnett.spellbook.filter.AttackTypeFilter
+import com.rnett.spellbook.filter.DurationFilter
 import com.rnett.spellbook.filter.LevelFilter
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.filter.filter
@@ -77,7 +80,6 @@ class ExpansionManager {
         inline val expanded get() = components[idx]
     }
 }
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -156,9 +158,11 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, showRese
                 { update(filter.copy(conditions = it)) },
                 expandedStates.component(),
                 { Text("Conditions") }) {
-                Box(Modifier.height(24.dp)) {
-                    ConditionTag(spellConditionsByName.getValue(it.name), sidebar = false)
-                }
+                ConditionTag(spellConditionsByName.getValue(it.name), sidebar = false)
+            }
+
+            OptionalBoolean(filter.incapacitation, { update(filter.copy(incapacitation = it)) }) {
+                Text("Incapacitation")
             }
 
             FilterEditor(filter.actions, pickableActionTypes, { update(filter.copy(actions = it)) }, expandedStates.component(),
@@ -170,6 +174,22 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, showRese
 
             OptionalBoolean(filter.hasManipulate, { update(filter.copy(hasManipulate = it)) }) {
                 Text("Manipulate")
+            }
+
+            FilterEditor(filter.targeting,
+                allTargeting,
+                { update(filter.copy(targeting = it)) },
+                expandedStates.component(),
+                { Text("Targeting") }) {
+                TargetingTag(it)
+            }
+
+            FilterEditor(filter.duration,
+                allDurations.map { DurationFilter(it) }.toSet(),
+                { update(filter.copy(duration = it)) },
+                expandedStates.component(),
+                { Text("Duration") }) {
+                DurationTag(it.duration, false)
             }
 
             OptionalBoolean(filter.sustained, { update(filter.copy(sustained = it)) }) {
@@ -201,9 +221,7 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: Boolean = false, showRese
 
             FilterEditor(filter.schools, School.schools, { update(filter.copy(schools = it)) }, expandedStates.component(),
                 { Text("School") }) {
-                Box(Modifier.height(24.dp)) {
-                    TraitTag(traitsByName.getValue(it.name), sidebar = false)
-                }
+                TraitTag(traitsByName.getValue(it.name), sidebar = false)
             }
 
             OptionalBoolean(filter.hasSummons, { update(filter.copy(hasSummons = it)) }) {

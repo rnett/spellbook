@@ -4,6 +4,7 @@ import com.rnett.spellbook.Rarity
 import com.rnett.spellbook.School
 import com.rnett.spellbook.Spell
 import com.rnett.spellbook.Trait
+import com.rnett.spellbook.filter.DURATION_IN_DESCRIPTION
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
@@ -25,3 +26,12 @@ val traitsByName by lazy { allTraits.associateBy { it.name } }
 val allSpellConditions by lazy { allSpells.flatMap { it.conditions }.distinct() }
 val interestingSpellConditions by lazy { allSpellConditions.filter { it.isInteresting }.toSet() }
 val spellConditionsByName by lazy { interestingSpellConditions.associateBy { it.name } }
+
+
+val allDurations by lazy {
+    allSpells.map { it.duration }.filterNot { it != null && "see" in it }.toSet() + DURATION_IN_DESCRIPTION
+}
+
+val allTargeting by lazy {
+    allSpells.flatMap { it.targeting ?: emptyList() }.toSet()
+}

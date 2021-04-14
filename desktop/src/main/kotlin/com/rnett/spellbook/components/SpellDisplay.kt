@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.Spell
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.core.HtmlText
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable

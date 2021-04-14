@@ -41,6 +41,7 @@ import com.rnett.spellbook.TargetingType
 import com.rnett.spellbook.Trait
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.constantActionImg
+import com.rnett.spellbook.eq
 
 //TODO school and tag colors should be less bright
 
@@ -270,7 +271,10 @@ fun TraitTag(trait: Trait, specialTraits: Boolean = true, sidebar: Boolean = tru
         val (color, prefix) = when (trait) {
             in Rarity -> TagColors.Rarity(trait) to "Rarity"
             in School -> TagColors.School to "School"
-            else -> TagColors.Trait to "Trait"
+            else -> if (trait eq Trait.Incapacitation)
+                TagColors.Incapacitation to "Trait"
+            else
+                TagColors.Trait to "Trait"
         }
         SpellTag(trait.name, color.asCompose(), "$prefix: ${trait.name}", sidebarInfo = sidebarInfo)
     } else {

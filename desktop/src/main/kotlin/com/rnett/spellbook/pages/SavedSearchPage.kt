@@ -61,9 +61,6 @@ import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.newName
 
-//TODO finish this.  At least remove, rename, search
-//TODO need interactions in search page
-
 @OptIn(ExperimentalAnimationApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun SavedSearchPage(
@@ -104,7 +101,6 @@ fun SavedSearchPage(
                         .ifLet(idx == openFilterIdx) {
                             it.background(MainColors.outsideColor.withAlpha(0.85f).asCompose().compositeOver(Color.White))
                         }
-                        .padding(vertical = 10.dp, horizontal = 5.dp)
                         .focusRequester(focusRequester)
                         .onFocusChanged {
                             if (it == FocusState.Inactive)
@@ -120,7 +116,8 @@ fun SavedSearchPage(
                                 focusRequester.requestFocus()
                                 editingName = name
                             }
-                        ),
+                        )
+                        .padding(vertical = 10.dp, horizontal = 5.dp),
                         verticalAlignment = Alignment.CenterVertically) {
 
                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
@@ -177,7 +174,7 @@ fun SavedSearchPage(
             Column(Modifier.weight(0.5f)) {
                 AnimatedVisibility(openFilterIdx != null) {
                     if (openFilterIdx != null) {
-                        key(filters[openFilterIdx!!].second) {
+                        key(openFilterIdx!!, filters[openFilterIdx!!].first) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Spacer(Modifier.height(10.dp))
                                 Button({ search(openFilterIdx!!) }, Modifier.fillMaxWidth(0.8f),

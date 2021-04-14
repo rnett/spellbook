@@ -39,14 +39,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.core.FlowRow
 import com.rnett.spellbook.filter.Filter
 import com.rnett.spellbook.filter.FilterClause
 import com.rnett.spellbook.filter.Operation
 import com.rnett.spellbook.filter.SpellFilterPart
 
 @Composable
-inline fun FilterDivider(end: Boolean = false) {
-    Spacer(Modifier.height(4.dp))
+inline fun FilterDivider(end: Boolean = false, start: Boolean = false) {
+    if (!start)
+        Spacer(Modifier.height(4.dp))
     Divider(color = FilterColors.dividerColor.asCompose())
     Spacer(Modifier.height(4.dp))
     if (end)
@@ -120,8 +122,8 @@ fun OptionalBoolean(current: Boolean?, set: (Boolean?) -> Unit, modifier: Modifi
                 shape = RoundedCornerShape(3.dp),
                 border = BorderStroke(1.5.dp, FilterColors.dividerColor.asCompose()),
                 color = when (current) {
-                    true -> FilterColors.checkboxRequired.asCompose().copy(alpha = 0.7f)
-                    false -> FilterColors.checkboxForbidden.asCompose().copy(alpha = 0.7f)
+                    true -> FilterColors.checkboxRequired.asCompose().copy(alpha = 0.85f)
+                    false -> FilterColors.checkboxForbidden.asCompose().copy(alpha = 0.85f)
                     null -> Color.Transparent
                 }
             ) {
@@ -157,7 +159,7 @@ fun <T> SetEditor(
     render: @Composable (T) -> Unit,
 ) {
     Column(modifier.fillMaxWidth()) {
-        Box(Modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().clickable { expanded.expand(!expanded.expanded) }.padding(bottom = 4.dp)) {
             Box(Modifier.align(Alignment.CenterStart)) {
                 title()
             }
@@ -173,7 +175,7 @@ fun <T> SetEditor(
             }
         }
 
-        FilterDivider()
+        FilterDivider(start = true)
 
         FlowRow(Modifier.fillMaxWidth(), verticalGap = 8.dp, horizontalGap = 10.dp) {
             current.forEach {
@@ -214,7 +216,7 @@ fun <T> SetEditor(
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun <T : SpellFilterPart> FilterEditor(
     current: Filter<T>,
@@ -226,13 +228,13 @@ fun <T : SpellFilterPart> FilterEditor(
     render: @Composable (T) -> Unit,
 ) {
     Column(modifier.fillMaxWidth()) {
-        Box(Modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().clickable { expanded.expand(!expanded.expanded) }.padding(bottom = 4.dp)) {
             Box(Modifier.align(Alignment.CenterStart)) {
                 title()
             }
 
             Row(Modifier.align(Alignment.TopEnd).padding(bottom = 5.dp, start = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                NegateButton(current.negate) { set(current.copy(negate = it).also { println(it) }) }
+                NegateButton(current.negate) { set(current.copy(negate = it)) }
 
                 Spacer(Modifier.width(8.dp))
                 OperationButton(current.outerOperation) { set(current.copy(outerOperation = it)) }
@@ -252,7 +254,7 @@ fun <T : SpellFilterPart> FilterEditor(
                 }
             }
         }
-        FilterDivider()
+        FilterDivider(start = true)
 
         current.clauses.forEachIndexed { idx, it ->
 

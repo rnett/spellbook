@@ -37,6 +37,7 @@ import com.rnett.spellbook.Condition
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.Trait
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.core.HtmlText
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.request.get

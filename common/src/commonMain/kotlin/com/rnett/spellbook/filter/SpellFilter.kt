@@ -7,6 +7,7 @@ import com.rnett.spellbook.Save
 import com.rnett.spellbook.Spell
 import com.rnett.spellbook.SpellList
 import com.rnett.spellbook.SpellType
+import com.rnett.spellbook.TargetingType
 import com.rnett.spellbook.TraitKey
 import kotlinx.serialization.Serializable
 
@@ -20,6 +21,17 @@ data class ConditionFilter(val name: String) : SpellFilterPart {
 }
 
 val Condition.filter get() = ConditionFilter(name)
+
+const val DURATION_IN_DESCRIPTION = "see description"
+
+@Serializable
+data class DurationFilter(val duration: String?) : SpellFilterPart {
+    override fun matches(spell: Spell): Boolean =
+        if (duration == DURATION_IN_DESCRIPTION)
+            spell.duration != null && "see" in spell.duration
+        else
+            spell.duration == duration
+}
 
 @Serializable
 sealed class AttackTypeFilter : SpellFilterPart {
@@ -107,7 +119,7 @@ class Ander {
 inline fun and(block: Ander.() -> Unit): Boolean =
     Ander().apply(block).result()
 
-//TODO area, range, duration.
+//TODO area, range.
 // damage, but need in spell
 // option to show hightenable spells at their hightened levels like AoN
 @Serializable
@@ -130,6 +142,9 @@ data class SpellFilter(
     val rarity: Filter<TraitKey> = defaultAndFilter(),
     val hasManipulate: Boolean? = null,
     val persistentDamage: Boolean? = null,
+    val duration: Filter<DurationFilter> = defaultOrFilter(),
+    val targeting: Filter<TargetingType> = defaultOrFilter(),
+    val incapacitation: Boolean? = null,
 ) : SpellFilterPart {
     override fun matches(spell: Spell): Boolean =
         and {
@@ -146,13 +161,16 @@ data class SpellFilter(
 
             +{ schools.matches(spell) }
             +{ rarity.matches(spell) }
-            +{ hasManipulate matchesIfNonNull (spell.hasManipulate) }
+            +{ hasManipulate matchesIfNonNull spell.hasManipulate }
+            +{ targeting.matches(spell) }
+            +{ duration.matches(spell) }
 
             +{ actions.matches(spell) }
             +{ (hasActionTypes?.let { types -> spell.actionTypes.orEmpty().any { it in types } } ?: true) }
             +{ (doesntHaveActionTypes?.let { types -> spell.actionTypes.orEmpty().none { it in types } } ?: true) }
             +{ conditions.matches(spell) }
             +{ traits.matches(spell) }
+            +{ incapacitation matchesIfNonNull spell.incapacitation }
             +{ persistentDamage matchesIfNonNull spell.persistentDamage }
         }
 

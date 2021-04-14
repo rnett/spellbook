@@ -11,6 +11,8 @@ data class TraitKey(val name: String) : SpellFilterPart {
     override fun matches(spell: Spell): Boolean = spell.traits.any { it.name == this.name }
 }
 
+operator fun Iterable<Trait>.contains(key: TraitKey) = any { it eq key }
+
 infix fun Trait.eq(key: TraitKey) = key eq this
 
 abstract class TraitFamily(val familyName: String) {
@@ -44,12 +46,14 @@ data class Trait(val name: String, val aonId: Int, val description: String) {
 
     companion object {
         val Attack = TraitKey("Attack")
+        val Incapacitation = TraitKey("Incapacitation")
     }
 
     val isInteresting by lazy { name !in uninterestingConditions && this !in School && this !in Rarity }
 
     val key by lazy { TraitKey(name) }
 }
+
 
 object School : TraitFamily("School") {
     val Abjuration by trait()

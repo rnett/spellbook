@@ -95,7 +95,7 @@ object SpellbookDB {
 //    }
 
 //TODO anding doesn't work, since it only ever applies to single rows
-fun getSpellsForFilter(filter: SpellFilter): Set<Spell> {
+fun getSpellsForFilter(filter: SpellFilter): List<Spell> {
     //TODO make view
 //    val baseTable = Spells
 //        .leftJoin(SpellConditions)
@@ -186,5 +186,5 @@ fun getSpellsForFilter(filter: SpellFilter): Set<Spell> {
 //
 //    allSpells.let { println(it.size) }
 
-    return allSpells.filterTo(mutableSetOf()) { filter.matches(it) }
+    return allSpells.filter { filter.matches(it) }
 }

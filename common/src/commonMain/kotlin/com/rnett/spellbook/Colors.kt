@@ -57,8 +57,8 @@ object FilterColors {
     val dividerColor = Color("#AAAAAA")
     val adderSpaceColor = Color("#555454")
     val typeButtonColor = Color("#6C6C6C")
-    val checkboxRequired = Color("#445945")
-    val checkboxForbidden = Color("#6C575C")
+    val checkboxRequired = Color("#496E4C")
+    val checkboxForbidden = Color("#7B3D3C")
 }
 
 object TagColors {
@@ -93,7 +93,7 @@ object TagColors {
         }
     }
 
-    val School = Color("#9400d3", 0.6f)
+    val School = Color("#9400d3", 0.4f)
 
     fun SpellList(spellList: SpellList): Color = when (spellList) {
         SpellList.Arcane -> Color("#4169e1")
@@ -104,7 +104,8 @@ object TagColors {
         SpellList.Other -> Color("#696969")
     }
 
-    val Trait = Color("#a52a2a", 0.6f)
+    val Trait = Color("#a52a2a", 0.4f)
+    val Incapacitation = Color("#AA1600", 0.75f)
 
     object Duration {
         val Sustained = Color("#08AE58")
@@ -115,7 +116,7 @@ object TagColors {
     object Area {
         fun AreaType(areaType: AreaType): Color = when (areaType) {
             AreaType.Burst -> Color("#ff0000")
-            AreaType.Line -> Color("#87cefa")
+            AreaType.Line -> Color("#5EB4C6")
             AreaType.Emanation -> Color("#FF5733")
             AreaType.Cone -> Color("#bdb76b")
             AreaType.Wall -> Color("#2f4f4f")
@@ -129,7 +130,7 @@ object TagColors {
         TargetingType.MultiTarget -> Color("#9e4a1c")
         TargetingType.Other -> Color("#a9a9a9")
         TargetingType.Area.Cone -> Color("#448BB3")
-        TargetingType.Area.Line -> Color("#3BE8EE")
+        TargetingType.Area.Line -> Color("#5EB4C6")
         TargetingType.Area.Emanation -> Color("#B8A025")
         TargetingType.Area.Burst -> Color("#ff0000")
         TargetingType.Area.Wall -> Color("#2f4f4f")

@@ -103,7 +103,7 @@ fun SpellListPage(
     Surface(color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
         var filter by remember { mutableStateOf(initialFilter, referentialEqualityPolicy()) }
 
-        var spells by remember { mutableStateOf<Set<Spell>?>(null) }
+        var spells by remember { mutableStateOf<List<Spell>?>(null) }
         val scrollState = rememberLazyListState()
 
         LaunchedEffect(filter) {
