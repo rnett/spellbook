@@ -10,6 +10,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\common\src\commonMain\kotlin\com\rnett\spellbook\SavedSearchRepository.kt">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\common\src\commonMain\kotlin\com\rnett\spellbook\filter\Filter.kt">
           <value>
             <Attribute>

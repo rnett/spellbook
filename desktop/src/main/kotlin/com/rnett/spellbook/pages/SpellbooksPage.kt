@@ -22,15 +22,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spellbook.LevelSlot
 import com.rnett.spellbook.spellbook.SpellLevel
 import com.rnett.spellbook.spellbook.SpellSlot
-import com.rnett.spellbook.spellbook.Spellbook
 import com.rnett.spellbook.spellbook.SpellbookType
+import com.rnett.spellbook.spellbook.Spellcasting
+import com.rnett.spellbook.spellbook.withLevel
+import com.rnett.spellbook.spellbook.withReplace
 
 @Composable
-fun SpellbooksPage(spellbooks: List<Pair<String, Spellbook<*>>>, searchSlot: (LevelSlot) -> Unit) {
+fun SpellbooksPage(
+    spellbooks: List<Pair<String, Spellcasting<*>>>,
+    set: (Int, Spellcasting<*>) -> Unit,
+    searchSlot: (LevelSlot, (Spell) -> Unit) -> Unit,
+) {
     var currentSpellbook: Int? by remember { mutableStateOf(if (spellbooks.isNotEmpty()) 0 else null) }
 
     Surface(color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
@@ -41,7 +48,9 @@ fun SpellbooksPage(spellbooks: List<Pair<String, Spellbook<*>>>, searchSlot: (Le
 
                     Divider(Modifier.fillMaxWidth().padding(vertical = 4.dp))
 
-                    SpellbookDisplay(spellbooks[currentSpellbook!!].second, searchSlot)
+                    SpellbookDisplay(spellbooks[currentSpellbook!!].second, {
+                        set(currentSpellbook!!, it)
+                    }, searchSlot)
                 }
             }
         }
@@ -49,19 +58,19 @@ fun SpellbooksPage(spellbooks: List<Pair<String, Spellbook<*>>>, searchSlot: (Le
 }
 
 @Composable
-fun SpellbookDisplay(spellbook: Spellbook<*>, searchSlot: (LevelSlot) -> Unit) {
+fun SpellbookDisplay(spellcasting: Spellcasting<*>, set: (Spellcasting<*>) -> Unit, searchSlot: (LevelSlot, (Spell) -> Unit) -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(spellbook.type.name)
+            Text(spellcasting.type.name)
             Spacer(Modifier.weight(1f))
-            Text(spellbook.maxLevel.toString())
+            Text(spellcasting.maxLevel.toString())
         }
 
-        (0..spellbook.maxLevel).forEach {
-            if (spellbook.type == SpellbookType.Spontaneous) {
-                SpontaneousLevel(spellbook[it] as SpellLevel.Spontaneous, it, searchSlot)
+        (0..spellcasting.maxLevel).forEach { level ->
+            if (spellcasting.type == SpellbookType.Spontaneous) {
+                SpontaneousLevel(spellcasting[level] as SpellLevel.Spontaneous, level, { set(spellcasting.withLevel(level, it)) }, searchSlot)
             } else {
-                PreparedLevel(spellbook[it] as SpellLevel.Prepared, it, searchSlot)
+                PreparedLevel(spellcasting[level] as SpellLevel.Prepared, level, { set(spellcasting.withLevel(level, it)) }, searchSlot)
             }
         }
 
@@ -75,7 +84,12 @@ fun ListsIcon(lists: Set<SpellList>) {
 }
 
 @Composable
-fun SpontaneousLevel(spells: SpellLevel.Spontaneous, level: Int, searchSlot: (LevelSlot) -> Unit) {
+fun SpontaneousLevel(
+    spells: SpellLevel.Spontaneous,
+    level: Int,
+    set: (SpellLevel.Spontaneous) -> Unit,
+    searchSlot: (LevelSlot, (Spell) -> Unit) -> Unit,
+) {
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth()) {
             if (level == 0) {
@@ -91,16 +105,18 @@ fun SpontaneousLevel(spells: SpellLevel.Spontaneous, level: Int, searchSlot: (Le
         Divider()
 
         spells.slots.forEachIndexed { idx, slot ->
-            SpontaneousSlot(slot, level, idx in spells.signatures, searchSlot)
+            SpontaneousSlot(slot, level, { set(spells.copy(slots = spells.slots.withReplace(idx, it))) }, idx in spells.signatures, searchSlot)
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SpontaneousSlot(slot: SpellSlot, level: Int, isSignature: Boolean, searchSlot: (LevelSlot) -> Unit) {
+fun SpontaneousSlot(slot: SpellSlot, level: Int, set: (SpellSlot) -> Unit, isSignature: Boolean, searchSlot: (LevelSlot, (Spell) -> Unit) -> Unit) {
     Row(Modifier.fillMaxWidth().combinedClickable(onDoubleClick = {
-        searchSlot(LevelSlot(level, slot))
+        searchSlot(LevelSlot(level, slot)) {
+            set(slot.copy(spell = it))
+        }
     }) { }) {
         ListsIcon(slot.lists)
         Spacer(Modifier.width(10.dp))
@@ -115,6 +131,6 @@ fun SpontaneousSlot(slot: SpellSlot, level: Int, isSignature: Boolean, searchSlo
 }
 
 @Composable
-fun PreparedLevel(spells: SpellLevel.Prepared, level: Int, searchSlot: (LevelSlot) -> Unit) {
+fun PreparedLevel(spells: SpellLevel.Prepared, level: Int, set: (SpellLevel.Prepared) -> Unit, searchSlot: (LevelSlot, (Spell) -> Unit) -> Unit) {
 
 }

@@ -26,13 +26,13 @@ import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.filter.SpellFilter
-import com.rnett.spellbook.newName
 
 @Composable
 fun SpellListSaver(
     filter: SpellFilter,
     savedFilters: Map<SpellFilter, String>,
     savedNames: Set<String>,
+    newName: () -> String,
     saveFilter: (String, SpellFilter) -> Unit,
     load: () -> Unit,
 ) {
@@ -54,7 +54,7 @@ fun SpellListSaver(
             var filterName: String? by remember { mutableStateOf(null) }
             if (filterName == null) {
                 IconButton({
-                    filterName = savedNames.newName()
+                    filterName = newName()
                 }, enabled = filter != SpellFilter()) {
                     Icon(Icons.Default.TurnedInNot, "Save")
                 }

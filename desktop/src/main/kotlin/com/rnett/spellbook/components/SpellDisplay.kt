@@ -26,7 +26,7 @@ import com.rnett.spellbook.spell.Spell
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun SpellDisplay(spell: Spell) {
+fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?) {
     var expanded by remember { mutableStateOf(false) }
 
     Surface(
@@ -35,7 +35,7 @@ fun SpellDisplay(spell: Spell) {
     ) {
 
         Column {
-            SpellHeader(spell, Modifier.clickable(remember { MutableInteractionSource() }, null) { expanded = !expanded })
+            SpellHeader(spell, Modifier.clickable(remember { MutableInteractionSource() }, null) { expanded = !expanded }, setSelectedSpell)
 
             Surface(Modifier.fillMaxWidth(), color = MainColors.spellBodyColor.asCompose()) {
 

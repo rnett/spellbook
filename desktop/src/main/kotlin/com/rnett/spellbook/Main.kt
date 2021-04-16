@@ -31,10 +31,11 @@ import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.pages.SavedSearchPage
 import com.rnett.spellbook.pages.SpellListPage
 import com.rnett.spellbook.pages.SpellbooksPage
+import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spellbook.LevelSlot
-import com.rnett.spellbook.spellbook.Spellbook
 import com.rnett.spellbook.spellbook.SpellbookType
+import com.rnett.spellbook.spellbook.Spellcasting
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -83,12 +84,30 @@ fun initCaches() {
     allDurations.let { }
 }
 
+//sealed class MainState{
+//    abstract val page: Pages
+//
+//    @Composable
+//    abstract fun show()
+//
+//    object Search: MainState() {
+//        override val page: Pages = Pages.SpellSearch
+//
+//        override fun show() {
+//            TODO("Not yet implemented")
+//        }
+//
+//    }
+//}
+
+//TODO need a cohesive global state
 sealed class NextSearch {
     data class Filter(val filter: SpellFilter) : NextSearch()
-    data class Slot(val slot: LevelSlot) : NextSearch()
+    data class Slot(val slot: LevelSlot, val set: (Spell) -> Unit) : NextSearch()
 
-    val filterOrNull get() = if (this is Filter) filter else null
-    val slotOrNull get() = if (this is Slot) slot else null
+    inline val filterOrNull get() = if (this is Filter) filter else null
+    inline val slotOrNull get() = if (this is Slot) slot else null
+    inline val slotSetterOrNull get() = if (this is Slot) set else null
 }
 
 fun main() {
@@ -109,6 +128,7 @@ fun main() {
                     val nextSearch: NextSearch? by nextSearchFlow.collectAsState()
 
                     val savedSearchRepo = remember { LocalSavedSearchRepo({}) }
+                    val savedSearches by savedSearchRepo.state.collectAsState()
 
                     TabRow(currentPage.ordinal, backgroundColor = MainColors.spellBodyColor.asCompose()) {
                         Tab(currentPage == Pages.Spellbooks, {
@@ -133,24 +153,28 @@ fun main() {
 
                     when (currentPage) {
                         Pages.Spellbooks -> {
-                            SpellbooksPage(listOf("Main" to Spellbook.fullCaster(SpellbookType.Spontaneous, SpellList.Arcane, 4))) {
-                                nextSearchFlow.value = NextSearch.Slot(it)
+                            SpellbooksPage(listOf("Main" to Spellcasting.fullCaster(SpellbookType.Spontaneous, SpellList.Arcane, 4)), { idx, new ->
+                                //TODO save spellbooks
+                                println(new)
+                            }) { slot, setter ->
+                                nextSearchFlow.value = NextSearch.Slot(slot, setter)
                                 currentPage = Pages.SpellSearch
                             }
                         }
                         Pages.SpellSearch -> {
                             SpellListPage(nextSearch?.filterOrNull ?: SpellFilter(),
-                                savedSearchRepo.all,
-                                savedSearchRepo::add,
+                                savedSearches,
+                                { name, value -> savedSearchRepo.value = savedSearches.set(name, value) },
                                 nextSearch?.slotOrNull
-                            )
+                            ) {
+                                nextSearch?.slotSetterOrNull?.invoke(it)
+                                nextSearchFlow.value = null
+                                currentPage = Pages.Spellbooks
+                            }
                         }
-                        Pages.SavedSearches -> SavedSearchPage(savedSearchRepo.all,
-                            savedSearchRepo::remove,
-                            savedSearchRepo::set,
-                            savedSearchRepo::rename,
-                            savedSearchRepo::add) {
-                            nextSearchFlow.value = NextSearch.Filter(savedSearchRepo[it].second)
+                        Pages.SavedSearches -> SavedSearchPage(savedSearches,
+                            { savedSearchRepo.value = it }) {
+                            nextSearchFlow.value = NextSearch.Filter(savedSearches[it]!!)
                             currentPage = Pages.SpellSearch
                         }
                     }

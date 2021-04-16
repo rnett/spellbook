@@ -46,6 +46,7 @@ kotlin {
                 api("org.jetbrains.kotlinx:kotlinx-serialization-core:$serialization_version")
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version")
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
+                api("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
             }
         }
         val commonTest by getting {

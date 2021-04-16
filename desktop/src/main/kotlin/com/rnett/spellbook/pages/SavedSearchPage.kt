@@ -56,59 +56,70 @@ import androidx.compose.ui.window.Popup
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.SavedSearchColors
+import com.rnett.spellbook.SavedSearchs
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.SmallTextField
 import com.rnett.spellbook.components.SpellFilterEditor
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
-import com.rnett.spellbook.newName
 
 @OptIn(ExperimentalAnimationApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun SavedSearchPage(
-    filters: List<Pair<String, SpellFilter>>,
-    remove: (Int) -> Unit,
-    set: (Int, SpellFilter) -> Unit,
-    rename: (Int, String) -> Unit,
-    add: (String, SpellFilter) -> Int,
-    search: (Int) -> Unit,
+    filters: SavedSearchs,
+    update: (SavedSearchs) -> Unit,
+    search: (String) -> Unit,
 ) {
-    val knownNames = filters.map { it.first }.toSet()
+
     Surface(color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
         Row {
-            var openFilterIdx: Int? by remember { mutableStateOf(if (filters.isEmpty()) null else 0) }
+            var openFilter: String? by remember { mutableStateOf(if (filters.isEmpty()) null else filters.keys.first()) }
             val scrollState = rememberScrollState()
 
-            var deletePopupFor: Int? by remember(filters) { mutableStateOf(null) }
+            var deletePopupFor: String? by remember(filters) { mutableStateOf(null) }
 
             if (deletePopupFor != null) {
-                DeletePopup(filters[deletePopupFor!!].first, { deletePopupFor = null }, {
-                    if (deletePopupFor == 0)
-                        openFilterIdx = null
-                    else
-                        openFilterIdx = deletePopupFor!! - 1
-                    remove(deletePopupFor!!)
+                DeletePopup(deletePopupFor!!, { deletePopupFor = null }, {
+                    if (deletePopupFor == openFilter) {
+                        openFilter = if (filters.size == 1)
+                            null
+                        else {
+                            val list = filters.keys.toList()
+                            if (deletePopupFor == list.last())
+                                list.first()
+                            else
+                                list[list.indexOf(deletePopupFor!!) + 1]
+                        }
+                    }
+                    update(filters.remove(deletePopupFor!!))
                 })
             }
 
+            fun rename(old: String, new: String) =
+                filters.rename(old, new).also {
+                    if (openFilter == old)
+                        openFilter = new
+                }
+
+
             Column(Modifier.padding(start = 10.dp, top = 10.dp).weight(0.5f).verticalScroll(scrollState)) {
 
-                filters.forEachIndexed { idx, (name, _) ->
+                filters.all.forEach { (name, _) ->
                     var editingName: String? by remember { mutableStateOf(null) }
 
                     val focusRequester = FocusRequester()
 
                     Row(Modifier
                         .fillMaxWidth()
-                        .ifLet(idx == openFilterIdx) {
+                        .ifLet(name == openFilter) {
                             it.background(MainColors.outsideColor.withAlpha(0.85f).asCompose().compositeOver(Color.White))
                         }
                         .focusRequester(focusRequester)
                         .onFocusChanged {
                             if (it == FocusState.Inactive) {
                                 editingName?.let {
-                                    if (it !in knownNames)
-                                        rename(idx, it)
+                                    if (it !in filters.all)
+                                        update(rename(name, it))
                                     editingName = null
                                 }
                             }
@@ -117,7 +128,7 @@ fun SavedSearchPage(
                         .combinedClickable(
                             onClick = {
                                 focusRequester.requestFocus()
-                                openFilterIdx = idx
+                                openFilter = name
                             },
                             onDoubleClick = {
                                 focusRequester.requestFocus()
@@ -134,13 +145,13 @@ fun SavedSearchPage(
                                 IconButton({
                                     val newName = editingName!!
                                     editingName = null
-                                    rename(idx, newName)
-                                }, enabled = editingName == name || editingName!! !in knownNames) {
+                                    update(rename(name, newName))
+                                }, enabled = editingName == name || editingName!! !in filters.all) {
                                     Icon(Icons.Default.CheckCircleOutline, "Save")
                                 }
                                 Spacer(Modifier.width(5.dp))
                                 SmallTextField(editingName!!, { editingName = it },
-                                    isError = editingName!! in knownNames,
+                                    isError = editingName!! in filters.all,
                                     singleLine = true,
                                     colors = TextFieldDefaults.textFieldColors(
                                         cursorColor = FilterColors.dividerColor.asCompose(),
@@ -155,7 +166,7 @@ fun SavedSearchPage(
                             verticalAlignment = Alignment.CenterVertically) {
 
                             IconButton({
-                                deletePopupFor = idx
+                                deletePopupFor = name
                             }) {
                                 Icon(Icons.Outlined.DeleteForever, "Delete", tint = Color.Red.copy(alpha = 0.7f))
                             }
@@ -170,8 +181,9 @@ fun SavedSearchPage(
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     IconButton({
-                        val newName = knownNames.newName()
-                        openFilterIdx = add(newName, SpellFilter())
+                        val newName = filters.newName
+                        update(filters.set(newName, SpellFilter()))
+                        openFilter = newName
                     }) {
                         Icon(Icons.Default.Add, "New Search")
                     }
@@ -179,12 +191,12 @@ fun SavedSearchPage(
             }
             VerticalScrollbar(rememberScrollbarAdapter(scrollState))
             Column(Modifier.weight(0.5f)) {
-                AnimatedVisibility(openFilterIdx != null) {
-                    if (openFilterIdx != null) {
-                        key(openFilterIdx!!, filters[openFilterIdx!!].first) {
+                AnimatedVisibility(openFilter != null) {
+                    if (openFilter != null) {
+                        key(openFilter!!) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Spacer(Modifier.height(10.dp))
-                                Button({ search(openFilterIdx!!) }, Modifier.fillMaxWidth(0.8f),
+                                Button({ search(openFilter!!) }, Modifier.fillMaxWidth(0.8f),
                                     colors = ButtonDefaults.buttonColors(backgroundColor = SavedSearchColors.searchButtonColor.asCompose())) {
                                     Row {
                                         Icon(Icons.Outlined.Search, "Search")
@@ -192,9 +204,8 @@ fun SavedSearchPage(
                                     }
                                 }
                                 Spacer(Modifier.height(10.dp))
-                                SpellFilterEditor(filters[openFilterIdx!!].second, showReset = false) { set(openFilterIdx!!, it) }
+                                SpellFilterEditor(filters[openFilter!!]!!, showReset = false) { update(filters.set(openFilter!!, it)) }
                             }
-
                         }
                     }
                 }

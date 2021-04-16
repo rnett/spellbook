@@ -3,6 +3,9 @@ package com.rnett.spellbook.spellbook
 import com.rnett.spellbook.spell.SpellList
 import kotlinx.serialization.Serializable
 
+@Serializable
+data class Spellbook(val spellcastings: Map<String, Spellcasting<*>>)
+
 enum class SpellbookType {
     Prepared, Spontaneous;
 }
@@ -24,8 +27,14 @@ sealed class SpellLevel {
     }
 }
 
+fun <T> List<T>.withReplace(i: Int, new: T): List<T> {
+    val m = toMutableList()
+    m[i] = new
+    return m.toList()
+}
+
 @Serializable
-sealed class Spellbook<out L : SpellLevel>(val type: SpellbookType) {
+sealed class Spellcasting<out L : SpellLevel>(val type: SpellbookType) {
     abstract val cantrips: L
     abstract val levels: List<L>
 
@@ -43,7 +52,7 @@ sealed class Spellbook<out L : SpellLevel>(val type: SpellbookType) {
 
     @Serializable
     data class Prepared(override val cantrips: SpellLevel.Prepared, override val levels: List<SpellLevel.Prepared>) :
-        Spellbook<SpellLevel.Prepared>(SpellbookType.Prepared) {
+        Spellcasting<SpellLevel.Prepared>(SpellbookType.Prepared) {
         constructor(list: SpellList, levelSizes: List<Int>) : this(
             SpellLevel.Prepared(list, true, levelSizes[0]),
             levelSizes.drop(1).map { SpellLevel.Prepared(list, false, it) }
@@ -52,7 +61,7 @@ sealed class Spellbook<out L : SpellLevel>(val type: SpellbookType) {
 
     @Serializable
     data class Spontaneous(override val cantrips: SpellLevel.Spontaneous, override val levels: List<SpellLevel.Spontaneous>) :
-        Spellbook<SpellLevel.Spontaneous>(SpellbookType.Spontaneous) {
+        Spellcasting<SpellLevel.Spontaneous>(SpellbookType.Spontaneous) {
         constructor(list: SpellList, levelSizes: List<Int>, signatures: List<Int>) : this(
             SpellLevel.Spontaneous(list, true, levelSizes[0], 0),
             levelSizes.drop(1).zip(signatures + List(signatures.size - levelSizes.lastIndex) { 0 })
@@ -61,7 +70,7 @@ sealed class Spellbook<out L : SpellLevel>(val type: SpellbookType) {
     }
 
     companion object {
-        fun fullCaster(type: SpellbookType, list: SpellList, numSlots: Int): Spellbook<SpellLevel> {
+        fun fullCaster(type: SpellbookType, list: SpellList, numSlots: Int): Spellcasting<SpellLevel> {
             val slots = listOf(5) + List(9) { numSlots } + 1
             return when (type) {
                 SpellbookType.Prepared -> Prepared(list, slots)
@@ -69,7 +78,7 @@ sealed class Spellbook<out L : SpellLevel>(val type: SpellbookType) {
             }
         }
 
-        fun archetypeCaster(type: SpellbookType, list: SpellList, bredth: Boolean = true): Spellbook<SpellLevel> {
+        fun archetypeCaster(type: SpellbookType, list: SpellList, bredth: Boolean = true): Spellcasting<SpellLevel> {
             val slots = listOf(2) + List(6) { if (bredth) 2 else 1 } + listOf(1, 1)
             return when (type) {
                 SpellbookType.Prepared -> Prepared(list, slots)
@@ -78,3 +87,19 @@ sealed class Spellbook<out L : SpellLevel>(val type: SpellbookType) {
         }
     }
 }
+
+fun <T : Spellcasting<L>, L : SpellLevel> T.withLevel(level: Int, newValue: L): T = when (this) {
+    is Spellcasting.Prepared -> {
+        if (level == 0)
+            copy(cantrips = newValue as SpellLevel.Prepared)
+        else
+            copy(levels = levels.withReplace(level, newValue as SpellLevel.Prepared))
+    }
+    is Spellcasting.Spontaneous -> {
+        if (level == 0)
+            copy(cantrips = newValue as SpellLevel.Spontaneous)
+        else
+            copy(levels = levels.withReplace(level, newValue as SpellLevel.Spontaneous))
+    }
+    else -> error("Unknown spellbook type $this")
+} as T
