@@ -5,13 +5,22 @@ import androidx.compose.foundation.BoxWithTooltip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.LocalContentColor
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupPositionProvider
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
@@ -57,5 +66,16 @@ object CenterPopup : PopupPositionProvider {
         val xExcess = windowSize.width - popupContentSize.width
         val yExcess = windowSize.height - popupContentSize.height
         return IntOffset(xExcess / 2, yExcess / 2)
+    }
+}
+
+@Composable
+fun <T> Iterable<T>.join(separator: @Composable () -> Unit, render: @Composable (T) -> Unit) {
+    var first = true
+    forEach {
+        if (!first)
+            separator()
+        render(it)
+        first = false
     }
 }

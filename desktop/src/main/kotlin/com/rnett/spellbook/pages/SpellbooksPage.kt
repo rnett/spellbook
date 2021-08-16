@@ -3,20 +3,37 @@ package com.rnett.spellbook.pages
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.Divider
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.join
+import com.rnett.spellbook.components.spell.SpellListTag
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spellbook.*
+import com.rnett.spellbook.spellbook.LevelSlot
+import com.rnett.spellbook.spellbook.SpellLevel
+import com.rnett.spellbook.spellbook.SpellSlot
+import com.rnett.spellbook.spellbook.SpellbookType
+import com.rnett.spellbook.spellbook.Spellcasting
+import com.rnett.spellbook.spellbook.withLevel
+import com.rnett.spellbook.spellbook.withReplace
 
 @Composable
 fun SpellbooksPage(
@@ -69,6 +86,12 @@ fun SpellbookDisplay(
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(spellcasting.type.name)
+            Spacer(Modifier.weight(1f))
+            Row {
+                spellcasting.defaultLists.join({ Spacer(Modifier.width(1.dp)) }) {
+                    SpellListTag(it)
+                }
+            }
             Spacer(Modifier.weight(1f))
             Text(spellcasting.maxLevel.toString())
         }

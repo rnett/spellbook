@@ -2,9 +2,18 @@ package com.rnett.spellbook.components.spell
 
 import androidx.compose.foundation.BoxWithTooltip
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
@@ -26,7 +35,18 @@ import com.rnett.spellbook.components.AonUrl
 import com.rnett.spellbook.components.SidebarData
 import com.rnett.spellbook.components.SidebarNav
 import com.rnett.spellbook.components.TextTooltip
-import com.rnett.spellbook.spell.*
+import com.rnett.spellbook.spell.Actions
+import com.rnett.spellbook.spell.CastActionType
+import com.rnett.spellbook.spell.Condition
+import com.rnett.spellbook.spell.Rarity
+import com.rnett.spellbook.spell.Save
+import com.rnett.spellbook.spell.School
+import com.rnett.spellbook.spell.SpellList
+import com.rnett.spellbook.spell.SpellType
+import com.rnett.spellbook.spell.TargetingType
+import com.rnett.spellbook.spell.Trait
+import com.rnett.spellbook.spell.constantActionImg
+import com.rnett.spellbook.spell.eq
 
 //TODO school and tag colors should be less bright
 
