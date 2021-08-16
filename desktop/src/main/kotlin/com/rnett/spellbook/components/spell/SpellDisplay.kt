@@ -1,4 +1,4 @@
-package com.rnett.spellbook.components
+package com.rnett.spellbook.components.spell
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -11,16 +11,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.AonUrl
+import com.rnett.spellbook.components.SidebarNav
 import com.rnett.spellbook.components.core.HtmlText
 import com.rnett.spellbook.spell.Spell
 
@@ -35,7 +33,11 @@ fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?) {
     ) {
 
         Column {
-            SpellHeader(spell, Modifier.clickable(remember { MutableInteractionSource() }, null) { expanded = !expanded }, setSelectedSpell)
+            SpellHeader(
+                spell,
+                Modifier.clickable(remember { MutableInteractionSource() }, null) { expanded = !expanded },
+                setSelectedSpell
+            )
 
             Surface(Modifier.fillMaxWidth(), color = MainColors.spellBodyColor.asCompose()) {
 

@@ -105,8 +105,8 @@ enum class CastActionType {
 }
 
 @Serializable
-enum class SpellType : SpellFilterPart {
-    Cantrip, Spell, Focus;
+enum class SpellType(val longName: String) : SpellFilterPart {
+    Cantrip("cantrip"), Spell("spell"), Focus("focus spell");
 
     override fun matches(spell: com.rnett.spellbook.spell.Spell): Boolean = this == spell.type
 }

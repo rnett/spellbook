@@ -18,7 +18,13 @@ import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.SavedSearchs
 import com.rnett.spellbook.asCompose
-import com.rnett.spellbook.components.*
+import com.rnett.spellbook.components.SidebarDisplay
+import com.rnett.spellbook.components.SidebarState
+import com.rnett.spellbook.components.filter.FilterDivider
+import com.rnett.spellbook.components.filter.SpellFilterEditor
+import com.rnett.spellbook.components.search.SpellListFinder
+import com.rnett.spellbook.components.search.SpellListSaver
+import com.rnett.spellbook.components.spell.SpellDisplay
 import com.rnett.spellbook.db.getSpellsForFilter
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
@@ -33,8 +39,10 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
 fun SpellListPage(
-    initialFilter: SpellFilter = SpellFilter(),
+    filter: SpellFilter,
+    setFilter: (SpellFilter) -> Unit,
     knownFilters: SavedSearchs,
+    updateSavedFilters: (SavedSearchs) -> Unit,
     saveFilter: (String, SpellFilter) -> Unit,
     searchSlot: LevelSlot? = null,
     setSelectedSpell: ((Spell) -> Unit)? = null,
@@ -44,8 +52,7 @@ fun SpellListPage(
     val savedByName = knownFilters.toMap()
 
     Surface(color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
-        var filter by remember { mutableStateOf(initialFilter.forSlot(searchSlot), referentialEqualityPolicy()) }
-        var loading by remember { mutableStateOf(false) }
+        var loadingSavedFilter by remember { mutableStateOf(false) }
 
         var spells by remember { mutableStateOf<List<Spell>?>(null) }
         val scrollState = rememberLazyListState()
@@ -67,18 +74,18 @@ fun SpellListPage(
                         //TODO cancel?
                     }
                 }
-                if (loading) {
-                    SpellListFinder(savedNames.toList(), { loading = false }) {
-                        filter = savedByName.getValue(it).forSlot(searchSlot)
-                        loading = false
+                if (loadingSavedFilter) {
+                    SpellListFinder(knownFilters, updateSavedFilters, { loadingSavedFilter = false }) {
+                        setFilter(savedByName.getValue(it).forSlot(searchSlot))
+                        loadingSavedFilter = false
                     }
                 } else {
                     SpellListSaver(filter, savedByFilter, savedNames, { knownFilters.newName }, { name, filter ->
                         saveFilter(name, filter.ifLet(searchSlot != null) { it.withoutAnySlot() })
-                    }) { loading = true }
+                    }) { loadingSavedFilter = true }
                     FilterDivider()
                     SpellFilterEditor(filter, searchSlot) {
-                        filter = it.forSlot(searchSlot)
+                        setFilter(it.forSlot(searchSlot))
                     }
                 }
             }

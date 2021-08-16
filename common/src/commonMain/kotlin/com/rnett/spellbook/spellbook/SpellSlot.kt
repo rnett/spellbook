@@ -1,10 +1,6 @@
 package com.rnett.spellbook.spellbook
 
-import com.rnett.spellbook.filter.LevelFilter
-import com.rnett.spellbook.filter.SpellFilter
-import com.rnett.spellbook.filter.defaultAndFilter
-import com.rnett.spellbook.filter.defaultOrFilter
-import com.rnett.spellbook.filter.singleOrClauseFilter
+import com.rnett.spellbook.filter.*
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spell.SpellType
@@ -39,6 +35,4 @@ fun SpellFilter.withoutAnySlot() = copy(
 data class LevelSlot(val level: Int, val slot: SpellSlot)
 
 @Serializable
-data class SpellSlot(val lists: Set<SpellList>, val type: SpellType, val spell: Spell? = null) {
-    constructor(list: SpellList, cantrips: Boolean) : this(setOf(list), if (cantrips) SpellType.Cantrip else SpellType.Spell)
-}
+data class SpellSlot(val lists: Set<SpellList>, val type: SpellType, val spell: Spell? = null)

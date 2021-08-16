@@ -16,14 +16,16 @@ repositories {
 dependencies {
     testImplementation(kotlin("test-junit"))
     implementation(compose.desktop.currentOs)
+    implementation(compose.preview)
     implementation(compose.materialIconsExtended)
 
     implementation(project(":common"))
 }
 
-tasks.processResources{
-    val resources = project(":common").extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>().sourceSets["jvmMain"].resources
-    from(resources.srcDirs.first()){
+tasks.processResources {
+    val resources =
+        project(":common").extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>().sourceSets["jvmMain"].resources
+    from(resources.srcDirs.first()) {
         includeEmptyDirs = false
         exclude("application.conf")
     }

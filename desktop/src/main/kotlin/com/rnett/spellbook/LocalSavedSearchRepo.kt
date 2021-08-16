@@ -3,13 +3,7 @@ package com.rnett.spellbook
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.spellbook.Spellbook
 import kotlinx.collections.immutable.PersistentMap
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -52,7 +46,17 @@ class LocalNamedObjectRepo<T>(
 }
 
 fun LocalSavedSearchRepo(handleException: (Throwable) -> Unit) =
-    LocalNamedObjectRepo<SpellFilter>(File("./data/savedSearches.json"), handleException, SpellFilter.serializer(), "New Search")
+    LocalNamedObjectRepo<SpellFilter>(
+        File("./data/savedSearches.json"),
+        handleException,
+        SpellFilter.serializer(),
+        "New Search"
+    )
 
 fun LocalSpellbookhRepo(handleException: (Throwable) -> Unit) =
-    LocalNamedObjectRepo<Spellbook>(File("./data/spellbooks.json"), handleException, Spellbook.serializer(), "New Spellbook")
+    LocalNamedObjectRepo<Spellbook>(
+        File("./data/spellbooks.json"),
+        handleException,
+        Spellbook.serializer(),
+        "New Spellbook"
+    )

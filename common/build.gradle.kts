@@ -29,7 +29,6 @@ kotlin {
                 useIR = true
             }
         }
-        withJava()
     }
     js(IR) {
         browser {
@@ -86,14 +85,12 @@ kotlin {
                 implementation(kotlin("test-js"))
             }
         }
-//        all{
-//            languageSettings.apply{
-//                enableLanguageFeature("InlineClasses")
-//                enableLanguageFeature("NewInference")
-//                useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
-//                useExperimentalAnnotation("kotlin.RequiresOptIn")
-//                useExperimentalAnnotation("kotlin.time.ExperimentalTime")
-//            }
-//        }
+        all {
+            languageSettings.apply {
+                useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
+                useExperimentalAnnotation("kotlin.time.ExperimentalTime")
+                useExperimentalAnnotation("kotlin.RequiresOptIn")
+            }
+        }
     }
 }

@@ -1,25 +1,17 @@
-package com.rnett.spellbook.components
+package com.rnett.spellbook.components.spell
 
+import androidx.compose.foundation.BoxWithTooltip
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.LocalTextStyle
-import androidx.compose.material.ProvideTextStyle
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.contentColorFor
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.imageFromResource
+import androidx.compose.ui.res.loadImageBitmap
+import androidx.compose.ui.res.useResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -30,18 +22,11 @@ import androidx.compose.ui.unit.sp
 import com.rnett.spellbook.Color
 import com.rnett.spellbook.TagColors
 import com.rnett.spellbook.asCompose
-import com.rnett.spellbook.spell.Actions
-import com.rnett.spellbook.spell.CastActionType
-import com.rnett.spellbook.spell.Condition
-import com.rnett.spellbook.spell.Rarity
-import com.rnett.spellbook.spell.Save
-import com.rnett.spellbook.spell.School
-import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.SpellType
-import com.rnett.spellbook.spell.TargetingType
-import com.rnett.spellbook.spell.Trait
-import com.rnett.spellbook.spell.constantActionImg
-import com.rnett.spellbook.spell.eq
+import com.rnett.spellbook.components.AonUrl
+import com.rnett.spellbook.components.SidebarData
+import com.rnett.spellbook.components.SidebarNav
+import com.rnett.spellbook.components.TextTooltip
+import com.rnett.spellbook.spell.*
 
 //TODO school and tag colors should be less bright
 
@@ -67,8 +52,10 @@ fun SpellTag(
     noVerticalPadding: Boolean = false,
     textColor: androidx.compose.ui.graphics.Color? = null,
 ) = SpellTag(color, tooltip, modifier, sidebarInfo, noVerticalPadding, textColor) {
-    Text(content,
-        color = textColor ?: androidx.compose.ui.graphics.Color.Unspecified)
+    Text(
+        content,
+        color = textColor ?: androidx.compose.ui.graphics.Color.Unspecified
+    )
 }
 
 @Composable
@@ -80,7 +67,8 @@ fun SpellTag(
     noVerticalPadding: Boolean = false,
     textColor: Color? = null,
     content: @Composable () -> Unit,
-): Unit = SpellTag(color.asCompose(), tooltip, modifier, sidebarInfo, noVerticalPadding, textColor?.asCompose(), content)
+): Unit =
+    SpellTag(color.asCompose(), tooltip, modifier, sidebarInfo, noVerticalPadding, textColor?.asCompose(), content)
 
 @Composable
 fun SpellTag(
@@ -105,7 +93,9 @@ fun SpellTag(
     val vertPadding = if (noVerticalPadding) 0.dp else 3.dp
 
     Surface(shape = RoundedCornerShape(8.dp), color = color, contentColor = textColor ?: contentColorFor(color)) {
-        Box(myModifier.padding(5.dp, vertPadding)) {
+        BoxWithTooltip({
+            TextTooltip(tooltip)
+        }, myModifier.padding(5.dp, vertPadding)) {
             ProvideTextStyle(TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)) {
                 content()
             }
@@ -135,20 +125,23 @@ fun ActionsTag(actions: Actions) {
             Row {
                 when (actions) {
                     is Actions.Constant -> {
-                        Icon(imageFromResource(constantActionImg(actions.actions)), actions.actions.toString())
+                        Icon(
+                            useResource(constantActionImg(actions.actions), ::loadImageBitmap),
+                            actions.actions.toString()
+                        )
                     }
                     is Actions.Variable -> {
                         Row {
-                            Icon(imageFromResource(constantActionImg(actions.min)), actions.min.toString())
+                            Icon(useResource(constantActionImg(actions.min), ::loadImageBitmap), actions.min.toString())
                             Icon(Icons.Default.ArrowForward, "to", Modifier.padding(horizontal = 3.dp))
-                            Icon(imageFromResource(constantActionImg(actions.max)), actions.max.toString())
+                            Icon(useResource(constantActionImg(actions.max), ::loadImageBitmap), actions.max.toString())
                         }
                     }
                     is Actions.Reaction -> {
-                        Icon(imageFromResource("static/reaction.png"), "Reaction")
+                        Icon(useResource("static/reaction.png", ::loadImageBitmap), "Reaction")
                     }
                     is Actions.Time -> {
-                        Icon(imageFromResource("static/time.png"), "Duration")
+                        Icon(useResource("static/time.png", ::loadImageBitmap), "Duration")
                     }
                 }
             }
@@ -202,7 +195,7 @@ fun TargetingTag(targeting: TargetingType) = SpellTag(TagColors.Targeting(target
                 else -> error("Impossible targeting type: $targeting")
             }
 
-            Icon(imageFromResource("static/$name.png"), name, Modifier.height(18.dp).width(20.dp))
+            Icon(useResource("static/$name.png", ::loadImageBitmap), name, Modifier.height(18.dp).width(20.dp))
         }
     }
 }
@@ -235,7 +228,7 @@ fun DurationTag(duration: String?, isSustained: Boolean) {
         if (isSustained) {
             if (duration == "Sustained") {
                 SpellTag(TagColors.Duration.Sustained, "Duration: Sustained") {
-                    Icon(imageFromResource("static/sustained.png"), "Sustained", Modifier.height(20.dp))
+                    Icon(useResource("static/sustained.png", ::loadImageBitmap), "Sustained", Modifier.height(20.dp))
                 }
             } else {
                 SpellTag(TagColors.Duration.Sustained, "Duration: $duration") {
@@ -250,7 +243,11 @@ fun DurationTag(duration: String?, isSustained: Boolean) {
                         parts.forEachIndexed { idx, it ->
                             if (it == "||") {
 
-                                Icon(imageFromResource("static/sustained.png"), "Sustained", Modifier.width(16.dp))
+                                Icon(
+                                    useResource("static/sustained.png", ::loadImageBitmap),
+                                    "Sustained",
+                                    Modifier.width(16.dp)
+                                )
                                 Text("(${times.removeFirst()})")
                             } else
                                 Text(it)

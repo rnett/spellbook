@@ -1,18 +1,7 @@
-package com.rnett.spellbook.components
+package com.rnett.spellbook.components.spell
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
-import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -24,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 
@@ -35,11 +25,16 @@ fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: (
         Row(Modifier.fillMaxHeight(0.5f)) {
             if (setSelectedSpell != null) {
                 IconButton({ setSelectedSpell(spell) }) {
-                    Icon(Icons.Default.CheckCircleOutline, "Select")
+                    IconWithTooltip(Icons.Default.CheckCircleOutline, "Select")
                 }
                 Spacer(Modifier.width(2.dp))
             }
-            Row(Modifier.fillMaxWidth(0.15f).widthIn(min = 200.dp).weight(0.3f)) { Text(spell.name, fontWeight = FontWeight.Bold) }
+            Row(Modifier.fillMaxWidth(0.15f).widthIn(min = 200.dp).weight(0.3f)) {
+                Text(
+                    spell.name,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
 
             Row(
@@ -106,7 +101,10 @@ fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: (
                 }
             }
 
-            Row(Modifier.fillMaxWidth(0.2f).weight(0.5f), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.Start)) {
+            Row(
+                Modifier.fillMaxWidth(0.2f).weight(0.5f),
+                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.Start)
+            ) {
                 spell.traits.filter { it.isInteresting }.forEach {
                     TraitTag(it)
                 }

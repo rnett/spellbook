@@ -1,4 +1,4 @@
-package com.rnett.spellbook.components
+package com.rnett.spellbook.components.filter
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -6,29 +6,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.IconToggleButton
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.HorizontalRule
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.core.FlowRow
 import com.rnett.spellbook.filter.Filter
 import com.rnett.spellbook.filter.FilterClause
@@ -58,7 +41,11 @@ inline fun FilterDivider(end: Boolean = false, start: Boolean = false) {
 @Composable
 inline fun ClauseDivider(operation: Operation) {
     Spacer(Modifier.height(4.dp))
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Box(Modifier.weight(1f).background(color = FilterColors.dividerColor.asCompose()).height(1.dp))
 
         Box(Modifier.padding(horizontal = 10.dp)) {
@@ -84,20 +71,30 @@ fun OperationBadge(operation: Operation, modifier: Modifier = Modifier) {
 
 @Composable
 fun OperationButton(operation: Operation, set: (Operation) -> Unit) {
-    OperationBadge(operation, Modifier.background(color = FilterColors.typeButtonColor.asCompose(), shape = RoundedCornerShape(5.dp))
-        .clickable {
-            set(when (operation) {
-                Operation.AND -> Operation.OR
-                Operation.OR -> Operation.AND
+    OperationBadge(operation,
+        Modifier.background(color = FilterColors.typeButtonColor.asCompose(), shape = RoundedCornerShape(5.dp))
+            .clickable {
+                set(
+                    when (operation) {
+                        Operation.AND -> Operation.OR
+                        Operation.OR -> Operation.AND
+                    }
+                )
             })
-        })
 }
 
 @Composable
 fun NegateButton(negate: Boolean, set: (Boolean) -> Unit) {
     Box(Modifier
-        .background(color = if (negate) Color.Red.copy(alpha = 0.5f) else Color.Transparent, shape = RoundedCornerShape(5.dp))
-        .border(Dp.Hairline, FilterColors.dividerColor.asCompose().copy(alpha = 0.8f), shape = RoundedCornerShape(5.dp))
+        .background(
+            color = if (negate) Color.Red.copy(alpha = 0.5f) else Color.Transparent,
+            shape = RoundedCornerShape(5.dp)
+        )
+        .border(
+            Dp.Hairline,
+            FilterColors.dividerColor.asCompose().copy(alpha = 0.8f),
+            shape = RoundedCornerShape(5.dp)
+        )
         .clickable {
             set(!negate)
         }
@@ -109,7 +106,12 @@ fun NegateButton(negate: Boolean, set: (Boolean) -> Unit) {
 
 
 @Composable
-fun OptionalBoolean(current: Boolean?, set: (Boolean?) -> Unit, modifier: Modifier = Modifier, title: @Composable() () -> Unit) {
+fun OptionalBoolean(
+    current: Boolean?,
+    set: (Boolean?) -> Unit,
+    modifier: Modifier = Modifier,
+    title: @Composable() () -> Unit
+) {
     Column {
         Spacer(Modifier.height(5.dp))
         Box(modifier.fillMaxWidth()) {
@@ -128,16 +130,18 @@ fun OptionalBoolean(current: Boolean?, set: (Boolean?) -> Unit, modifier: Modifi
                 }
             ) {
                 IconButton({
-                    set(when (current) {
-                        false -> null
-                        null -> true
-                        true -> false
-                    })
+                    set(
+                        when (current) {
+                            false -> null
+                            null -> true
+                            true -> false
+                        }
+                    )
                 }) {
                     when (current) {
-                        null -> Icon(Icons.Default.HorizontalRule, "Either")
-                        true -> Icon(Icons.Default.Check, "Required")
-                        false -> Icon(Icons.Default.Close, "Forbidden")
+                        null -> IconWithTooltip(Icons.Default.HorizontalRule, "Either")
+                        true -> IconWithTooltip(Icons.Default.Check, "Required")
+                        false -> IconWithTooltip(Icons.Default.Close, "Forbidden")
                     }
                 }
             }
@@ -168,9 +172,9 @@ fun <T> SetEditor(
                 expanded.expand(it)
             }, Modifier.align(Alignment.TopEnd).size(30.dp)) {
                 if (expanded.expanded) {
-                    Icon(Icons.Default.Done, "Finish Edit")
+                    IconWithTooltip(Icons.Default.Done, "Finish Edit")
                 } else {
-                    Icon(Icons.Default.Edit, "Edit")
+                    IconWithTooltip(Icons.Default.Edit, "Edit")
                 }
             }
         }
@@ -192,9 +196,11 @@ fun <T> SetEditor(
             Spacer(Modifier.height(8.dp))
 
         AnimatedVisibility(expanded.expanded) {
-            Surface(shape = RoundedCornerShape(10.dp),
+            Surface(
+                shape = RoundedCornerShape(10.dp),
                 color = FilterColors.adderSpaceColor.asCompose(),
-                border = BorderStroke(Dp.Hairline, FilterColors.dividerColor.asCompose())) {
+                border = BorderStroke(Dp.Hairline, FilterColors.dividerColor.asCompose())
+            ) {
                 Box(Modifier.padding(5.dp)) {
                     FlowRow(Modifier.fillMaxWidth(), verticalGap = 8.dp, horizontalGap = 10.dp) {
                         (allOptions - current).forEach {
@@ -233,7 +239,10 @@ fun <T : SpellFilterPart> FilterEditor(
                 title()
             }
 
-            Row(Modifier.align(Alignment.TopEnd).padding(bottom = 5.dp, start = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.align(Alignment.TopEnd).padding(bottom = 5.dp, start = 5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 NegateButton(current.negate) { set(current.copy(negate = it)) }
 
                 Spacer(Modifier.width(8.dp))
@@ -247,9 +256,9 @@ fun <T : SpellFilterPart> FilterEditor(
                     expanded.expand(it)
                 }, Modifier.size(30.dp)) {
                     if (expanded.expanded) {
-                        Icon(Icons.Default.Done, "Finish Edit")
+                        IconWithTooltip(Icons.Default.Done, "Finish Edit")
                     } else {
-                        Icon(Icons.Default.Edit, "Edit")
+                        IconWithTooltip(Icons.Default.Edit, "Edit")
                     }
                 }
             }
@@ -295,7 +304,12 @@ private fun <T> Clause(
     if (current.isEmpty) {
         Spacer(Modifier.height(30.dp))
     } else {
-        FlowRow(Modifier.fillMaxWidth().padding(4.dp), verticalGap = 8.dp, horizontalGap = 4.dp, verticalAlignment = Alignment.CenterVertically) {
+        FlowRow(
+            Modifier.fillMaxWidth().padding(4.dp),
+            verticalGap = 8.dp,
+            horizontalGap = 4.dp,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(Modifier.padding(end = 4.dp)) {
                 NegateButton(current.negate) { set(current.copy(negate = it)) }
             }
@@ -318,9 +332,11 @@ private fun <T> Clause(
         Spacer(Modifier.height(8.dp))
 
     AnimatedVisibility(expanded) {
-        Surface(shape = RoundedCornerShape(10.dp),
+        Surface(
+            shape = RoundedCornerShape(10.dp),
             color = FilterColors.adderSpaceColor.asCompose(),
-            border = BorderStroke(Dp.Hairline, FilterColors.dividerColor.asCompose())) {
+            border = BorderStroke(Dp.Hairline, FilterColors.dividerColor.asCompose())
+        ) {
             Box(Modifier.padding(5.dp)) {
                 FlowRow(Modifier.fillMaxWidth(), verticalGap = 8.dp, horizontalGap = 10.dp) {
                     (allOptions - current.filters).forEach {

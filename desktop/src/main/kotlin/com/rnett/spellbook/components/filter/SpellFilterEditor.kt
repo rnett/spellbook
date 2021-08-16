@@ -1,8 +1,11 @@
-package com.rnett.spellbook.components
+package com.rnett.spellbook.components.filter
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.IconButton
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -15,6 +18,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.IconWithTooltip
+import com.rnett.spellbook.components.spell.*
 import com.rnett.spellbook.data.*
 import com.rnett.spellbook.filter.*
 import com.rnett.spellbook.spell.*
@@ -101,14 +106,14 @@ fun SpellFilterEditor(
                     IconButton({
                         update(filter.copy(level = filter.level.copy(min = filter.level.min - 1)))
                     }, enabled = filter.level.min > 1) {
-                        Icon(Icons.Default.Remove, "Minus")
+                        IconWithTooltip(Icons.Default.Remove, "Minus")
                     }
                     Text(filter.level.min.toString())
                     IconButton({
                         val newValue = filter.level.min + 1
                         update(filter.copy(level = LevelFilter(newValue, max(filter.level.max, newValue))))
                     }, enabled = filter.level.min < 10) {
-                        Icon(Icons.Default.Add, "Plus")
+                        IconWithTooltip(Icons.Default.Add, "Plus")
                     }
                 }
 
@@ -119,13 +124,13 @@ fun SpellFilterEditor(
                         val newValue = filter.level.max - 1
                         update(filter.copy(level = LevelFilter(min(newValue, filter.level.min), newValue)))
                     }, enabled = filter.level.max > 1) {
-                        Icon(Icons.Default.Remove, "Minus")
+                        IconWithTooltip(Icons.Default.Remove, "Minus")
                     }
                     Text(filter.level.max.toString())
                     IconButton({
                         update(filter.copy(level = filter.level.copy(max = filter.level.max + 1)))
                     }, enabled = filter.level.max < 10) {
-                        Icon(Icons.Default.Add, "Plus")
+                        IconWithTooltip(Icons.Default.Add, "Plus")
                     }
                 }
 

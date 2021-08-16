@@ -1,21 +1,15 @@
 package com.rnett.spellbook
 
-import com.rnett.spellbook.spell.AreaType
-import com.rnett.spellbook.spell.CastActionType
-import com.rnett.spellbook.spell.Save
-import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.SpellType
-import com.rnett.spellbook.spell.TargetingType
-import com.rnett.spellbook.spell.Trait
+import com.rnett.spellbook.spell.*
 
 private const val TRANSPARENT = "transparent"
 
 class Color(private val _hexString: String, val alpha: Float = 1f) {
-    val isTransparent by lazy { _hexString.isBlank() || _hexString.toLowerCase() == TRANSPARENT }
+    val isTransparent by lazy { _hexString.isBlank() || _hexString.lowercase() == TRANSPARENT }
 
     val hexString by lazy {
         if (!_hexString.startsWith("#") && !isTransparent)
-            "#" + _hexString.toLowerCase()
+            "#" + _hexString.lowercase()
         else
             _hexString
     }
@@ -55,6 +49,7 @@ object MainColors {
     val textColor = Color("#ffffff")
     val infoBoxColor = Color("#696969")
     val infoHeaderColor = Color("#522e2c")
+    val tooltipColor = Color("#74705A")
 }
 
 object SavedSearchColors {
@@ -68,6 +63,7 @@ object FilterColors {
     val checkboxRequired = Color("#496E4C")
     val checkboxForbidden = Color("#7B3D3C")
     val cancelReset = Color("#FF0000", 0.4f)
+    val goToFullPage = Color("#4D5E76")
 }
 
 object TagColors {

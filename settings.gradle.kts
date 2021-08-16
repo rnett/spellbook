@@ -15,8 +15,6 @@ pluginManagement {
     }
 }
 
-enableFeaturePreview("GRADLE_METADATA")
-
 rootProject.name = "spellbook"
 
 include("common", /*"web", */"desktop")
