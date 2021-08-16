@@ -1,23 +1,8 @@
 package com.rnett.spellbook.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.ScrollbarStyleAmbient
-import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -30,33 +15,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.asCompose
-import com.rnett.spellbook.data.allDurations
-import com.rnett.spellbook.data.allTargeting
-import com.rnett.spellbook.data.interestingSpellConditions
-import com.rnett.spellbook.data.nonSpecialSpellTraits
-import com.rnett.spellbook.data.spellConditionsByName
-import com.rnett.spellbook.data.traitsByName
-import com.rnett.spellbook.filter.ActionFilter
-import com.rnett.spellbook.filter.AttackTypeFilter
-import com.rnett.spellbook.filter.DurationFilter
-import com.rnett.spellbook.filter.LevelFilter
-import com.rnett.spellbook.filter.SpellFilter
-import com.rnett.spellbook.filter.filter
-import com.rnett.spellbook.spell.CastActionType
-import com.rnett.spellbook.spell.Rarity
-import com.rnett.spellbook.spell.Save
-import com.rnett.spellbook.spell.School
-import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.SpellType
+import com.rnett.spellbook.data.*
+import com.rnett.spellbook.filter.*
+import com.rnett.spellbook.spell.*
 import com.rnett.spellbook.spellbook.LevelSlot
 import kotlin.math.max
 import kotlin.math.min
 
 
-private val pickableAttackTypes = (Save.values().map { AttackTypeFilter.TargetSave(it, null) } + AttackTypeFilter.Attack).toSet()
+private val pickableAttackTypes =
+    (Save.values().map { AttackTypeFilter.TargetSave(it, null) } + AttackTypeFilter.Attack).toSet()
 
 private val pickableActionTypes =
-    setOf(ActionFilter.Free, ActionFilter.Single, ActionFilter.Double, ActionFilter.Triple, ActionFilter.Reaction, ActionFilter.Duration)
+    setOf(
+        ActionFilter.Free,
+        ActionFilter.Single,
+        ActionFilter.Double,
+        ActionFilter.Triple,
+        ActionFilter.Reaction,
+        ActionFilter.Duration
+    )
 
 class ExpansionManager {
     val components: MutableList<Boolean> = mutableStateListOf<Boolean>()
@@ -85,14 +63,22 @@ class ExpansionManager {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SpellFilterEditor(filter: SpellFilter, presetSlot: LevelSlot? = null, showReset: Boolean = true, update: (SpellFilter) -> Unit) {
+fun SpellFilterEditor(
+    filter: SpellFilter,
+    presetSlot: LevelSlot? = null,
+    showReset: Boolean = true,
+    update: (SpellFilter) -> Unit
+) {
     Box {
         val scrollState = remember { ScrollState(0) }
         Column(Modifier.padding(top = 10.dp, bottom = 10.dp, start = 10.dp, end = 20.dp).verticalScroll(scrollState)) {
             val expandedStates = remember { ExpansionManager() }
 
             if (presetSlot == null) {
-                FilterEditor(filter.lists, SpellList.lists, { update(filter.copy(lists = it)) }, expandedStates.component(),
+                FilterEditor(filter.lists,
+                    SpellList.lists,
+                    { update(filter.copy(lists = it)) },
+                    expandedStates.component(),
                     { Text("Spell Lists") }) {
                     SpellListTag(it)
                 }
@@ -101,7 +87,10 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: LevelSlot? = null, showRe
                     Text("Focus")
                 }
 
-                FilterEditor(filter.types, SpellType.values().toSet(), { update(filter.copy(types = it)) }, expandedStates.component(),
+                FilterEditor(filter.types,
+                    SpellType.values().toSet(),
+                    { update(filter.copy(types = it)) },
+                    expandedStates.component(),
                     { Text("Spell Type") }) {
                     TypeTag(it)
                 }
@@ -143,7 +132,10 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: LevelSlot? = null, showRe
                 FilterDivider(true)
             }
 
-            FilterEditor(filter.attackTypes, pickableAttackTypes, { update(filter.copy(attackTypes = it)) }, expandedStates.component(),
+            FilterEditor(filter.attackTypes,
+                pickableAttackTypes,
+                { update(filter.copy(attackTypes = it)) },
+                expandedStates.component(),
                 { Text("Attack Type") }) {
                 when (it) {
                     AttackTypeFilter.Attack -> AttackTag()
@@ -167,7 +159,10 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: LevelSlot? = null, showRe
                 Text("Incapacitation")
             }
 
-            FilterEditor(filter.actions, pickableActionTypes, { update(filter.copy(actions = it)) }, expandedStates.component(),
+            FilterEditor(filter.actions,
+                pickableActionTypes,
+                { update(filter.copy(actions = it)) },
+                expandedStates.component(),
                 { Text("Actions") }) {
                 Box(Modifier.height(24.dp)) {
                     ActionsTag(it.toActions())
@@ -221,7 +216,10 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: LevelSlot? = null, showRe
                 }
             }
 
-            FilterEditor(filter.schools, School.schools, { update(filter.copy(schools = it)) }, expandedStates.component(),
+            FilterEditor(filter.schools,
+                School.schools,
+                { update(filter.copy(schools = it)) },
+                expandedStates.component(),
                 { Text("School") }) {
                 TraitTag(traitsByName.getValue(it.name), sidebar = false)
             }
@@ -258,9 +256,11 @@ fun SpellFilterEditor(filter: SpellFilter, presetSlot: LevelSlot? = null, showRe
             }
 
         }
-        val scrollStyle = ScrollbarStyleAmbient.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
-        VerticalScrollbar(rememberScrollbarAdapter(scrollState),
+        val scrollStyle = LocalScrollbarStyle.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
+        VerticalScrollbar(
+            rememberScrollbarAdapter(scrollState),
             Modifier.align(Alignment.CenterEnd),
-            scrollStyle)
+            style = scrollStyle
+        )
     }
 }

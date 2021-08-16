@@ -1,8 +1,6 @@
 package com.rnett.spellbook
 
-import androidx.compose.desktop.AppWindow
 import androidx.compose.desktop.DesktopMaterialTheme
-import androidx.compose.desktop.WindowEvents
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,23 +8,13 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.MenuBar
-import com.rnett.spellbook.data.allDurations
-import com.rnett.spellbook.data.allSpellConditions
-import com.rnett.spellbook.data.allSpellTraits
-import com.rnett.spellbook.data.allSpells
-import com.rnett.spellbook.data.allTargeting
-import com.rnett.spellbook.data.allTraits
+import androidx.compose.ui.window.WindowPlacement
+import androidx.compose.ui.window.WindowState
+import androidx.compose.ui.window.singleWindowApplication
+import com.rnett.spellbook.data.*
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.pages.SavedSearchPage
 import com.rnett.spellbook.pages.SpellListPage
@@ -39,37 +27,6 @@ import com.rnett.spellbook.spellbook.Spellcasting
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import java.awt.image.BufferedImage
-import javax.swing.SwingUtilities
-
-fun MaximizeWindow(
-    title: String = "JetpackDesktopWindow",
-    size: IntSize = IntSize(1920, 1024),
-    location: IntOffset = IntOffset(-1920, 0),
-    centered: Boolean = true,
-    icon: BufferedImage? = null,
-    menuBar: MenuBar? = null,
-    undecorated: Boolean = false,
-    resizable: Boolean = true,
-    events: WindowEvents = WindowEvents(),
-    onDismissRequest: (() -> Unit)? = null,
-    content: @Composable () -> Unit = {},
-) = SwingUtilities.invokeLater {
-    AppWindow(
-        title = title,
-        size = size,
-        location = location,
-        centered = centered,
-        icon = icon,
-        menuBar = menuBar,
-        undecorated = undecorated,
-        resizable = resizable,
-        events = events,
-        onDismissRequest = onDismissRequest
-    ).also { it.maximize() }.show {
-        content()
-    }
-}
 
 enum class Pages {
     Spellbooks, SpellSearch, SavedSearches;
@@ -84,21 +41,73 @@ fun initCaches() {
     allDurations.let { }
 }
 
-//sealed class MainState{
-//    abstract val page: Pages
-//
-//    @Composable
-//    abstract fun show()
-//
-//    object Search: MainState() {
-//        override val page: Pages = Pages.SpellSearch
-//
-//        override fun show() {
-//            TODO("Not yet implemented")
-//        }
-//
-//    }
-//}
+data class MainContext(
+    val savedSearches: SavedSearchs,
+    val savedSearchRepo: LocalNamedObjectRepo<SpellFilter>,
+    val setPage: (MainState) -> Unit,
+)
+
+//TODO finish
+sealed class MainState{
+    abstract val page: Pages
+
+    @Composable
+    abstract fun show(context: MainContext)
+
+    class Search(val search: SpellFilter = SpellFilter()): MainState() {
+        override val page: Pages = Pages.SpellSearch
+
+        @Composable
+        override fun show(context: MainContext) = with(context){
+            SpellListPage(search,
+                savedSearches,
+                { name, value -> savedSearchRepo.value = savedSearches.set(name, value) },
+                null,
+                null
+            )
+        }
+    }
+
+    class SelectSpell(val slot: LevelSlot, val setter: (Spell) -> Unit): MainState(){
+        override val page: Pages = Pages.SpellSearch
+
+        @Composable
+        override fun show(context: MainContext) = with(context){
+            SpellListPage(SpellFilter(),
+                savedSearches,
+                { name, value -> savedSearchRepo.value = savedSearches.set(name, value) },
+                slot,
+                setter
+            )
+        }
+    }
+
+    object SavedSearches: MainState(){
+        override val page: Pages = Pages.SavedSearches
+
+        @Composable
+        override fun show(context: MainContext) = with(context){
+            SavedSearchPage(savedSearches,
+                { savedSearchRepo.value = it }) {
+                setPage(Search(savedSearches[it]!!))
+            }
+        }
+    }
+
+    object Spellbooks: MainState(){
+        override val page: Pages = Pages.Spellbooks
+
+        @Composable
+        override fun show(context: MainContext) = with(context){
+            SpellbooksPage(listOf("Main" to Spellcasting.fullCaster(SpellbookType.Spontaneous, SpellList.Arcane, 4)), { idx, new ->
+                //TODO save spellbooks
+                println(new)
+            }) { slot, setter ->
+                setPage(SelectSpell(slot, setter))
+            }
+        }
+    }
+}
 
 //TODO need a cohesive global state
 sealed class NextSearch {
@@ -117,7 +126,7 @@ fun main() {
         initCaches()
     }
 
-    MaximizeWindow("Spellbook") {
+    singleWindowApplication(WindowState(placement = WindowPlacement.Maximized)) {
         Surface(Modifier.fillMaxSize(), color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
             DesktopMaterialTheme() {
                 Column(Modifier.fillMaxSize()) {

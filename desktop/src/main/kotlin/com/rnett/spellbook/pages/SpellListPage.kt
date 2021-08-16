@@ -2,40 +2,23 @@ package com.rnett.spellbook.pages
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.ScrollbarStyleAmbient
+import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.referentialEqualityPolicy
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.SavedSearchs
 import com.rnett.spellbook.asCompose
-import com.rnett.spellbook.components.FilterDivider
-import com.rnett.spellbook.components.SidebarDisplay
-import com.rnett.spellbook.components.SidebarState
-import com.rnett.spellbook.components.SpellDisplay
-import com.rnett.spellbook.components.SpellFilterEditor
-import com.rnett.spellbook.components.SpellListFinder
-import com.rnett.spellbook.components.SpellListSaver
+import com.rnett.spellbook.components.*
 import com.rnett.spellbook.db.getSpellsForFilter
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
@@ -112,10 +95,13 @@ fun SpellListPage(
                                 }
                             }
                         }
-                        val scrollStyle = ScrollbarStyleAmbient.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
-                        VerticalScrollbar(rememberScrollbarAdapter(scrollState, spells!!.size, 100.dp),
+                        val scrollStyle =
+                            LocalScrollbarStyle.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
+                        VerticalScrollbar(
+                            rememberScrollbarAdapter(scrollState),
                             Modifier.align(Alignment.CenterEnd),
-                            scrollStyle)
+                            style = scrollStyle
+                        )
                     }
                 }
             }

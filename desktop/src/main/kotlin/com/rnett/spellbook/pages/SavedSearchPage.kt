@@ -116,7 +116,7 @@ fun SavedSearchPage(
                         }
                         .focusRequester(focusRequester)
                         .onFocusChanged {
-                            if (it == FocusState.Inactive) {
+                            if (!it.hasFocus) {
                                 editingName?.let {
                                     if (it !in filters.all)
                                         update(rename(name, it))
@@ -216,7 +216,7 @@ fun SavedSearchPage(
 
 @Composable
 private fun DeletePopup(deleteName: String, close: () -> Unit, remove: () -> Unit) {
-    Popup(alignment = Alignment.Center, offset = IntOffset(0, -200), isFocusable = true, onDismissRequest = { close() }) {
+    Popup(alignment = Alignment.Center, offset = IntOffset(0, -200), focusable = true, onDismissRequest = { close() }) {
         Surface(
             Modifier
                 .width(300.dp),

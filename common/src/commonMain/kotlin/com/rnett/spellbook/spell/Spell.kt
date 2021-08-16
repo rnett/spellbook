@@ -111,6 +111,9 @@ enum class SpellType : SpellFilterPart {
     override fun matches(spell: com.rnett.spellbook.spell.Spell): Boolean = this == spell.type
 }
 
+
+private val spellComparator = compareBy<Spell> { it.level }.thenBy { it.type }.thenBy { it.name }
+
 //TODO track conditions
 //TODO track source by book, allow filtering
 //TODO add persistent damage flag (and to filter)
@@ -157,9 +160,7 @@ data class Spell(
         TargetingType.targetingTypes(area, targets)
     }
 
-    override fun compareTo(other: Spell): Int {
-        return level.compareTo(other.level) * 10000 + type.compareTo(other.type) * 100 + name.compareTo(other.name)
-    }
+    override fun compareTo(other: Spell): Int = spellComparator.compare(this, other)
 }
 
 object SpellComparator : Comparator<Spell> {
