@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
@@ -24,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.SmallTextField
 import com.rnett.spellbook.filter.SpellFilter
@@ -46,7 +46,7 @@ fun SpellListSaver(
             Text(savedFilters.getValue(filter))
 
             Spacer(Modifier.weight(0.5f))
-            IconButton({
+            IconButtonHand({
                 load()
             }) {
                 IconWithTooltip(Icons.Default.Bookmarks, "Saved Searches")
@@ -54,19 +54,19 @@ fun SpellListSaver(
         } else {
             var filterName: String? by remember { mutableStateOf(null) }
             if (filterName == null) {
-                IconButton({
+                IconButtonHand({
                     filterName = newName()
                 }, enabled = filter != SpellFilter()) {
                     IconWithTooltip(Icons.Default.TurnedInNot, "Save")
                 }
                 Spacer(Modifier.weight(0.5f))
-                IconButton({
+                IconButtonHand({
                     load()
                 }) {
                     IconWithTooltip(Icons.Default.Bookmarks, "Saved Searches")
                 }
             } else {
-                IconButton({
+                IconButtonHand({
                     filterName = null
                 }) {
                     IconWithTooltip(Icons.Outlined.Cancel, "Cancel")
@@ -84,7 +84,7 @@ fun SpellListSaver(
                     )
                 )
 
-                IconButton({
+                IconButtonHand({
                     saveFilter(filterName!!, filter)
                     filterName = null
                 }, enabled = filterName!! !in savedNames) {

@@ -39,7 +39,7 @@ import com.rnett.spellbook.db.getSpellsForFilter
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.spell.Spell
-import com.rnett.spellbook.spellbook.LevelSlot
+import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.forSlot
 import com.rnett.spellbook.spellbook.withoutAnySlot
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +54,7 @@ fun SpellListPage(
     knownFilters: SavedSearchs,
     updateSavedFilters: (SavedSearchs) -> Unit,
     saveFilter: (String, SpellFilter) -> Unit,
-    searchSlot: LevelSlot? = null,
+    searchSlot: LevelKnownSpell? = null,
     setSelectedSpell: ((Spell) -> Unit)? = null,
 ) {
     val savedByFilter = knownFilters.entries.reversed().associate { it.value to it.key }

@@ -2,19 +2,25 @@ package com.rnett.spellbook.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.BoxWithTooltip
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerIcon
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -24,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupPositionProvider
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.ifLet
 
 @Composable
 fun Tooltip(content: @Composable () -> Unit) {
@@ -79,3 +86,26 @@ fun <T> Iterable<T>.join(separator: @Composable () -> Unit, render: @Composable 
         first = false
     }
 }
+
+@Composable
+fun repeatJoin(n: Int, separator: @Composable () -> Unit, render: @Composable (Int) -> Unit) {
+    var first = true
+    repeat(n) {
+        if (!first)
+            separator()
+        render(it)
+        first = false
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun Modifier.handPointer() = pointerIcon(PointerIcon.Hand)
+
+@Composable
+fun IconButtonHand(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    content: @Composable () -> Unit
+) = IconButton(onClick, modifier.ifLet(enabled, Modifier::handPointer), enabled, interactionSource, content)

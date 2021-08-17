@@ -51,6 +51,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicInteger
 
 val client = HttpClient() {
@@ -74,11 +75,13 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         val levelStr = doc.select("h1.title > span").text()
 
         val spoilerRegex = Regex("This Spell is from the ([\\w ]+) and may contain Spoilers")
-        val spoilerWarnings = doc.select("#ctl00_MainContent_DetailedOutput h2.title").filter { it.text().matches(spoilerRegex) }
+        val spoilerWarnings =
+            doc.select("#ctl00_MainContent_DetailedOutput h2.title").filter { it.text().matches(spoilerRegex) }
         assert(spoilerWarnings.size <= 1) { "More than one spoiler warning" }
         val spoilers = spoilerWarnings.singleOrNull()?.let { spoilerRegex.matchEntire(it.text())!!.groupValues[1] }
 
-        val statblock = doc.select("#ctl00_MainContent_DetailedOutput").single().childNode(0).siblingsUntilElement { it.normalTagName == "hr" }
+        val statblock = doc.select("#ctl00_MainContent_DetailedOutput").single().childNode(0)
+            .siblingsUntilElement { it.normalTagName == "hr" }
 
         spoilerWarnings.forEach { it.remove() }
 
@@ -88,7 +91,7 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         postfix?.forEach { it.remove() }
 
         val fullText = doc.select("#ctl00_MainContent_DetailedOutput").text()
-        val fullTextLower = fullText.toLowerCase()
+        val fullTextLower = fullText.lowercase(Locale.getDefault())
 
         val type = when {
             "Cantrip" in levelStr -> SpellType.Cantrip
@@ -126,13 +129,13 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
             if ("Saving Throw basic $it" in fullText) {
                 basicSave = true
                 save = it
-            } else if ("basic ${it.name.toLowerCase()} save" in fullTextLower) {
+            } else if ("basic ${it.name.lowercase(Locale.getDefault())} save" in fullTextLower) {
                 basicSave = true
                 save = it
             } else if ("Saving Throw $it" in fullText) {
                 basicSave = false
                 save = it
-            } else if ("${it.name.toLowerCase()} save" in fullTextLower) {
+            } else if ("${it.name.lowercase(Locale.getDefault())} save" in fullTextLower) {
                 if (save == null) {
                     basicSave = false
                     save = it
@@ -164,11 +167,12 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
                 else
                     actionsElements).textWithNewlines(false).replace("\n", " ").trim(' ', ';').ifBlank { null }
 
-        var actionTypes: List<CastActionType>? = if (!actionValues.isEmpty() || (actionsText != null && '(' in actionsText && ')' in actionsText))
-            actionsText?.substringAfter("(")?.substringBefore(")")?.split(",", " or ")
-                ?.map { CastActionType.valueOf(it.trim().enumFormat()) }
-        else
-            null
+        var actionTypes: List<CastActionType>? =
+            if (!actionValues.isEmpty() || (actionsText != null && '(' in actionsText && ')' in actionsText))
+                actionsText?.substringAfter("(")?.substringBefore(")")?.split(",", " or ")
+                    ?.map { CastActionType.valueOf(it.trim().enumFormat()) }
+            else
+                null
 
         val actions: Actions = when {
             actionValues.isEmpty() -> {
@@ -214,14 +218,15 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         val area =
             Bs.singleOrNull { it.text() == "Area" }?.nextSibling()?.safeAs<TextNode?>()?.text()?.trim(' ', ';')
 
-        val sustained = duration?.let { "sustained" in it.toLowerCase() } == true
+        val sustained = duration?.let { "sustained" in it.lowercase(Locale.getDefault()) } == true
 
         val hrs = doc.select("#ctl00_MainContent_DetailedOutput > hr").toList()
 
         assert(hrs.isNotEmpty()) { "Didn't find any <hr>s?!?!?" }
 
         val description = adjustAonHtml(
-            doc.select("#ctl00_MainContent_DetailedOutput > hr").first().siblingsUntilElement { it.normalTagName == "hr" }
+            doc.select("#ctl00_MainContent_DetailedOutput > hr").first()
+                .siblingsUntilElement { it.normalTagName == "hr" }
                 .map { if (it is Element) adjustAonElement(it) else it }
                 .map { it.outerHtml() }
                 .joinToString("\n")
@@ -260,7 +265,8 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
 
         if (postfix != null) {
             fun makePostFixStr() =
-                adjustAonHtml(postfix.map { if (it is Element) adjustAonElement(it) else it }.joinToString("\n") { it.outerHtml() })
+                adjustAonHtml(postfix.map { if (it is Element) adjustAonElement(it) else it }
+                    .joinToString("\n") { it.outerHtml() })
 
             val titles = postfix.elements().filter { it.normalTagName == "h2" }
             val regex = Regex("Level ([0-9\\-]+) \\D+")
@@ -289,7 +295,12 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
                     val title = titles[0]
                     val link = title.select("a").singleOrNull()
                     if (link != null && link.attr("href").startsWith("Monsters.aspx?ID=")) {
-                        summons = Summons.Single(Creature(link.text(), link.attr("href").substringAfter("Monsters.aspx?ID=").toInt()))
+                        summons = Summons.Single(
+                            Creature(
+                                link.text(),
+                                link.attr("href").substringAfter("Monsters.aspx?ID=").toInt()
+                            )
+                        )
                         postfixStr = null
                     } else {
                         summons = null
@@ -416,7 +427,8 @@ suspend fun loadConditions(url: String = "https://2e.aonprd.com/Conditions.aspx"
         }
 
         val description =
-            it.nextElementSibling().nextElementSibling().nextElementSibling().nextElementSibling().siblingsUntilElement { it.normalTagName == "h2" }
+            it.nextElementSibling().nextElementSibling().nextElementSibling().nextElementSibling()
+                .siblingsUntilElement { it.normalTagName == "h2" }
                 .textWithNewlines()
         Condition(name, source, description, id, null)
     }.toSet()
@@ -493,7 +505,12 @@ suspend fun spellsFromPage(url: String) = loadPage(url).select("a")
 
 //TODO track conditions
 @OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
-suspend fun loadSpells(spells: Collection<String>, conditions: Set<String>, bufferPages: Int = 500, batchUpdates: Int = 50) {
+suspend fun loadSpells(
+    spells: Collection<String>,
+    conditions: Set<String>,
+    bufferPages: Int = 500,
+    batchUpdates: Int = 50
+) {
 //    val spellBar = Mutexed(ProgressBar("Spells", spells.size.toLong()))
     val pagesBar = Mutexed(ProgressBar("Spells", spells.size.toLong()))
 
@@ -505,7 +522,8 @@ suspend fun loadSpells(spells: Collection<String>, conditions: Set<String>, buff
 
     val inserts = mutableListOf<Job>()
     val foundSpells = Mutexed(mutableListOf<SpellData>())
-    val seenSpells = newSuspendedTransaction { Spells.slice(Spells.id).selectAll().map { it[Spells.id].value }.toMutableSet() }
+    val seenSpells =
+        newSuspendedTransaction { Spells.slice(Spells.id).selectAll().map { it[Spells.id].value }.toMutableSet() }
 
     coroutineScope {
         val spellPages = spells.asFlow().flatMapMerge(200) { flowOf(loadPage(it)) }
@@ -553,7 +571,7 @@ suspend fun loadSpells(spells: Collection<String>, conditions: Set<String>, buff
 }
 
 fun main(args: Array<String>): Unit = runBlocking {
-    if (args.isEmpty() || args[0].toLowerCase().let { it != "pg" && it != "postgres" }) {
+    if (args.isEmpty() || args[0].lowercase(Locale.getDefault()).let { it != "pg" && it != "postgres" }) {
         println("Loading to H2")
         SpellbookDB.initH2()
     } else {

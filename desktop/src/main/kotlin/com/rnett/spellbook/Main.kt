@@ -1,6 +1,8 @@
 package com.rnett.spellbook
 
 import androidx.compose.desktop.DesktopMaterialTheme
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,10 +17,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
@@ -35,7 +39,7 @@ import com.rnett.spellbook.pages.SpellListPage
 import com.rnett.spellbook.pages.SpellbooksPage
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spellbook.LevelSlot
+import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.SpellbookType
 import com.rnett.spellbook.spellbook.Spellcasting
 import kotlinx.coroutines.GlobalScope
@@ -59,7 +63,7 @@ class MainState(
     initialPage: Pages
 ) {
     val savedSearches = savedSearchRepo.state
-    var lookingForSpell by mutableStateOf<LevelSlot?>(null)
+    var lookingForSpell by mutableStateOf<LevelKnownSpell?>(null)
 
     val searchPage = PageState.Search()
     val spellbookPage = PageState.Spellbooks()
@@ -117,11 +121,17 @@ sealed class PageState {
 
         @Composable
         override fun show(main: MainState) = with(main) {
+            val spells = mutableStateListOf(
+                "Main" to Spellcasting.fullCaster(
+                    SpellbookType.Spontaneous,
+                    setOf(SpellList.Arcane),
+                    4
+                )
+            )
             SpellbooksPage(
-                listOf("Main" to Spellcasting.fullCaster(SpellbookType.Spontaneous, setOf(SpellList.Arcane), 4)),
+                spells,
                 { idx, new ->
-                    //TODO save spellbooks
-                    println(new)
+                    spells[idx] = spells[idx].first to new
                 }) { slot, setter ->
             }
         }
@@ -131,7 +141,7 @@ sealed class PageState {
 //TODO need a cohesive global state
 sealed class NextSearch {
     data class Filter(val filter: SpellFilter) : NextSearch()
-    data class Slot(val slot: LevelSlot, val set: (Spell) -> Unit) : NextSearch()
+    data class Slot(val slot: LevelKnownSpell, val set: (Spell) -> Unit) : NextSearch()
 
     inline val filterOrNull get() = if (this is Filter) filter else null
     inline val slotOrNull get() = if (this is Slot) slot else null
@@ -146,8 +156,12 @@ fun main() {
     }
 
     singleWindowApplication(WindowState(placement = WindowPlacement.Maximized)) {
+        val focusManager = LocalFocusManager.current
         Surface(
-            Modifier.fillMaxSize(),
+            Modifier.fillMaxSize().clickable(remember { MutableInteractionSource() }, null) {
+                focusManager.clearFocus()
+                //TODO this is a bit of a hack.  I want to lose focus whenever I click outside of the focused element
+            },
             color = MainColors.outsideColor.asCompose(),
             contentColor = MainColors.textColor.asCompose()
         ) {

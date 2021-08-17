@@ -3,6 +3,7 @@ package com.rnett.spellbook.components.filter
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
-import androidx.compose.material.IconButton
 import androidx.compose.material.IconToggleButton
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.HorizontalRule
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -38,8 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.core.FlowRow
+import com.rnett.spellbook.components.handPointer
 import com.rnett.spellbook.filter.Filter
 import com.rnett.spellbook.filter.FilterClause
 import com.rnett.spellbook.filter.Operation
@@ -90,6 +93,7 @@ fun OperationBadge(operation: Operation, modifier: Modifier = Modifier) {
 fun OperationButton(operation: Operation, set: (Operation) -> Unit) {
     OperationBadge(operation,
         Modifier.background(color = FilterColors.typeButtonColor.asCompose(), shape = RoundedCornerShape(5.dp))
+            .handPointer()
             .clickable {
                 set(
                     when (operation) {
@@ -115,6 +119,7 @@ fun NegateButton(negate: Boolean, set: (Boolean) -> Unit) {
         .clickable {
             set(!negate)
         }
+        .handPointer()
         .height(20.dp).padding(4.dp, 1.dp),
         contentAlignment = Alignment.Center) {
         Text("NOT", textAlign = TextAlign.Center, fontSize = 14.sp, maxLines = 1)
@@ -122,6 +127,7 @@ fun NegateButton(negate: Boolean, set: (Boolean) -> Unit) {
 }
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OptionalBoolean(
     current: Boolean?,
@@ -146,7 +152,7 @@ fun OptionalBoolean(
                     null -> Color.Transparent
                 }
             ) {
-                IconButton({
+                IconButtonHand({
                     set(
                         when (current) {
                             false -> null
@@ -180,7 +186,8 @@ fun <T> SetEditor(
     render: @Composable (T) -> Unit,
 ) {
     Column(modifier.fillMaxWidth()) {
-        Box(Modifier.fillMaxWidth().clickable { expanded.expand(!expanded.expanded) }.padding(bottom = 4.dp)) {
+        Box(Modifier.fillMaxWidth().handPointer().clickable { expanded.expand(!expanded.expanded) }
+            .padding(bottom = 4.dp)) {
             Box(Modifier.align(Alignment.CenterStart)) {
                 title()
             }
@@ -200,7 +207,7 @@ fun <T> SetEditor(
 
         FlowRow(Modifier.fillMaxWidth(), verticalGap = 8.dp, horizontalGap = 10.dp) {
             current.forEach {
-                Box(Modifier.clickable(enabled = expanded.expanded) {
+                Box(Modifier.handPointer().clickable(enabled = expanded.expanded) {
                     set(current - it)
                 }) {
                     render(it)
@@ -221,7 +228,7 @@ fun <T> SetEditor(
                 Box(Modifier.padding(5.dp)) {
                     FlowRow(Modifier.fillMaxWidth(), verticalGap = 8.dp, horizontalGap = 10.dp) {
                         (allOptions - current).forEach {
-                            Box(Modifier.clickable {
+                            Box(Modifier.handPointer().clickable {
                                 set(current + it)
                             }) {
                                 render(it)
@@ -239,7 +246,10 @@ fun <T> SetEditor(
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalAnimationApi::class, ExperimentalFoundationApi::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
 fun <T : SpellFilterPart> FilterEditor(
     current: Filter<T>,
@@ -252,12 +262,12 @@ fun <T : SpellFilterPart> FilterEditor(
 ) {
     Column(modifier.fillMaxWidth()) {
         Box(Modifier.fillMaxWidth().clickable { expanded.expand(!expanded.expanded) }.padding(bottom = 4.dp)) {
-            Box(Modifier.align(Alignment.CenterStart)) {
+            Box(Modifier.align(Alignment.CenterStart).handPointer()) {
                 title()
             }
 
             Row(
-                Modifier.align(Alignment.TopEnd).padding(bottom = 5.dp, start = 5.dp),
+                Modifier.align(Alignment.CenterEnd).padding(bottom = 5.dp, start = 5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 NegateButton(current.negate) { set(current.copy(negate = it)) }
@@ -271,7 +281,7 @@ fun <T : SpellFilterPart> FilterEditor(
                 Spacer(Modifier.width(8.dp))
                 IconToggleButton(expanded.expanded, {
                     expanded.expand(it)
-                }, Modifier.size(30.dp)) {
+                }, Modifier.size(30.dp).handPointer()) {
                     if (expanded.expanded) {
                         IconWithTooltip(Icons.Default.Done, "Finish Edit")
                     } else {
@@ -336,7 +346,7 @@ private fun <T> Clause(
                     OperationBadge(operation)
                 }
 
-                Box(Modifier.clickable(enabled = expanded) {
+                Box(Modifier.handPointer().clickable(enabled = expanded) {
                     set(current - it)
                 }) {
                     render(it)
@@ -357,7 +367,7 @@ private fun <T> Clause(
             Box(Modifier.padding(5.dp)) {
                 FlowRow(Modifier.fillMaxWidth(), verticalGap = 8.dp, horizontalGap = 10.dp) {
                     (allOptions - current.filters).forEach {
-                        Box(Modifier.clickable {
+                        Box(Modifier.handPointer().clickable {
                             set(current + it)
                         }) {
                             render(it)

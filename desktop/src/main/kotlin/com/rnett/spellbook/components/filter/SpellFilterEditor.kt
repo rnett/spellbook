@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.spell.ActionTypeTag
 import com.rnett.spellbook.components.spell.ActionsTag
@@ -58,7 +58,7 @@ import com.rnett.spellbook.spell.Save
 import com.rnett.spellbook.spell.School
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spell.SpellType
-import com.rnett.spellbook.spellbook.LevelSlot
+import com.rnett.spellbook.spellbook.LevelKnownSpell
 import kotlin.math.max
 import kotlin.math.min
 
@@ -105,7 +105,7 @@ class ExpansionManager {
 @Composable
 fun SpellFilterEditor(
     filter: SpellFilter,
-    presetSlot: LevelSlot? = null,
+    presetSlot: LevelKnownSpell? = null,
     showReset: Boolean = true,
     update: (SpellFilter) -> Unit
 ) {
@@ -138,13 +138,13 @@ fun SpellFilterEditor(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Min Level")
                     Spacer(Modifier.weight(1f))
-                    IconButton({
+                    IconButtonHand({
                         update(filter.copy(level = filter.level.copy(min = filter.level.min - 1)))
                     }, enabled = filter.level.min > 1) {
                         IconWithTooltip(Icons.Default.Remove, "Minus")
                     }
                     Text(filter.level.min.toString())
-                    IconButton({
+                    IconButtonHand({
                         val newValue = filter.level.min + 1
                         update(filter.copy(level = LevelFilter(newValue, max(filter.level.max, newValue))))
                     }, enabled = filter.level.min < 10) {
@@ -155,14 +155,14 @@ fun SpellFilterEditor(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Max Level")
                     Spacer(Modifier.weight(1f))
-                    IconButton({
+                    IconButtonHand({
                         val newValue = filter.level.max - 1
                         update(filter.copy(level = LevelFilter(min(newValue, filter.level.min), newValue)))
                     }, enabled = filter.level.max > 1) {
                         IconWithTooltip(Icons.Default.Remove, "Minus")
                     }
                     Text(filter.level.max.toString())
-                    IconButton({
+                    IconButtonHand({
                         update(filter.copy(level = filter.level.copy(max = filter.level.max + 1)))
                     }, enabled = filter.level.max < 10) {
                         IconWithTooltip(Icons.Default.Add, "Plus")

@@ -195,6 +195,14 @@ fun SpellListTag(spellList: SpellList, placeholder: Boolean = false) =
         SpellTag(spellList.name, Color.Transparent, "Not in ${spellList.name}", textColor = Color.Transparent)
 
 @Composable
+fun SpellListShortTag(spellList: SpellList, colorAlpha: Float = 1.0f) =
+    SpellTag(
+        spellList.name.substring(0, 1),
+        TagColors.SpellList(spellList).withAlpha(colorAlpha),
+        "Spell List: ${spellList.name}"
+    )
+
+@Composable
 fun TargetingTag(targeting: TargetingType) = SpellTag(TagColors.Targeting(targeting), "Targeting: $targeting") {
     when (targeting) {
         TargetingType.Other -> {

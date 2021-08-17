@@ -96,6 +96,7 @@ enum class SpellList(val normalList: Boolean) : SpellFilterPart {
 
     companion object {
         val lists by lazy { values().toSet() }
+        val traditions by lazy { setOf(Arcane, Divine, Occult, Primal) }
     }
 }
 

@@ -14,10 +14,10 @@ enum class SpellbookType {
 @Serializable
 sealed class SpellLevel {
     @Serializable
-    data class Prepared(val known: List<SpellSlot>, val maxPrepared: Int, val prepared: List<Int>) : SpellLevel() {
+    data class Prepared(val known: List<KnownSpell>, val maxPrepared: Int, val prepared: List<Int>) : SpellLevel() {
         companion object {
             fun empty(slots: Int, lists: Set<SpellList>, type: SpellType) = Prepared(
-                List(slots) { SpellSlot(lists, type) },
+                List(slots) { KnownSpell(lists, type) },
                 slots,
                 emptyList()
             )
@@ -25,16 +25,22 @@ sealed class SpellLevel {
     }
 
     @Serializable
-    data class Spontaneous(val maxSignatures: Int, val signatures: Set<Int>, val slots: List<SpellSlot>) :
+    data class Spontaneous(
+        val maxSignatures: Int,
+        val signatures: Set<Int>,
+        val known: List<KnownSpell>,
+        val numSlots: Int
+    ) :
         SpellLevel() {
 
-        val numSlots get() = slots.size
+        val numKnown get() = known.size
 
         companion object {
             fun empty(slots: Int, signatures: Int, lists: Set<SpellList>, type: SpellType) = Spontaneous(
                 signatures,
                 emptySet(),
-                List(slots) { SpellSlot(lists, type) }
+                List(slots) { KnownSpell(lists, type) },
+                slots
             )
         }
     }
@@ -131,13 +137,13 @@ fun <T : Spellcasting<L>, L : SpellLevel> T.withLevel(level: Int, newValue: L): 
         if (level == 0)
             copy(cantrips = newValue as SpellLevel.Prepared)
         else
-            copy(levels = levels.withReplace(level, newValue as SpellLevel.Prepared))
+            copy(levels = levels.withReplace(level - 1, newValue as SpellLevel.Prepared))
     }
     is Spellcasting.Spontaneous -> {
         if (level == 0)
             copy(cantrips = (newValue as SpellLevel.Spontaneous).copy(0, emptySet()))
         else
-            copy(levels = levels.withReplace(level, newValue as SpellLevel.Spontaneous))
+            copy(levels = levels.withReplace(level - 1, newValue as SpellLevel.Spontaneous))
     }
     else -> error("Unknown spellbook type $this")
 } as T

@@ -10,9 +10,11 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
+import java.util.Locale
 
 
-fun attrRegex(tag: String, attr: String) = Regex("(?<=<$tag[^>]*$attr=['\"])(.+?)(?=[\"'])", RegexOption.DOT_MATCHES_ALL)
+fun attrRegex(tag: String, attr: String) =
+    Regex("(?<=<$tag[^>]*$attr=['\"])(.+?)(?=[\"'])", RegexOption.DOT_MATCHES_ALL)
 
 private val hrefRegex = attrRegex("a", "href")
 private val srcRegex = attrRegex("img", "src")
@@ -34,10 +36,11 @@ fun adjustAonHtml(html: String): String {
     return html
 }
 
-inline fun <R> loggedTransaction(database: Database? = null, crossinline block: Transaction.() -> R) = transaction(database) {
-    addLogger(Slf4jSqlDebugLogger)
-    block()
-}
+inline fun <R> loggedTransaction(database: Database? = null, crossinline block: Transaction.() -> R) =
+    transaction(database) {
+        addLogger(Slf4jSqlDebugLogger)
+        block()
+    }
 
 suspend inline fun <R> newSuspendedLoggedTransaction(
     context: CoroutineDispatcher?,
@@ -59,7 +62,8 @@ inline fun Node.firstSiblingOrNull(filter: (Node) -> Boolean): Node? {
     return current
 }
 
-inline fun Node.firstSibling(filter: (Node) -> Boolean) = firstSiblingOrNull(filter) ?: error("No sibling matching predicate found")
+inline fun Node.firstSibling(filter: (Node) -> Boolean) =
+    firstSiblingOrNull(filter) ?: error("No sibling matching predicate found")
 
 inline fun Node.firstElementSiblingOrNull(filter: (Element) -> Boolean) = firstSiblingOrNull {
     if (it is Element)
@@ -68,7 +72,8 @@ inline fun Node.firstElementSiblingOrNull(filter: (Element) -> Boolean) = firstS
         false
 }
 
-inline fun Node.firstElementSibling(filter: (Element) -> Boolean) = firstElementSiblingOrNull(filter) ?: error("No sibling matching predicate found")
+inline fun Node.firstElementSibling(filter: (Element) -> Boolean) =
+    firstElementSiblingOrNull(filter) ?: error("No sibling matching predicate found")
 
 inline fun Node.siblingsUntil(stop: (Node) -> Boolean): List<Node> {
     var current = this.nextSibling()
@@ -123,4 +128,4 @@ fun actionNumForText(text: String): Int =
 
 inline fun <reified T> Any?.safeAs() = this as? T
 
-fun String.enumFormat() = trim(' ', ';').toLowerCase().capitalize()
+fun String.enumFormat() = trim(' ', ';').lowercase(Locale.getDefault()).capitalize()
