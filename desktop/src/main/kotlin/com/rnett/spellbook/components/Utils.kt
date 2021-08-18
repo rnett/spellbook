@@ -2,6 +2,7 @@ package com.rnett.spellbook.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.BoxWithTooltip
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -13,12 +14,23 @@ import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerIcon
 import androidx.compose.ui.unit.IntOffset
@@ -109,3 +121,66 @@ fun IconButtonHand(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     content: @Composable () -> Unit
 ) = IconButton(onClick, modifier.ifLet(enabled, Modifier::handPointer), enabled, interactionSource, content)
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun Modifier.focusableEditable(
+    editing: Boolean,
+    setEditing: (Boolean) -> Unit
+): Modifier = composed {
+
+    val focusRequester = remember { FocusRequester() }
+
+    key(editing) {
+        SideEffect {
+            if (editing)
+                focusRequester.requestFocus()
+            else
+                focusRequester.freeFocus()
+        }
+    }
+
+    Modifier.focusRequester(focusRequester).focusable().onKeyEvent {
+        if (it.type == KeyEventType.KeyDown) {
+            when (it.key) {
+                Key.Escape -> {
+                    setEditing(false)
+                    true
+                }
+                Key.Enter, Key.NumPadEnter -> {
+                    setEditing(!editing)
+                    true
+                }
+                else -> false
+            }
+        } else false
+    }
+}
+
+fun Modifier.onKeyDown(keys: Set<Key>, consume: Boolean = true, handler: () -> Unit): Modifier {
+    return onKeyEvent {
+        if (it.type == KeyEventType.KeyDown && it.key in keys) {
+            handler()
+            consume
+        } else false
+    }
+}
+
+fun Modifier.onKeyDown(key: Key, consume: Boolean = true, handler: () -> Unit) = onKeyDown(setOf(key), consume, handler)
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun Modifier.onEscape(handler: () -> Unit) = onKeyDown(Key.Escape) {
+    handler()
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+inline fun onEscape(crossinline handler: () -> Unit): (KeyEvent) -> Boolean = {
+    if (it.type == KeyEventType.KeyDown && it.key == Key.Escape) {
+        handler()
+        true
+    } else false
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun Modifier.onEnter(handler: () -> Unit) = onKeyDown(setOf(Key.Enter, Key.NumPadEnter)) {
+    handler()
+}

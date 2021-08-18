@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,19 +43,20 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import com.rnett.spellbook.FilterColors
+import com.rnett.spellbook.LocalMainState
 import com.rnett.spellbook.MainColors
-import com.rnett.spellbook.SavedSearchs
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.CenterPopup
 import com.rnett.spellbook.components.IconWithTooltip
+import com.rnett.spellbook.filter.SpellFilter
 
 @Composable
-fun SpellListFinder(
-    savedSearchs: SavedSearchs,
-    update: (SavedSearchs) -> Unit,
+fun SpellFilterLoader(
     cancel: () -> Unit,
-    load: (String) -> Unit,
+    load: (SpellFilter) -> Unit,
 ) {
+    val savedSearchs by LocalMainState.current.savedFilters()
+    val savedByName by remember { derivedStateOf { savedSearchs.toMap() } }
     val scrollState = rememberScrollState()
     var managing by remember { mutableStateOf(false) }
 
@@ -80,7 +82,7 @@ fun SpellListFinder(
 
                 Divider(color = FilterColors.dividerColor.asCompose())
                 savedSearchs.keys.forEach {
-                    Row(Modifier.fillMaxWidth().clickable { load(it) }.padding(10.dp)) {
+                    Row(Modifier.fillMaxWidth().clickable { load(savedByName.getValue(it)) }.padding(10.dp)) {
                         Text(it)
                         Spacer(Modifier.weight(0.5f))
                         IconWithTooltip(Icons.Default.Search, "Search")
@@ -116,11 +118,9 @@ fun SpellListFinder(
     if (managing) {
         ManageSavedSearchesPopup(
             { managing = false },
-            savedSearchs,
-            update,
             {
                 managing = false
-                load(it)
+                load(savedByName.getValue(it))
             }
         )
     }
@@ -130,8 +130,6 @@ fun SpellListFinder(
 @Composable
 private fun ManageSavedSearchesPopup(
     close: () -> Unit,
-    filters: SavedSearchs,
-    update: (SavedSearchs) -> Unit,
     search: (String) -> Unit
 ) {
     Popup(
@@ -151,7 +149,7 @@ private fun ManageSavedSearchesPopup(
                         IconWithTooltip(Icons.Default.Close, "Close")
                     }
                 }
-                SavedSearchPage(filters, update, search)
+                SavedSearchPage(search)
             }
         }
     }

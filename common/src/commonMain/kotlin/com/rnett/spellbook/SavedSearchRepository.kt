@@ -20,7 +20,8 @@ abstract class NamedObjectRepository<T>(
 
     }
 
-    private val mutableState: MutableStateFlow<NamedObjectView<T>> = MutableStateFlow(NamedObjectView(initial.toPersistentMap(), baseName, ::suffix))
+    private val mutableState: MutableStateFlow<NamedObjectView<T>> =
+        MutableStateFlow(NamedObjectView(initial.toPersistentMap(), baseName, ::suffix))
 
     var value: NamedObjectView<T>
         get() = mutableState.value
@@ -32,23 +33,26 @@ abstract class NamedObjectRepository<T>(
     val state: StateFlow<NamedObjectView<T>> = mutableState
 }
 
-data class NamedObjectView<T>(val all: PersistentMap<String, T>, private val baseName: String, private val suffix: (Int) -> String) :
+data class NamedObjectView<T>(
+    val all: PersistentMap<String, T>,
+    private val baseName: String,
+    private val suffix: (Int) -> String
+) :
     Map<String, T> by all {
 
-    operator fun set(key: String, value: T) = copy(all = all.put(key, value))
+    fun replace(key: String, value: T) = copy(all = all.put(key, value))
 
     fun remove(key: String) = copy(all = all.remove(key))
 
-    val newName
-        get(): String {
-            var name = baseName
-            var i = 0
-            while (name in this) {
-                i++
-                name = baseName + suffix(i)
-            }
-            return name
+    fun newName(): String {
+        var name = baseName
+        var i = 0
+        while (name in this) {
+            i++
+            name = baseName + suffix(i)
         }
+        return name
+    }
 
     fun rename(old: String, new: String) = copy(all = all.keys.toPersistentList().mutate {
         it[it.indexOf(old)] = new
@@ -62,7 +66,7 @@ data class NamedObjectView<T>(val all: PersistentMap<String, T>, private val bas
     }.toPersistentMap()
     )
 
-    fun add(value: T) = set(newName, value)
+    fun add(value: T) = replace(newName(), value)
 }
 
 typealias SavedSearchs = NamedObjectView<SpellFilter>

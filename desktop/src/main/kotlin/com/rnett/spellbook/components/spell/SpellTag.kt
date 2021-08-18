@@ -2,6 +2,7 @@ package com.rnett.spellbook.components.spell
 
 import androidx.compose.foundation.BoxWithTooltip
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -54,7 +55,7 @@ import com.rnett.spellbook.spell.eq
 fun SpellTag(
     content: String,
     color: Color,
-    tooltip: String,
+    tooltip: String?,
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
@@ -66,7 +67,7 @@ fun SpellTag(
 fun SpellTag(
     content: String,
     color: androidx.compose.ui.graphics.Color,
-    tooltip: String,
+    tooltip: String?,
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
@@ -81,7 +82,7 @@ fun SpellTag(
 @Composable
 fun SpellTag(
     color: Color,
-    tooltip: String,
+    tooltip: String?,
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
@@ -93,7 +94,7 @@ fun SpellTag(
 @Composable
 fun SpellTag(
     color: androidx.compose.ui.graphics.Color,
-    tooltip: String,
+    tooltip: String?,
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
@@ -113,11 +114,24 @@ fun SpellTag(
     val vertPadding = if (noVerticalPadding) 0.dp else 3.dp
 
     Surface(shape = RoundedCornerShape(8.dp), color = color, contentColor = textColor ?: contentColorFor(color)) {
-        BoxWithTooltip({
-            TextTooltip(tooltip)
-        }, myModifier.padding(5.dp, vertPadding)) {
-            ProvideTextStyle(TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)) {
+        val innerContent: @Composable () -> Unit = {
+            ProvideTextStyle(
+                TextStyle(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            ) {
                 content()
+            }
+        }
+        if (tooltip != null) {
+            BoxWithTooltip({
+                TextTooltip(tooltip)
+            }, myModifier.padding(5.dp, vertPadding), content = innerContent)
+        } else {
+            Box(myModifier.padding(5.dp, vertPadding)) {
+                innerContent()
             }
         }
     }

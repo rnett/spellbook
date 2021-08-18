@@ -2,7 +2,6 @@ package com.rnett.spellbook.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,21 +11,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 
@@ -47,34 +41,11 @@ fun IconMaxSetter(
 ) {
     var editing by remember { mutableStateOf(false) }
 
-    val focusRequester = remember { FocusRequester() }
-
-    key(editing) {
-        SideEffect {
-            if (editing)
-                focusRequester.requestFocus()
-            else
-                focusRequester.freeFocus()
-        }
-    }
-
     Row(
-        Modifier.focusRequester(focusRequester).onFocusChanged {
-            if (editing && !it.isFocused) {
-                editing = false
-            }
-        }.focusable()
-            .onPreviewKeyEvent {
+        Modifier.focusableEditable(editing) { editing = it }
+            .onKeyEvent {
                 if (it.type == KeyEventType.KeyDown) {
                     when (it.key) {
-                        Key.Escape -> {
-                            editing = false
-                            true
-                        }
-                        Key.Enter, Key.NumPadEnter -> {
-                            editing = !editing
-                            true
-                        }
                         Key.Plus, Key.DirectionRight -> {
                             setMax(max + 1)
                             true

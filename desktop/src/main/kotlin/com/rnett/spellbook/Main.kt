@@ -14,6 +14,7 @@ import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -21,6 +22,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
@@ -36,12 +38,14 @@ import com.rnett.spellbook.data.allTargeting
 import com.rnett.spellbook.data.allTraits
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.pages.SpellListPage
+import com.rnett.spellbook.pages.SpellListState
 import com.rnett.spellbook.pages.SpellbooksPage
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.SpellbookType
 import com.rnett.spellbook.spellbook.Spellcasting
+import com.rnett.spellbook.spellbook.withLevel
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -58,11 +62,12 @@ fun initCaches() {
     allDurations.let { }
 }
 
+val LocalMainState = staticCompositionLocalOf<MainState> { error("MainState not set") }
+
 class MainState(
     val savedSearchRepo: LocalNamedObjectRepo<SpellFilter>, //TODO just use mutable state + LaunchedEffect keyed on it to save?
     initialPage: Pages
 ) {
-    val savedSearches = savedSearchRepo.state
     var lookingForSpell by mutableStateOf<LevelKnownSpell?>(null)
 
     val searchPage = PageState.Search()
@@ -87,6 +92,18 @@ class MainState(
     )
         private set
 
+
+    fun saveFilter(name: String, spellFilter: SpellFilter) {
+        savedSearchRepo.value = savedSearchRepo.value.replace(name, spellFilter)
+    }
+
+    fun updateSavedFilters(searches: SavedSearchs) {
+        savedSearchRepo.value = searches
+    }
+
+    @Composable
+    fun savedFilters() = savedSearchRepo.state.collectAsState()
+
 }
 
 //TODO finish
@@ -99,19 +116,11 @@ sealed class PageState {
     class Search : PageState() {
         override val page: Pages = Pages.SpellSearch
 
-        var search: SpellFilter by mutableStateOf(SpellFilter())
-
         @Composable
         override fun show(main: MainState) = with(main) {
-            val savedSearchesState by savedSearches.collectAsState()
+            val state: SpellListState = remember { SpellListState.Search(SpellFilter()) }
             SpellListPage(
-                search,
-                { search = it },
-                savedSearchesState,
-                { savedSearchRepo.value = it },
-                { name, value -> savedSearchRepo.value = savedSearchesState.set(name, value) },
-                null,
-                null
+                state
             )
         }
     }
@@ -126,14 +135,17 @@ sealed class PageState {
                     SpellbookType.Spontaneous,
                     setOf(SpellList.Arcane),
                     4
-                )
+                ).let {
+                    it.withLevel(3, it[3].let {
+                        it.withKnown(0, allSpells.first { it.name == "Fireball" })
+                    })
+                }
             )
             SpellbooksPage(
                 spells,
                 { idx, new ->
                     spells[idx] = spells[idx].first to new
-                }) { slot, setter ->
-            }
+                })
         }
     }
 }
@@ -172,32 +184,37 @@ fun main() {
 
                     val mainState = remember { MainState(savedSearchRepo, Pages.Spellbooks) }
 
-                    mainState.lookingForSpell?.let {
-                        Row {
-                            Text("Selecting level ${it.level} ${it.slot.type.longName} from {")
-                            Spacer(Modifier.width(0.5.dp))
-                            it.slot.lists.forEach {
-                                SpellListTag(it)
+                    CompositionLocalProvider(
+                        LocalMainState.provides(mainState)
+                    ) {
+
+                        mainState.lookingForSpell?.let {
+                            Row {
+                                Text("Selecting level ${it.level} ${it.slot.type.longName} from {")
                                 Spacer(Modifier.width(0.5.dp))
+                                it.slot.lists.forEach {
+                                    SpellListTag(it)
+                                    Spacer(Modifier.width(0.5.dp))
+                                }
+                                Text("}")
                             }
-                            Text("}")
                         }
-                    }
 
-                    TabRow(mainState.currentPage.ordinal, backgroundColor = MainColors.spellBodyColor.asCompose()) {
-                        Tab(mainState.currentPage == Pages.Spellbooks, {
-                            mainState.currentPage = Pages.Spellbooks
-                        }) {
-                            Text("Spellbooks", Modifier.padding(10.dp))
+                        TabRow(mainState.currentPage.ordinal, backgroundColor = MainColors.spellBodyColor.asCompose()) {
+                            Tab(mainState.currentPage == Pages.Spellbooks, {
+                                mainState.currentPage = Pages.Spellbooks
+                            }) {
+                                Text("Spellbooks", Modifier.padding(10.dp))
+                            }
+                            Tab(mainState.currentPage == Pages.SpellSearch, {
+                                mainState.currentPage = Pages.SpellSearch
+                            }) {
+                                Text("Search", Modifier.padding(10.dp))
+                            }
                         }
-                        Tab(mainState.currentPage == Pages.SpellSearch, {
-                            mainState.currentPage = Pages.SpellSearch
-                        }) {
-                            Text("Search", Modifier.padding(10.dp))
-                        }
-                    }
 
-                    mainState.page.show(mainState)
+                        mainState.page.show(mainState)
+                    }
                 }
             }
         }

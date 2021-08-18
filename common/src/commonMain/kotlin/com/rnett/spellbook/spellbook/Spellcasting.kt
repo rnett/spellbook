@@ -1,5 +1,6 @@
 package com.rnett.spellbook.spellbook
 
+import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spell.SpellType
 import kotlinx.serialization.Serializable
@@ -13,6 +14,9 @@ enum class SpellbookType {
 
 @Serializable
 sealed class SpellLevel {
+
+    abstract fun withKnown(i: Int, spell: Spell): SpellLevel
+
     @Serializable
     data class Prepared(val known: List<KnownSpell>, val maxPrepared: Int, val prepared: List<Int>) : SpellLevel() {
         companion object {
@@ -22,6 +26,9 @@ sealed class SpellLevel {
                 emptyList()
             )
         }
+
+        override fun withKnown(i: Int, spell: Spell): Prepared =
+            copy(known = known.withReplace(i) { it.copy(spell = spell) })
     }
 
     @Serializable
@@ -34,6 +41,9 @@ sealed class SpellLevel {
         SpellLevel() {
 
         val numKnown get() = known.size
+
+        override fun withKnown(i: Int, spell: Spell): Spontaneous =
+            copy(known = known.withReplace(i) { it.copy(spell = spell) })
 
         companion object {
             fun empty(slots: Int, signatures: Int, lists: Set<SpellList>, type: SpellType) = Spontaneous(
@@ -49,6 +59,12 @@ sealed class SpellLevel {
 fun <T> List<T>.withReplace(i: Int, new: T): List<T> {
     val m = toMutableList()
     m[i] = new
+    return m.toList()
+}
+
+fun <T> List<T>.withReplace(i: Int, new: (T) -> T): List<T> {
+    val m = toMutableList()
+    m[i] = new(m[i])
     return m.toList()
 }
 

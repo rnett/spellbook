@@ -26,14 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
-import com.rnett.spellbook.SavedSearchs
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.SidebarDisplay
 import com.rnett.spellbook.components.SidebarState
 import com.rnett.spellbook.components.filter.FilterDivider
 import com.rnett.spellbook.components.filter.SpellFilterEditor
-import com.rnett.spellbook.components.search.SpellListFinder
-import com.rnett.spellbook.components.search.SpellListSaver
+import com.rnett.spellbook.components.search.SpellFilterLoader
+import com.rnett.spellbook.components.search.SpellFilterSaver
 import com.rnett.spellbook.components.spell.SpellDisplay
 import com.rnett.spellbook.db.getSpellsForFilter
 import com.rnett.spellbook.filter.SpellFilter
@@ -46,30 +45,41 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 
+sealed class SpellListState {
+    abstract var filter: SpellFilter
+
+    abstract val level: LevelKnownSpell?
+
+    class Search(filter: SpellFilter) :
+        SpellListState() {
+        override var filter: SpellFilter by mutableStateOf(filter)
+        override val level: LevelKnownSpell? = null
+    }
+
+    class FindForSpellbook(
+        filter: SpellFilter,
+        override val level: LevelKnownSpell,
+        val setSpell: (Spell) -> Unit
+    ) : SpellListState() {
+        override var filter: SpellFilter by mutableStateOf(filter.forSlot(level))
+    }
+
+}
+
 @OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
 fun SpellListPage(
-    filter: SpellFilter,
-    setFilter: (SpellFilter) -> Unit,
-    knownFilters: SavedSearchs,
-    updateSavedFilters: (SavedSearchs) -> Unit,
-    saveFilter: (String, SpellFilter) -> Unit,
-    searchSlot: LevelKnownSpell? = null,
-    setSelectedSpell: ((Spell) -> Unit)? = null,
+    state: SpellListState
 ) {
-    val savedByFilter = knownFilters.entries.reversed().associate { it.value to it.key }
-    val savedNames = knownFilters.keys
-    val savedByName = knownFilters.toMap()
-
     Surface(color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
         var loadingSavedFilter by remember { mutableStateOf(false) }
 
         var spells by remember { mutableStateOf<List<Spell>?>(null) }
         val scrollState = rememberLazyListState()
 
-        LaunchedEffect(filter) {
+        LaunchedEffect(state.filter) {
             withContext(Dispatchers.IO) {
-                spells = getSpellsForFilter(filter)
+                spells = getSpellsForFilter(state.filter)
             }
         }
 
@@ -78,24 +88,24 @@ fun SpellListPage(
 
         Row {
             Column(Modifier.fillMaxWidth(0.15f)) {
-                if (setSelectedSpell != null) {
+                if (state is SpellListState.FindForSpellbook) {
                     Row(Modifier.fillMaxWidth()) {
                         Text("Select spell...")
                         //TODO cancel?
                     }
                 }
                 if (loadingSavedFilter) {
-                    SpellListFinder(knownFilters, updateSavedFilters, { loadingSavedFilter = false }) {
-                        setFilter(savedByName.getValue(it).forSlot(searchSlot))
+                    SpellFilterLoader({ loadingSavedFilter = false }) {
+                        state.filter = it.forSlot(state.level)
                         loadingSavedFilter = false
                     }
                 } else {
-                    SpellListSaver(filter, savedByFilter, savedNames, { knownFilters.newName }, { name, filter ->
-                        saveFilter(name, filter.ifLet(searchSlot != null) { it.withoutAnySlot() })
+                    SpellFilterSaver(state.filter, { filter ->
+                        filter.ifLet(state.level != null) { it.withoutAnySlot() }
                     }) { loadingSavedFilter = true }
                     FilterDivider()
-                    SpellFilterEditor(filter, searchSlot) {
-                        setFilter(it.forSlot(searchSlot))
+                    SpellFilterEditor(state.filter, state.level) {
+                        state.filter = it.forSlot(state.level)
                     }
                 }
             }
@@ -107,7 +117,10 @@ fun SpellListPage(
                             LazyColumn(state = scrollState) {
                                 items(spells!!.toList(), { it.name }) {
                                     Box(Modifier.padding(bottom = 10.dp)) {
-                                        SpellDisplay(it, setSelectedSpell)
+                                        SpellDisplay(
+                                            it,
+                                            if (state is SpellListState.FindForSpellbook) state.setSpell else null
+                                        )
                                     }
                                 }
                             }

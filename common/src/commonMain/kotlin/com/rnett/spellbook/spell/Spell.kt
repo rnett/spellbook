@@ -44,7 +44,7 @@ sealed class TargetingType(open val name: String) : SpellFilterPart {
         companion object {
             val knownTypes by lazy { setOf(Cone, Line, Emanation, Burst, Wall) }
             operator fun invoke(area: String): List<Area> {
-                val found = knownTypes.filter { it.name.toLowerCase() in area.toLowerCase() }
+                val found = knownTypes.filter { it.name.lowercase() in area.lowercase() }
 
                 return if (found.isNotEmpty())
                     found
@@ -96,7 +96,7 @@ enum class SpellList(val normalList: Boolean) : SpellFilterPart {
 
     companion object {
         val lists by lazy { values().toSet() }
-        val traditions by lazy { setOf(Arcane, Divine, Occult, Primal) }
+        val traditions by lazy { setOf(Arcane, Divine, Occult, Primal).sorted() }
     }
 }
 

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.TurnedIn
 import androidx.compose.material.icons.filled.TurnedInNot
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.FilterColors
+import com.rnett.spellbook.LocalMainState
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
@@ -29,21 +31,23 @@ import com.rnett.spellbook.components.SmallTextField
 import com.rnett.spellbook.filter.SpellFilter
 
 @Composable
-fun SpellListSaver(
+fun SpellFilterSaver(
     filter: SpellFilter,
-    savedFilters: Map<SpellFilter, String>,
-    savedNames: Set<String>,
-    newName: () -> String,
-    saveFilter: (String, SpellFilter) -> Unit,
+    adjustFilter: (SpellFilter) -> SpellFilter,
     load: () -> Unit,
 ) {
+    val mainState = LocalMainState.current
+    val savedFilters by mainState.savedFilters()
+    val savedFiltersByFilter by remember { derivedStateOf { savedFilters.entries.associate { it.value to it.key } } }
+    val savedNames by remember { derivedStateOf { savedFilters.keys } }
+
     Row(Modifier.padding(vertical = 5.dp).height(30.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (filter in savedFilters) {
+        if (filter in savedFiltersByFilter) {
             Spacer(Modifier.width(12.dp))
             IconWithTooltip(Icons.Default.TurnedIn, "Saved")
 
             Spacer(Modifier.width(4.dp))
-            Text(savedFilters.getValue(filter))
+            Text(savedFiltersByFilter.getValue(filter))
 
             Spacer(Modifier.weight(0.5f))
             IconButtonHand({
@@ -55,7 +59,7 @@ fun SpellListSaver(
             var filterName: String? by remember { mutableStateOf(null) }
             if (filterName == null) {
                 IconButtonHand({
-                    filterName = newName()
+                    filterName = savedFilters.newName()
                 }, enabled = filter != SpellFilter()) {
                     IconWithTooltip(Icons.Default.TurnedInNot, "Save")
                 }
@@ -85,7 +89,7 @@ fun SpellListSaver(
                 )
 
                 IconButtonHand({
-                    saveFilter(filterName!!, filter)
+                    mainState.saveFilter(filterName!!, adjustFilter(filter))
                     filterName = null
                 }, enabled = filterName!! !in savedNames) {
                     IconWithTooltip(Icons.Default.BookmarkAdd, "Save")

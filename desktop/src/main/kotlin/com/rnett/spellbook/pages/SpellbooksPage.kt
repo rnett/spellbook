@@ -1,25 +1,30 @@
 package com.rnett.spellbook.pages
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -29,26 +34,41 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.window.Popup
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.CenterPopup
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconMaxSetter
 import com.rnett.spellbook.components.IconSetter
 import com.rnett.spellbook.components.IconWithTooltip
+import com.rnett.spellbook.components.core.FlowRow
+import com.rnett.spellbook.components.focusableEditable
 import com.rnett.spellbook.components.handPointer
 import com.rnett.spellbook.components.join
+import com.rnett.spellbook.components.onEnter
+import com.rnett.spellbook.components.onEscape
+import com.rnett.spellbook.components.spell.ActionsTag
+import com.rnett.spellbook.components.spell.SpellDisplay
 import com.rnett.spellbook.components.spell.SpellListShortTag
 import com.rnett.spellbook.components.spell.SpellListTag
+import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
@@ -63,10 +83,11 @@ import com.rnett.spellbook.spellbook.withReplace
 @Composable
 fun SpellbooksPage(
     spellbooks: List<Pair<String, Spellcasting<*>>>,
-    set: (Int, Spellcasting<*>) -> Unit,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit,
+    set: (Int, Spellcasting<*>) -> Unit
 ) {
     var currentSpellbook: Int? by remember { mutableStateOf(if (spellbooks.isNotEmpty()) 0 else null) }
+
+    var currentSearch by remember { mutableStateOf<Pair<LevelKnownSpell, (Spell) -> Unit>?>(null) }
 
     Surface(color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
         Row {
@@ -78,27 +99,16 @@ fun SpellbooksPage(
 
                     SpellbookDisplay(spellbooks[currentSpellbook!!].second, {
                         set(currentSpellbook!!, it)
-                    }, searchSlot)
+                    }) { slot, setter ->
+                        currentSearch = slot to setter
+                    }
                 }
             }
         }
     }
-}
 
-@Composable
-@Preview
-fun EmptySpontaneous() {
-    var sorc by remember {
-        mutableStateOf(
-            Spellcasting.fullCaster(
-                SpellbookType.Spontaneous,
-                setOf(SpellList.Arcane),
-                4
-            )
-        )
-    }
-    SpellbookDisplay(sorc, { sorc = it }) { _, _ ->
-
+    currentSearch?.let {
+        SearchPopup({ currentSearch = null }, it.first, it.second)
     }
 }
 
@@ -106,7 +116,50 @@ fun EmptySpontaneous() {
 
 //TODO prepared should be drag and drop from known into slots
 
-//TODO I want some kind of icon number setter, i.e. - * * * +, w/ an option for max.  For slots & signatures
+//TODO should be able to drag around spontaneous ones to other slots, too, as long as the spell lists match
+
+//TODO button to remove spell.  On clicks, open if spell is there, search if not.  No searching when spell is there
+
+//TODO something like a shopping cart.  Add from search page, drag out into spellbooks and groups
+
+@Composable
+fun SearchPopup(
+    close: () -> Unit,
+    level: LevelKnownSpell,
+    setSpell: (Spell) -> Unit
+) {
+    Popup(
+        CenterPopup,
+        onDismissRequest = { close() },
+        onPreviewKeyEvent = onEscape(close),
+        focusable = true
+    ) {
+        Surface(
+            Modifier.fillMaxSize(0.9f),
+            color = MainColors.outsideColor.withAlpha(0.6f).asCompose().compositeOver(Color.Black),
+            border = BorderStroke(2.dp, Color.Black),
+            elevation = 5.dp
+        ) {
+            Column(Modifier.fillMaxSize()) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    IconButton(close) {
+                        IconWithTooltip(Icons.Default.Close, "Close")
+                    }
+                }
+                val state = remember {
+                    SpellListState.FindForSpellbook(
+                        SpellFilter(),
+                        level
+                    ) {
+                        setSpell(it)
+                        close()
+                    }
+                }
+                SpellListPage(state)
+            }
+        }
+    }
+}
 
 @Composable
 fun SpellbookDisplay(
@@ -166,6 +219,7 @@ fun ListsIcon(lists: Set<SpellList>, set: (Set<SpellList>) -> Unit) {
 
     Row(
         Modifier
+            .focusableEditable(editing) { editing = it }
             .combinedClickable(onDoubleClick = {
                 editing = !editing
             }) {}
@@ -173,7 +227,7 @@ fun ListsIcon(lists: Set<SpellList>, set: (Set<SpellList>) -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (!editing) {
-            lists.forEach {
+            lists.sorted().forEach {
                 Box(Modifier.padding(2.dp)) {
                     SpellListShortTag(it)
                 }
@@ -181,7 +235,7 @@ fun ListsIcon(lists: Set<SpellList>, set: (Set<SpellList>) -> Unit) {
         } else {
             SpellList.traditions.forEach {
                 Box(Modifier
-                    .padding(horizontal = 2.dp)
+                    .padding(2.dp)
                     .handPointer()
                     .clickable(
                         it !in lists || lists.size > 1
@@ -260,6 +314,50 @@ fun SpontaneousLevel(
     }
 }
 
+enum class SpellDrawerState {
+    Header, Full, Closed;
+
+    val next
+        get() = when (this) {
+            Header -> Full
+            Full -> Closed
+            Closed -> Header
+        }
+
+    val changeExpanded
+        get() = when (this) {
+            Header -> Full
+            Full -> Header
+            else -> Closed
+        }
+}
+
+@Composable
+fun SpellInfoDrawer(spell: Spell, state: SpellDrawerState, setState: (SpellDrawerState) -> Unit) {
+    if (state == SpellDrawerState.Closed) return
+    val focusRequester = remember { FocusRequester() }
+
+    key(state) {
+        SideEffect {
+            if (state == SpellDrawerState.Closed)
+                focusRequester.freeFocus()
+            else
+                focusRequester.requestFocus()
+        }
+    }
+
+    Box(Modifier
+        .focusRequester(focusRequester)
+        .focusable()
+        .onEscape { setState(SpellDrawerState.Closed) }
+        .onEnter { setState(state.next) }
+    ) {
+        SpellDisplay(spell, null, state == SpellDrawerState.Full) {
+            setState(state.changeExpanded)
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SpontaneousSlot(
@@ -271,31 +369,68 @@ fun SpontaneousSlot(
     canBeSignature: Boolean,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp).combinedClickable(onDoubleClick = {
-        searchSlot(LevelKnownSpell(level, slot)) {
-            set(slot.copy(spell = it))
-        }
-    }) { }, verticalAlignment = Alignment.CenterVertically) {
+    var drawerOpen by remember { mutableStateOf(SpellDrawerState.Closed) }
 
-        if (level > 0) {
-            if (isSignature) {
-                IconButtonHand({ setSignature(false) }, Modifier.size(15.dp)) {
-                    IconWithTooltip(Icons.Filled.Star, "Signature")
+    Column(Modifier.fillMaxWidth()) {
+
+        Row(Modifier.fillMaxWidth().padding(vertical = 3.dp).combinedClickable(onDoubleClick = {
+            searchSlot(LevelKnownSpell(level, slot)) {
+                set(slot.copy(spell = it))
+            }
+        }) {
+            if (slot.spell != null)
+                drawerOpen = drawerOpen.next
+
+        }, verticalAlignment = Alignment.CenterVertically) {
+
+            Row(Modifier.width(15.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (level > 0) {
+                    if (isSignature) {
+                        IconButtonHand({ setSignature(false) }, Modifier.size(15.dp)) {
+                            IconWithTooltip(Icons.Filled.Star, "Signature")
+                        }
+                    } else {
+                        IconButtonHand(
+                            { setSignature(true) },
+                            Modifier.size(15.dp),
+                            enabled = canBeSignature && slot.spell != null
+                        ) {
+                            IconWithTooltip(Icons.Outlined.StarOutline, "Make Signature")
+                        }
+                    }
                 }
-            } else {
-                IconButtonHand({ setSignature(true) }, Modifier.size(15.dp), enabled = canBeSignature) {
-                    IconWithTooltip(Icons.Outlined.StarOutline, "Make Signature")
+            }
+
+            Spacer(Modifier.width(10.dp))
+
+            Row(Modifier.width(120.dp), verticalAlignment = Alignment.CenterVertically) {
+                ListsIcon(slot.lists) { set(slot.copy(lists = it)) }
+            }
+
+            Spacer(Modifier.width(10.dp))
+
+            Text(slot.spell?.name ?: "Empty")
+
+            slot.spell?.let { spell ->
+                Spacer(Modifier.width(10.dp))
+
+                Box(Modifier.height(20.dp)) {
+                    ActionsTag(spell.actions)
+                }
+
+                Spacer(Modifier.width(10.dp))
+
+                FlowRow(Modifier.weight(0.2f).widthIn(max = 200.dp), horizontalGap = 4.dp) {
+                    spell.lists.forEach {
+                        SpellListTag(it)
+                    }
                 }
             }
         }
 
-        Spacer(Modifier.width(10.dp))
-
-        ListsIcon(slot.lists) { set(slot.copy(lists = it)) }
-
-        Spacer(Modifier.width(10.dp))
-
-        Text(slot.spell?.name ?: "Empty")
+        if (slot.spell != null) {
+            SpellInfoDrawer(slot.spell!!, drawerOpen) { drawerOpen = it }
+        }
     }
 }
 

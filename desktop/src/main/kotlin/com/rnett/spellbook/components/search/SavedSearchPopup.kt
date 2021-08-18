@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -53,23 +54,24 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import com.rnett.spellbook.FilterColors
+import com.rnett.spellbook.LocalMainState
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.SavedSearchColors
-import com.rnett.spellbook.SavedSearchs
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.SmallTextField
 import com.rnett.spellbook.components.filter.SpellFilterEditor
+import com.rnett.spellbook.components.onEscape
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
 
 @OptIn(ExperimentalAnimationApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun SavedSearchPage(
-    filters: SavedSearchs,
-    update: (SavedSearchs) -> Unit,
     search: (String) -> Unit,
 ) {
+    val mainState = LocalMainState.current
+    val filters by mainState.savedFilters()
 
     Surface(color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
         Row {
@@ -91,7 +93,8 @@ fun SavedSearchPage(
                                 list[list.indexOf(deletePopupFor!!) + 1]
                         }
                     }
-                    update(filters.remove(deletePopupFor!!))
+                    filters.remove(deletePopupFor!!)
+                    mainState.updateSavedFilters(filters.remove(deletePopupFor!!))
                 })
             }
 
@@ -120,8 +123,10 @@ fun SavedSearchPage(
                             .onFocusChanged {
                                 if (!it.hasFocus) {
                                     editingName?.let {
-                                        if (it !in filters.all)
-                                            update(rename(name, it))
+                                        if (it !in filters.all) {
+                                            rename(name, it)
+                                            mainState.updateSavedFilters(rename(name, it))
+                                        }
                                         editingName = null
                                     }
                                 }
@@ -147,7 +152,8 @@ fun SavedSearchPage(
                                 IconButton({
                                     val newName = editingName!!
                                     editingName = null
-                                    update(rename(name, newName))
+                                    rename(name, newName)
+                                    mainState.updateSavedFilters(rename(name, newName))
                                 }, enabled = editingName == name || editingName!! !in filters.all) {
                                     IconWithTooltip(Icons.Default.CheckCircleOutline, "Save")
                                 }
@@ -191,8 +197,9 @@ fun SavedSearchPage(
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     IconButton({
-                        val newName = filters.newName
-                        update(filters.set(newName, SpellFilter()))
+                        val newName = filters.newName()
+                        filters.replace(newName, SpellFilter())
+                        mainState.updateSavedFilters(filters.replace(newName, SpellFilter()))
                         openFilter = newName
                     }) {
                         IconWithTooltip(Icons.Default.Add, "New Search")
@@ -217,8 +224,12 @@ fun SavedSearchPage(
                                 }
                                 Spacer(Modifier.height(10.dp))
                                 SpellFilterEditor(filters[openFilter]!!, showReset = false) {
-                                    update(
-                                        filters.set(
+                                    filters.replace(
+                                        openFilter,
+                                        it
+                                    )
+                                    mainState.updateSavedFilters(
+                                        filters.replace(
                                             openFilter,
                                             it
                                         )
@@ -233,9 +244,13 @@ fun SavedSearchPage(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun DeletePopup(deleteName: String, close: () -> Unit, remove: () -> Unit) {
-    Popup(alignment = Alignment.Center, offset = IntOffset(0, -200), focusable = true, onDismissRequest = { close() }) {
+    Popup(
+        alignment = Alignment.Center, offset = IntOffset(0, -200), focusable = true, onDismissRequest = { close() },
+        onPreviewKeyEvent = onEscape(close)
+    ) {
         Surface(
             Modifier
                 .width(300.dp),

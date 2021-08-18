@@ -28,9 +28,7 @@ import com.rnett.spellbook.spell.Spell
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?) {
-    var expanded by remember { mutableStateOf(false) }
-
+fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?, expanded: Boolean, headerClick: () -> Unit) {
     Surface(
         shape = RoundedCornerShape(10.dp),
         color = MainColors.spellBorderColor.asCompose()
@@ -39,7 +37,7 @@ fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?) {
         Column {
             SpellHeader(
                 spell,
-                Modifier.clickable(remember { MutableInteractionSource() }, null) { expanded = !expanded },
+                Modifier.clickable(remember { MutableInteractionSource() }, null) { headerClick() },
                 setSelectedSpell
             )
 
@@ -71,4 +69,12 @@ fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?) {
             }
         }
     }
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?) {
+    var expanded by remember { mutableStateOf(false) }
+
+    SpellDisplay(spell, setSelectedSpell, expanded) { expanded = !expanded }
 }

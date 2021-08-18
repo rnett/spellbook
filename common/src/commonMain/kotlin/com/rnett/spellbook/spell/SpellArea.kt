@@ -36,7 +36,10 @@ sealed class SpellArea {
     companion object {
 
         private val typedRegex =
-            Regex("(\\d+)-foot(?:-radius) (${AreaType.values().joinToString("|") { it.name.toLowerCase() }})", RegexOption.IGNORE_CASE)
+            Regex(
+                "(\\d+)-foot(?:-radius) (${AreaType.values().joinToString("|") { it.name.lowercase() }})",
+                RegexOption.IGNORE_CASE
+            )
 
         operator fun invoke(text: String): SpellArea = if ("," in text) {
             val parts = text.split(",").map { it.trim() }
@@ -67,7 +70,7 @@ sealed class SpellArea {
         }
 
         private fun tryPartialType(text: String): SpellArea {
-            val partial = AreaType.values().singleOrNull { it.name.toLowerCase() in text.toLowerCase() }
+            val partial = AreaType.values().singleOrNull { it.name.lowercase() in text.lowercase() }
 
             return if (partial != null) {
                 PartiallyTyped(text, partial)
