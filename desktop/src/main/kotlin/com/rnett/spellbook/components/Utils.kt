@@ -88,6 +88,16 @@ object CenterPopup : PopupPositionProvider {
     }
 }
 
+class AbsolutePopupPositionProvider(val position: IntOffset) : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize
+    ): IntOffset = position
+
+}
+
 @Composable
 fun <T> Iterable<T>.join(separator: @Composable () -> Unit, render: @Composable (T) -> Unit) {
     var first = true

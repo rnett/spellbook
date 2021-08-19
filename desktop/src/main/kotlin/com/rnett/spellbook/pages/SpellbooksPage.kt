@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -30,6 +32,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material.icons.outlined.StarOutline
@@ -52,18 +55,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.window.Popup
 import com.rnett.spellbook.MainColors
+import com.rnett.spellbook.SavedSearchColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.CenterPopup
+import com.rnett.spellbook.components.DragSetState
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconMaxSetter
 import com.rnett.spellbook.components.IconSetter
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.core.FlowRow
+import com.rnett.spellbook.components.draggableContainer
+import com.rnett.spellbook.components.draggableItem
 import com.rnett.spellbook.components.focusableEditable
 import com.rnett.spellbook.components.handPointer
 import com.rnett.spellbook.components.join
 import com.rnett.spellbook.components.onEnter
 import com.rnett.spellbook.components.onEscape
+import com.rnett.spellbook.components.rememberDragSetState
 import com.rnett.spellbook.components.spell.ActionsTag
 import com.rnett.spellbook.components.spell.SpellDisplay
 import com.rnett.spellbook.components.spell.SpellListShortTag
@@ -188,7 +196,9 @@ fun SpellbookDisplay(
                     SpontaneousLevel(
                         spellcasting[level] as SpellLevel.Spontaneous,
                         level,
-                        { set(spellcasting.withLevel(level, it)) },
+                        {
+                            set(spellcasting.withLevel(level, it))
+                        },
                         searchSlot
                     )
                 } else {
@@ -264,7 +274,16 @@ fun SpontaneousLevel(
     set: (SpellLevel.Spontaneous) -> Unit,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit,
 ) {
+
+    val dragSet = rememberDragSetState<Spell>()
+
     Column(Modifier.fillMaxWidth()) {
+        dragSet.display {
+            Row {
+                Spacer(Modifier.width(10.dp))
+                Text(it.name)
+            }
+        }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(0.1f), verticalAlignment = Alignment.CenterVertically) {
                 if (level == 0) {
@@ -300,17 +319,137 @@ fun SpontaneousLevel(
 
         spells.known.forEachIndexed { idx, slot ->
             SpontaneousSlot(
+                idx,
                 slot,
                 level,
-                { set(spells.copy(known = spells.known.withReplace(idx, it))) },
+                {
+                    set(spells.copy(known = spells.known.withReplace(idx, it)))
+                },
                 idx in spells.signatures,
                 { set(spells.copy(signatures = if (it) spells.signatures + idx else spells.signatures - idx)) },
                 spells.signatures.size < spells.maxSignatures,
+                dragSet,
                 searchSlot
             )
         }
 
         Spacer(Modifier.height(12.dp))
+    }
+}
+
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun SpontaneousSlot(
+    idx: Int,
+    slot: KnownSpell,
+    level: Int,
+    set: (KnownSpell) -> Unit,
+    isSignature: Boolean,
+    setSignature: (Boolean) -> Unit,
+    canBeSignature: Boolean,
+    dragSet: DragSetState<Spell>,
+    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
+) {
+    var drawerOpen by remember { mutableStateOf(SpellDrawerState.Closed) }
+
+    Column(Modifier.fillMaxWidth()) {
+
+        val modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
+            .combinedClickable(onDoubleClick = {
+                if (slot.spell == null)
+                    searchSlot(LevelKnownSpell(level, slot)) {
+                        set(slot.copy(spell = it))
+                    }
+                else
+                    drawerOpen = drawerOpen.next
+            }) {
+                if (slot.spell != null)
+                    drawerOpen = drawerOpen.next
+            }.ifLet(slot.spell != null) {
+                it.draggableItem(dragSet, slot.spell!!) {
+                    println("Drug from $idx")
+                    set(slot.copy(spell = null))
+                }
+            }.ifLet(slot.spell == null) {
+                it.draggableContainer(dragSet,
+                    onEnter = {
+                        println("Entered $idx with ${it.name}")
+                    },
+                    onLeave = {
+                        println("Left $idx with ${it.name}")
+                    }) {
+                    println("Drug ${it.name} to $idx")
+                    set(slot.copy(spell = it))
+                }
+            }
+
+
+
+        Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.width(15.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (level > 0) {
+                    if (isSignature) {
+                        IconButtonHand({ setSignature(false) }, Modifier.size(15.dp)) {
+                            IconWithTooltip(Icons.Filled.Star, "Signature")
+                        }
+                    } else {
+                        IconButtonHand(
+                            { setSignature(true) },
+                            Modifier.size(15.dp),
+                            enabled = canBeSignature && slot.spell != null
+                        ) {
+                            IconWithTooltip(Icons.Outlined.StarOutline, "Make Signature")
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.width(10.dp))
+
+            Row(Modifier.width(120.dp), verticalAlignment = Alignment.CenterVertically) {
+                ListsIcon(slot.lists) { set(slot.copy(lists = it)) }
+            }
+
+            Spacer(Modifier.width(10.dp))
+
+            slot.spell?.let { spell ->
+                Text(spell.name)
+                Spacer(Modifier.width(10.dp))
+
+                Box(Modifier.height(20.dp)) {
+                    ActionsTag(spell.actions)
+                }
+
+                Spacer(Modifier.width(10.dp))
+
+                FlowRow(Modifier.weight(0.2f).widthIn(max = 200.dp), horizontalGap = 4.dp) {
+                    spell.lists.forEach {
+                        SpellListTag(it)
+                    }
+                }
+            }
+
+            if (slot.spell == null) {
+                Text("Empty")
+                Spacer(Modifier.width(20.dp))
+                IconButtonHand(
+                    {
+                        searchSlot(LevelKnownSpell(level, slot)) {
+                            set(slot.copy(spell = it))
+                        }
+                    },
+                    Modifier.size(24.dp)
+                        .background(SavedSearchColors.searchButtonColor.asCompose(), RoundedCornerShape(5.dp))
+                ) {
+                    IconWithTooltip(Icons.Default.Search, "Find spell")
+                }
+            }
+        }
+
+        if (slot.spell != null) {
+            SpellInfoDrawer(slot.spell!!, drawerOpen) { drawerOpen = it }
+        }
     }
 }
 
@@ -354,82 +493,6 @@ fun SpellInfoDrawer(spell: Spell, state: SpellDrawerState, setState: (SpellDrawe
     ) {
         SpellDisplay(spell, null, state == SpellDrawerState.Full) {
             setState(state.changeExpanded)
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun SpontaneousSlot(
-    slot: KnownSpell,
-    level: Int,
-    set: (KnownSpell) -> Unit,
-    isSignature: Boolean,
-    setSignature: (Boolean) -> Unit,
-    canBeSignature: Boolean,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
-) {
-    var drawerOpen by remember { mutableStateOf(SpellDrawerState.Closed) }
-
-    Column(Modifier.fillMaxWidth()) {
-
-        Row(Modifier.fillMaxWidth().padding(vertical = 3.dp).combinedClickable(onDoubleClick = {
-            searchSlot(LevelKnownSpell(level, slot)) {
-                set(slot.copy(spell = it))
-            }
-        }) {
-            if (slot.spell != null)
-                drawerOpen = drawerOpen.next
-
-        }, verticalAlignment = Alignment.CenterVertically) {
-
-            Row(Modifier.width(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (level > 0) {
-                    if (isSignature) {
-                        IconButtonHand({ setSignature(false) }, Modifier.size(15.dp)) {
-                            IconWithTooltip(Icons.Filled.Star, "Signature")
-                        }
-                    } else {
-                        IconButtonHand(
-                            { setSignature(true) },
-                            Modifier.size(15.dp),
-                            enabled = canBeSignature && slot.spell != null
-                        ) {
-                            IconWithTooltip(Icons.Outlined.StarOutline, "Make Signature")
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.width(10.dp))
-
-            Row(Modifier.width(120.dp), verticalAlignment = Alignment.CenterVertically) {
-                ListsIcon(slot.lists) { set(slot.copy(lists = it)) }
-            }
-
-            Spacer(Modifier.width(10.dp))
-
-            Text(slot.spell?.name ?: "Empty")
-
-            slot.spell?.let { spell ->
-                Spacer(Modifier.width(10.dp))
-
-                Box(Modifier.height(20.dp)) {
-                    ActionsTag(spell.actions)
-                }
-
-                Spacer(Modifier.width(10.dp))
-
-                FlowRow(Modifier.weight(0.2f).widthIn(max = 200.dp), horizontalGap = 4.dp) {
-                    spell.lists.forEach {
-                        SpellListTag(it)
-                    }
-                }
-            }
-        }
-
-        if (slot.spell != null) {
-            SpellInfoDrawer(slot.spell!!, drawerOpen) { drawerOpen = it }
         }
     }
 }
