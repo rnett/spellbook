@@ -280,8 +280,17 @@ fun SpontaneousLevel(
     Column(Modifier.fillMaxWidth()) {
         dragSet.display {
             Row {
-                Spacer(Modifier.width(10.dp))
-                Text(it.name)
+                Spacer(Modifier.width(15.dp))
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    border = BorderStroke(1.dp, Color.Black),
+                    color = Color.DarkGray.copy(alpha = 0.8f).compositeOver(Color.LightGray),
+                    elevation = 20.dp
+                ) {
+                    Row(Modifier.padding(12.dp, 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(it.name)
+                    }
+                }
             }
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -353,7 +362,12 @@ fun SpontaneousSlot(
 ) {
     var drawerOpen by remember { mutableStateOf(SpellDrawerState.Closed) }
 
-    Column(Modifier.fillMaxWidth()) {
+    var draggingOver by remember { mutableStateOf(false) }
+    var beingDragged by remember { mutableStateOf(false) }
+
+    Column(Modifier.fillMaxWidth().ifLet(draggingOver) {
+        it.background(Color.White.copy(alpha = 0.2f))
+    }) {
 
         val modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
             .combinedClickable(onDoubleClick = {
@@ -367,19 +381,30 @@ fun SpontaneousSlot(
                 if (slot.spell != null)
                     drawerOpen = drawerOpen.next
             }.ifLet(slot.spell != null) {
-                it.draggableItem(dragSet, slot.spell!!) {
-                    println("Drug from $idx")
+                it.draggableItem(
+                    dragSet, slot.spell!!,
+                    onDragStart = {
+                        beingDragged = true
+                    },
+                    onDragCancel = {
+                        beingDragged = false
+                    }
+                ) {
+                    beingDragged = false
                     set(slot.copy(spell = null))
                 }
             }.ifLet(slot.spell == null) {
                 it.draggableContainer(dragSet,
+                    accepts = {
+                        it.lists.any { it in slot.lists }
+                    },
                     onEnter = {
-                        println("Entered $idx with ${it.name}")
+                        draggingOver = true
                     },
                     onLeave = {
-                        println("Left $idx with ${it.name}")
-                    }) {
-                    println("Drug ${it.name} to $idx")
+                        draggingOver = false
+                    }
+                ) {
                     set(slot.copy(spell = it))
                 }
             }
@@ -413,36 +438,40 @@ fun SpontaneousSlot(
 
             Spacer(Modifier.width(10.dp))
 
-            slot.spell?.let { spell ->
-                Text(spell.name)
-                Spacer(Modifier.width(10.dp))
+            if (beingDragged) {
+                Divider(Modifier.fillMaxWidth(0.6f).height(1.dp).background(Color.White))
+            } else {
+                slot.spell?.let { spell ->
+                    Text(spell.name)
+                    Spacer(Modifier.width(10.dp))
 
-                Box(Modifier.height(20.dp)) {
-                    ActionsTag(spell.actions)
-                }
+                    Box(Modifier.height(20.dp)) {
+                        ActionsTag(spell.actions)
+                    }
 
-                Spacer(Modifier.width(10.dp))
+                    Spacer(Modifier.width(10.dp))
 
-                FlowRow(Modifier.weight(0.2f).widthIn(max = 200.dp), horizontalGap = 4.dp) {
-                    spell.lists.forEach {
-                        SpellListTag(it)
+                    FlowRow(Modifier.weight(0.2f).widthIn(max = 200.dp), horizontalGap = 4.dp) {
+                        spell.lists.forEach {
+                            SpellListTag(it)
+                        }
                     }
                 }
-            }
 
-            if (slot.spell == null) {
-                Text("Empty")
-                Spacer(Modifier.width(20.dp))
-                IconButtonHand(
-                    {
-                        searchSlot(LevelKnownSpell(level, slot)) {
-                            set(slot.copy(spell = it))
-                        }
-                    },
-                    Modifier.size(24.dp)
-                        .background(SavedSearchColors.searchButtonColor.asCompose(), RoundedCornerShape(5.dp))
-                ) {
-                    IconWithTooltip(Icons.Default.Search, "Find spell")
+                if (slot.spell == null) {
+                    Text("Empty")
+                    Spacer(Modifier.width(20.dp))
+                    IconButtonHand(
+                        {
+                            searchSlot(LevelKnownSpell(level, slot)) {
+                                set(slot.copy(spell = it))
+                            }
+                        },
+                        Modifier.size(24.dp)
+                            .background(SavedSearchColors.searchButtonColor.asCompose(), RoundedCornerShape(5.dp))
+                    ) {
+                        IconWithTooltip(Icons.Default.Search, "Find spell")
+                    }
                 }
             }
         }

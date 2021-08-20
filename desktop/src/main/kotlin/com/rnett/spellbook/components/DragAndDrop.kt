@@ -13,7 +13,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -34,7 +33,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import java.util.WeakHashMap
-import kotlin.random.Random
 
 @Composable
 fun <T> rememberDragSetState(): DragSetState<T> {
@@ -56,20 +54,30 @@ class DragSetState<T>(val composer: Composer, val scope: CoroutineScope) {
         windowPosition = coords
     }
 
+    /**
+     * @return true if the drag ended in an accepting container
+     */
     @OptIn(InternalComposeApi::class)
     internal fun endDrag(): Boolean {
         if (!isDragging) return false
-        val handler = containers.values.map { it.value }
-            .firstOrNull { it.bounds.contains(windowPosition!!) && it.accepts(item!!) }
+        val handler = containers.values
+            .firstOrNull { it.bounds.contains(windowPosition!!) && it.accepts.value(item!!) }
         handler?.onDrop?.invoke(item!!)
         cancelDrag()
-        return true
+
+        return handler != null
     }
 
     internal fun cancelDrag() {
+        containers.values.forEach {
+            val inBounds = it.bounds.contains(windowPosition!!)
+            val accepts by lazy { it.accepts.value(item!!) }
+
+            if (inBounds && accepts)
+                it.onLeave(item!!)
+        }
         item = null
         windowPosition = null
-        //TODO onLeave events
     }
 
     internal fun updateDrag(change: Offset) {
@@ -78,10 +86,10 @@ class DragSetState<T>(val composer: Composer, val scope: CoroutineScope) {
         val new = old + change
         windowPosition = new
 
-        containers.values.map { it.value }.forEach {
+        containers.values.forEach {
             val inNew = it.bounds.contains(new)
             val inOld = it.bounds.contains(old)
-            val accepts by lazy { it.accepts(item!!) }
+            val accepts by lazy { it.accepts.value(item!!) }
 
             if (inNew && !inOld && accepts)
                 it.onEnter(item!!)
@@ -103,16 +111,16 @@ class DragSetState<T>(val composer: Composer, val scope: CoroutineScope) {
 
     data class DragHandler<T>(
         val bounds: Rect,
-        val accepts: (T) -> Boolean,
+        val accepts: State<(T) -> Boolean>,
         val onEnter: (T) -> Unit,
         val onLeave: (T) -> Unit,
         val onIn: (T, Offset) -> Unit,
         val onDrop: (T) -> Unit
     )
 
-    private val containers = WeakHashMap<ContainerKey, State<DragHandler<T>>>()
+    private val containers = WeakHashMap<ContainerKey, DragHandler<T>>()
 
-    internal fun registerContainer(handle: State<DragHandler<T>>): ContainerKey {
+    internal fun registerContainer(handle: DragHandler<T>): ContainerKey {
         val key = ContainerKey()
         containers[key] = handle
         return key
@@ -132,29 +140,17 @@ class DragSetState<T>(val composer: Composer, val scope: CoroutineScope) {
     }
 }
 
-class Event<R>(val handler: State<() -> R>, val name: String = "ID ${Random.nextInt()}") {
-    operator fun invoke() = handler.value()
-    override fun toString(): String {
-        return "Event($name)"
-    }
-}
 
 @Composable
-fun <R> rememberUpdatedEventHandler(handler: () -> R, name: String = remember { "ID ${Random.nextInt()}" }) = Event(
-    rememberUpdatedState(handler), name
-)
+inline fun SideEffectHandler(buffer: Int): (() -> Unit) -> Unit {
 
-@Composable
-fun EventHandler(buffer: Int): (Event<*>) -> Unit {
-
-    val eventFlow = remember { MutableSharedFlow<Event<*>>(extraBufferCapacity = buffer) }
+    val eventFlow = remember { MutableSharedFlow<() -> Unit>(extraBufferCapacity = buffer) }
     val event by eventFlow.collectAsState(null)
 
     val scope = rememberCoroutineScope { Dispatchers.Default }
 
     event?.let {
         SideEffect {
-            println(it)
             it()
         }
     }
@@ -177,26 +173,28 @@ fun <T> Modifier.draggableItem(
         coords = it
     }
 
-    val dragStart = rememberUpdatedEventHandler(onDragStart, "Drag Start")
-    val dragCancel = rememberUpdatedEventHandler(onDragCancel, "Drag Cancel")
-    val drugOut = rememberUpdatedEventHandler(onDrugOut, "Drug Out")
+    val dragStart = rememberUpdatedState(onDragStart)
+    val dragCancel = rememberUpdatedState(onDragCancel)
+    val drugOut = rememberUpdatedState(onDrugOut)
 
-    val eventHandler = EventHandler(10)
+    val eventHandler = SideEffectHandler(2)
 
     if (coords != null) {
         mod.pointerInput(coords, set, item) {
             detectDragGesturesAfterLongPress(
                 onDragStart = {
                     set.startDrag(coords!!.localToWindow(it), item)
-                    eventHandler(dragStart)
+                    eventHandler { dragStart.value() }
                 },
                 onDragEnd = {
                     if (set.endDrag())
-                        eventHandler(drugOut)
+                        eventHandler { drugOut.value() }
+                    else
+                        eventHandler { dragCancel.value() }
                 },
                 onDragCancel = {
                     set.cancelDrag()
-                    eventHandler(dragCancel)
+                    eventHandler { dragCancel.value() }
                 },
                 onDrag = { _, delta ->
                     set.updateDrag(delta)
@@ -215,32 +213,33 @@ fun <T> Modifier.draggableContainer(
     onDrop: (T) -> Unit
 ) = composed {
 
-    val eventHandler = EventHandler(10)
+    val eventHandler = SideEffectHandler(2)
 
-    var coords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val onEnter = rememberUpdatedState(onEnter)
+    val onLeave = rememberUpdatedState(onLeave)
+    val onIn = rememberUpdatedState(onIn)
+    val accepts = rememberUpdatedState(accepts)
+    val onDrop = rememberUpdatedState(onDrop)
+
+    var bounds by remember { mutableStateOf<Rect>(Rect.Zero) }
     val mod = onGloballyPositioned {
-        coords = it
+        bounds = it.boundsInWindow()
     }
-    key(coords) {
-        if (coords != null) {
-            val handler = DragSetState.DragHandler(
-                coords!!.boundsInWindow(),
-                accepts,
-                onEnter,
-                onLeave,
-                onIn,
-                onDrop
-            )
 
-            val handlerState = rememberUpdatedState(handler)
+    val handler = DragSetState.DragHandler(
+        bounds,
+        accepts,
+        { onEnter.value(it) },
+        { onLeave.value(it) },
+        { it, offset -> onIn.value(it, offset) },
+        { eventHandler { onDrop.value(it) } }
+    )
 
-            DisposableEffect(coords, set) {
-                val key = set.registerContainer(handlerState)
+    DisposableEffect(bounds, set) {
+        val key = set.registerContainer(handler)
 
-                onDispose {
-                    key.remove()
-                }
-            }
+        onDispose {
+            key.remove()
         }
     }
 
