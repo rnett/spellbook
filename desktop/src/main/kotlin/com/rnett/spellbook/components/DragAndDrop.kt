@@ -69,6 +69,7 @@ class DragSetState<T>(val composer: Composer, val scope: CoroutineScope) {
     }
 
     internal fun cancelDrag() {
+        if (!isDragging) return
         containers.values.forEach {
             val inBounds = it.bounds.contains(windowPosition!!)
             val accepts by lazy { it.accepts.value(item!!) }

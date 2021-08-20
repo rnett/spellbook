@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
@@ -89,9 +91,11 @@ fun SpellListPage(
         Row {
             Column(Modifier.fillMaxWidth(0.15f)) {
                 if (state is SpellListState.FindForSpellbook) {
-                    Row(Modifier.fillMaxWidth()) {
-                        Text("Select spell...")
-                        //TODO cancel?
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Text("Select spell...", fontWeight = FontWeight.Bold)
                     }
                 }
                 if (loadingSavedFilter) {

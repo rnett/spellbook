@@ -9,10 +9,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.Divider
-import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircleOutline
@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
@@ -32,17 +33,19 @@ fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: (
 
     Column(modifier.fillMaxWidth().padding(10.dp)) {
 
-        Row(Modifier.fillMaxHeight(0.5f)) {
+        Row(Modifier.fillMaxHeight(0.5f), verticalAlignment = Alignment.CenterVertically) {
+            var textModifier = Modifier.fillMaxWidth(0.15f).widthIn(min = 200.dp).weight(0.3f)
             if (setSelectedSpell != null) {
-                IconButton({ setSelectedSpell(spell) }) {
-                    IconWithTooltip(Icons.Default.CheckCircleOutline, "Select")
+                IconButtonHand({ setSelectedSpell(spell) }, Modifier.size(24.dp)) {
+                    IconWithTooltip(Icons.Default.CheckCircleOutline, "Select Spell")
                 }
-                Spacer(Modifier.width(2.dp))
+                Spacer(Modifier.width(10.dp))
+                textModifier = textModifier.padding(bottom = 2.dp)
             }
-            Row(Modifier.fillMaxWidth(0.15f).widthIn(min = 200.dp).weight(0.3f)) {
+            Row(textModifier) {
                 Text(
                     spell.name,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
 
