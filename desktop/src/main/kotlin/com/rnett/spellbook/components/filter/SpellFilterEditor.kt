@@ -134,43 +134,45 @@ fun SpellFilterEditor(
                     { Text("Spell Type") }) {
                     TypeTag(it)
                 }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Min Level")
-                    Spacer(Modifier.weight(1f))
-                    IconButtonHand({
-                        update(filter.copy(level = filter.level.copy(min = filter.level.min - 1)))
-                    }, enabled = filter.level.min > 1) {
-                        IconWithTooltip(Icons.Default.Remove, "Minus")
-                    }
-                    Text(filter.level.min.toString())
-                    IconButtonHand({
-                        val newValue = filter.level.min + 1
-                        update(filter.copy(level = LevelFilter(newValue, max(filter.level.max, newValue))))
-                    }, enabled = filter.level.min < 10) {
-                        IconWithTooltip(Icons.Default.Add, "Plus")
-                    }
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Max Level")
-                    Spacer(Modifier.weight(1f))
-                    IconButtonHand({
-                        val newValue = filter.level.max - 1
-                        update(filter.copy(level = LevelFilter(min(newValue, filter.level.min), newValue)))
-                    }, enabled = filter.level.max > 1) {
-                        IconWithTooltip(Icons.Default.Remove, "Minus")
-                    }
-                    Text(filter.level.max.toString())
-                    IconButtonHand({
-                        update(filter.copy(level = filter.level.copy(max = filter.level.max + 1)))
-                    }, enabled = filter.level.max < 10) {
-                        IconWithTooltip(Icons.Default.Add, "Plus")
-                    }
-                }
-
-                FilterDivider(true)
             }
+
+            val levelLimit = presetSlot?.level ?: 10
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Min Level")
+                Spacer(Modifier.weight(1f))
+                IconButtonHand({
+                    update(filter.copy(level = filter.level.copy(min = filter.level.min - 1)))
+                }, enabled = filter.level.min > 1) {
+                    IconWithTooltip(Icons.Default.Remove, "Minus")
+                }
+                Text(filter.level.min.toString())
+                IconButtonHand({
+                    val newValue = filter.level.min + 1
+                    update(filter.copy(level = LevelFilter(newValue, max(filter.level.max, newValue))))
+                }, enabled = filter.level.min < levelLimit) {
+                    IconWithTooltip(Icons.Default.Add, "Plus")
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Max Level")
+                Spacer(Modifier.weight(1f))
+                IconButtonHand({
+                    val newValue = filter.level.max - 1
+                    update(filter.copy(level = LevelFilter(min(newValue, filter.level.min), newValue)))
+                }, enabled = filter.level.max > 1) {
+                    IconWithTooltip(Icons.Default.Remove, "Minus")
+                }
+                Text(filter.level.max.toString())
+                IconButtonHand({
+                    update(filter.copy(level = filter.level.copy(max = filter.level.max + 1)))
+                }, enabled = filter.level.max < levelLimit) {
+                    IconWithTooltip(Icons.Default.Add, "Plus")
+                }
+            }
+
+            FilterDivider(true)
 
             FilterEditor(filter.attackTypes,
                 pickableAttackTypes,

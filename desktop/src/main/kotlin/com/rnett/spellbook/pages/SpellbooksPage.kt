@@ -1,14 +1,9 @@
 package com.rnett.spellbook.pages
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,102 +12,102 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarOutline
-import androidx.compose.material.icons.outlined.DeleteForever
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import androidx.compose.ui.window.Popup
 import com.rnett.spellbook.MainColors
-import com.rnett.spellbook.SavedSearchColors
 import com.rnett.spellbook.asCompose
-import com.rnett.spellbook.components.CenterPopup
-import com.rnett.spellbook.components.DragSetState
-import com.rnett.spellbook.components.IconButtonHand
-import com.rnett.spellbook.components.IconMaxSetter
-import com.rnett.spellbook.components.IconSetter
-import com.rnett.spellbook.components.IconWithTooltip
-import com.rnett.spellbook.components.core.FlowRow
-import com.rnett.spellbook.components.draggableContainer
-import com.rnett.spellbook.components.draggableItem
-import com.rnett.spellbook.components.focusableEditable
-import com.rnett.spellbook.components.handPointer
 import com.rnett.spellbook.components.join
-import com.rnett.spellbook.components.onEnter
-import com.rnett.spellbook.components.onEscape
-import com.rnett.spellbook.components.rememberDragSetState
-import com.rnett.spellbook.components.spell.ActionsTag
-import com.rnett.spellbook.components.spell.SpellDisplay
-import com.rnett.spellbook.components.spell.SpellListShortTag
 import com.rnett.spellbook.components.spell.SpellListTag
-import com.rnett.spellbook.filter.SpellFilter
-import com.rnett.spellbook.ifLet
+import com.rnett.spellbook.components.spellbooks.PreparedLevel
+import com.rnett.spellbook.components.spellbooks.SearchPopup
+import com.rnett.spellbook.components.spellbooks.SpontaneousLevel
 import com.rnett.spellbook.spell.Spell
-import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spellbook.KnownSpell
 import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.SpellLevel
-import com.rnett.spellbook.spellbook.SpellbookType
+import com.rnett.spellbook.spellbook.Spellbook
 import com.rnett.spellbook.spellbook.Spellcasting
+import com.rnett.spellbook.spellbook.SpellcastingType
 import com.rnett.spellbook.spellbook.withLevel
-import com.rnett.spellbook.spellbook.withReplace
 
 @Composable
 fun SpellbooksPage(
-    spellbooks: List<Pair<String, Spellcasting<*>>>,
-    set: (Int, Spellcasting<*>) -> Unit
+    spellbooks: List<Pair<String, Spellbook>>,
+    set: (Int, Spellbook) -> Unit
 ) {
     var currentSpellbook: Int? by remember { mutableStateOf(if (spellbooks.isNotEmpty()) 0 else null) }
 
     var currentSearch by remember { mutableStateOf<Pair<LevelKnownSpell, (Spell) -> Unit>?>(null) }
 
-    Surface(color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
-        Row {
-            Column(Modifier.padding(start = 10.dp, top = 10.dp).weight(0.5f)) {
+    val scrollStyle = LocalScrollbarStyle.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
+
+    val verticalScrollState = rememberScrollState()
+    val horizontalScrollState = rememberScrollState()
+
+    Surface(
+        Modifier.fillMaxSize(),
+        color = MainColors.outsideColor.asCompose(),
+        contentColor = MainColors.textColor.asCompose()
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            Column(
+                Modifier
+                    .padding(start = 10.dp, top = 10.dp)
+            ) {
                 if (currentSpellbook != null) {
-                    Text(spellbooks[currentSpellbook!!].first, fontWeight = FontWeight.Bold)
+                    val (name, spellbook) = spellbooks[currentSpellbook!!]
+                    Text(name, fontSize = 2.em, fontWeight = FontWeight.Bold)
 
                     Divider(Modifier.fillMaxWidth().padding(vertical = 4.dp))
 
-                    SpellbookDisplay(spellbooks[currentSpellbook!!].second, {
-                        set(currentSpellbook!!, it)
-                    }) { slot, setter ->
-                        currentSearch = slot to setter
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(verticalScrollState)
+                            .horizontalScroll(horizontalScrollState)
+                    ) {
+                        spellbook.spellcastings.forEach { (castingName, casting) ->
+                            Column(Modifier.width(1000.dp)) {
+                                Text(castingName, fontWeight = FontWeight.Bold, fontSize = 1.5.em)
+
+                                Spacer(Modifier.height(10.dp))
+
+                                SpellcastingDisplay(casting, {
+                                    set(currentSpellbook!!, spellbook.withSpellcasting(castingName, it))
+                                }) { slot, setter ->
+                                    currentSearch = slot to setter
+                                }
+                            }
+                        }
                     }
                 }
             }
+//
+            VerticalScrollbar(
+                rememberScrollbarAdapter(verticalScrollState),
+                Modifier.align(Alignment.TopEnd),
+                style = scrollStyle
+            )
+
+            HorizontalScrollbar(
+                rememberScrollbarAdapter(horizontalScrollState),
+                Modifier.align(Alignment.BottomStart),
+                style = scrollStyle
+            )
         }
     }
 
@@ -121,426 +116,60 @@ fun SpellbooksPage(
     }
 }
 
-//TODO(now) make this look nice
+//TODO(now) make this look nice, do prepared and focus
+
+//TODO allow selecting heightened spells
 
 //TODO prepared should be drag and drop from known into slots
 
 //TODO something like a shopping cart.  Add from search page, drag out into spellbooks and groups
 
-@Composable
-fun SearchPopup(
-    close: () -> Unit,
-    level: LevelKnownSpell,
-    setSpell: (Spell) -> Unit
-) {
-    Popup(
-        CenterPopup,
-        onDismissRequest = { close() },
-        onPreviewKeyEvent = onEscape(close),
-        focusable = true
-    ) {
-        Surface(
-            Modifier.fillMaxSize(0.9f),
-            color = MainColors.outsideColor.withAlpha(0.6f).asCompose().compositeOver(Color.Black),
-            border = BorderStroke(2.dp, Color.Black),
-            elevation = 5.dp
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    IconButton(close) {
-                        IconWithTooltip(Icons.Default.Close, "Close")
-                    }
-                }
-                val state = remember {
-                    SpellListState.FindForSpellbook(
-                        SpellFilter(),
-                        level
-                    ) {
-                        setSpell(it)
-                        close()
-                    }
-                }
-                SpellListPage(state)
-            }
-        }
-    }
-}
+//TODO groups
+
+//TODO search by name
+
+//TODO options to open spells and sidebar pages in browser
+
 
 @Composable
-fun SpellbookDisplay(
+fun SpellcastingDisplay(
     spellcasting: Spellcasting<*>,
     set: (Spellcasting<*>) -> Unit,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
-    Row {
-        val scrollState = rememberScrollState()
-
-        Column(Modifier.weight(1f).verticalScroll(scrollState)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(spellcasting.type.name, fontSize = 1.5.em)
-                Spacer(Modifier.weight(1f))
-                Row {
-                    spellcasting.defaultLists.join({ Spacer(Modifier.width(1.dp)) }) {
-                        SpellListTag(it)
-                    }
-                }
-                Spacer(Modifier.weight(1f))
-                Text(spellcasting.maxLevel.toString())
-            }
-
-            (0..spellcasting.maxLevel).forEach { level ->
-                if (spellcasting.type == SpellbookType.Spontaneous) {
-                    SpontaneousLevel(
-                        spellcasting[level] as SpellLevel.Spontaneous,
-                        level,
-                        {
-                            set(spellcasting.withLevel(level, it))
-                        },
-                        searchSlot
-                    )
-                } else {
-                    PreparedLevel(
-                        spellcasting[level] as SpellLevel.Prepared,
-                        level,
-                        { set(spellcasting.withLevel(level, it)) },
-                        searchSlot
-                    )
-                }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(spellcasting.type.name, fontSize = 1.5.em)
+        Spacer(Modifier.weight(1f))
+        Row {
+            spellcasting.defaultLists.join({ Spacer(Modifier.width(1.dp)) }) {
+                SpellListTag(it)
             }
         }
-
-        val scrollStyle = LocalScrollbarStyle.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
-        VerticalScrollbar(
-            rememberScrollbarAdapter(scrollState),
-            Modifier,
-            style = scrollStyle
-        )
+        Spacer(Modifier.weight(1f))
+        Text(spellcasting.maxLevel.toString())
     }
-}
 
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
-@Composable
-fun ListsIcon(lists: Set<SpellList>, set: (Set<SpellList>) -> Unit) {
-    var editing by remember { mutableStateOf(false) }
-
-    Row(
-        Modifier
-            .focusableEditable(editing) { editing = it }
-            .combinedClickable(onDoubleClick = {
-                editing = !editing
-            }) {}
-            .ifLet(!editing) { it.handPointer() },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (!editing) {
-            lists.sorted().forEach {
-                Box(Modifier.padding(2.dp)) {
-                    SpellListShortTag(it)
-                }
-            }
-        } else {
-            SpellList.traditions.forEach {
-                Box(Modifier
-                    .padding(2.dp)
-                    .handPointer()
-                    .clickable(
-                        it !in lists || lists.size > 1
-                    ) {
-                        if (it in lists)
-                            set(lists - it)
-                        else
-                            set(lists + it)
-                    }) {
-                    SpellListShortTag(it, if (it in lists) 1.0f else 0.1f)
-                }
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButtonHand({ editing = false }, Modifier.size(20.dp).handPointer()) {
-                IconWithTooltip(Icons.Default.Close, "Done")
-            }
-        }
-
-    }
-}
-
-@Composable
-fun SpontaneousLevel(
-    spells: SpellLevel.Spontaneous,
-    level: Int,
-    set: (SpellLevel.Spontaneous) -> Unit,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit,
-) {
-
-    val dragSet = rememberDragSetState<Spell>()
-
-    Column(Modifier.fillMaxWidth()) {
-        dragSet.display {
-            Row {
-                Spacer(Modifier.width(15.dp))
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    border = BorderStroke(1.dp, Color.Black),
-                    color = Color.DarkGray.copy(alpha = 0.8f).compositeOver(Color.LightGray),
-                    elevation = 20.dp
-                ) {
-                    Row(Modifier.padding(12.dp, 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(it.name)
-                    }
-                }
-            }
-        }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Row(Modifier.weight(0.1f), verticalAlignment = Alignment.CenterVertically) {
-                if (level == 0) {
-                    Text("Cantrips")
-                } else {
-                    Text("Level $level")
-                }
-            }
-
-            if (level != 0) {
-
-                Row(Modifier.weight(0.3f), verticalAlignment = Alignment.CenterVertically) {
-                    IconSetter(spells.numSlots, { set(spells.copy(numSlots = it)) }) {
-                        IconWithTooltip(Icons.Default.LocalFireDepartment, "Spell Slot")
-                    }
-                }
-
-                Row(Modifier.weight(0.3f), verticalAlignment = Alignment.CenterVertically) {
-                    IconMaxSetter(
-                        spells.signatures.size,
-                        spells.maxSignatures,
-                        { set(spells.copy(maxSignatures = it)) },
-                        {
-                            Icon(Icons.Filled.Star, "Filled Signature")
-                        }) {
-                        Icon(Icons.Filled.StarOutline, "Open Signature")
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(2.dp))
-
-        spells.known.forEachIndexed { idx, slot ->
-            SpontaneousSlot(
-                idx,
-                slot,
+    (0..spellcasting.maxLevel).forEach { level ->
+        if (spellcasting.type == SpellcastingType.Spontaneous) {
+            SpontaneousLevel(
+                spellcasting[level] as SpellLevel.Spontaneous,
+                spellcasting.defaultLists,
                 level,
                 {
-                    set(spells.copy(known = spells.known.withReplace(idx, it)))
+                    set(spellcasting.withLevel(level, it))
                 },
-                idx in spells.signatures,
-                { set(spells.copy(signatures = if (it) spells.signatures + idx else spells.signatures - idx)) },
-                spells.signatures.size < spells.maxSignatures,
-                dragSet,
+                searchSlot
+            )
+        } else {
+            PreparedLevel(
+                spellcasting[level] as SpellLevel.Prepared,
+                spellcasting.defaultLists,
+                level,
+                { set(spellcasting.withLevel(level, it)) },
                 searchSlot
             )
         }
-
-        Spacer(Modifier.height(12.dp))
     }
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun SpontaneousSlot(
-    idx: Int,
-    slot: KnownSpell,
-    level: Int,
-    set: (KnownSpell) -> Unit,
-    isSignature: Boolean,
-    setSignature: (Boolean) -> Unit,
-    canBeSignature: Boolean,
-    dragSet: DragSetState<Spell>,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
-) {
-    key(slot.spell) {
-        var drawerOpen by remember { mutableStateOf(SpellDrawerState.Closed) }
-
-        var draggingOver by remember { mutableStateOf(false) }
-        var beingDragged by remember { mutableStateOf(false) }
-
-        Column(Modifier.fillMaxWidth().ifLet(draggingOver) {
-            it.background(Color.White.copy(alpha = 0.2f))
-        }) {
-
-            val modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
-                .combinedClickable(onDoubleClick = {
-                    if (slot.spell == null)
-                        searchSlot(LevelKnownSpell(level, slot)) {
-                            set(slot.copy(spell = it))
-                        }
-                    else
-                        drawerOpen = drawerOpen.next
-                }) {
-                    if (slot.spell != null)
-                        drawerOpen = drawerOpen.next
-                }.ifLet(slot.spell != null) {
-                    it.draggableItem(
-                        dragSet, slot.spell!!,
-                        onDragStart = {
-                            beingDragged = true
-                        },
-                        onDragCancel = {
-                            beingDragged = false
-                        }
-                    ) {
-                        beingDragged = false
-                        set(slot.copy(spell = null))
-                    }
-                }.ifLet(slot.spell == null) {
-                    it.draggableContainer(dragSet,
-                        accepts = {
-                            it.lists.any { it in slot.lists }
-                        },
-                        onEnter = {
-                            draggingOver = true
-                        },
-                        onLeave = {
-                            draggingOver = false
-                        }
-                    ) {
-                        set(slot.copy(spell = it))
-                    }
-                }
-
-
-
-            Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-                Row(Modifier.width(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (level > 0) {
-                        if (isSignature) {
-                            IconButtonHand({ setSignature(false) }, Modifier.size(15.dp)) {
-                                IconWithTooltip(Icons.Filled.Star, "Signature")
-                            }
-                        } else {
-                            IconButtonHand(
-                                { setSignature(true) },
-                                Modifier.size(15.dp),
-                                enabled = canBeSignature && slot.spell != null
-                            ) {
-                                IconWithTooltip(Icons.Outlined.StarOutline, "Make Signature")
-                            }
-                        }
-                    }
-                }
-
-                Spacer(Modifier.width(10.dp))
-
-                Row(Modifier.width(120.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ListsIcon(slot.lists) { set(slot.copy(lists = it)) }
-                }
-
-                Spacer(Modifier.width(10.dp))
-
-                if (beingDragged) {
-                    Divider(Modifier.fillMaxWidth(0.6f).height(1.dp).background(Color.White))
-                } else {
-                    slot.spell?.let { spell ->
-                        Row(Modifier.weight(0.15f), verticalAlignment = Alignment.CenterVertically) {
-                            Text(spell.name)
-                        }
-
-                        Row(Modifier.weight(0.05f), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.height(20.dp)) {
-                                ActionsTag(spell.actions)
-                            }
-                        }
-
-                        FlowRow(Modifier.weight(0.3f).widthIn(max = 200.dp), horizontalGap = 10.dp) {
-                            spell.lists.forEach {
-                                SpellListTag(it)
-                            }
-                        }
-                        Row(Modifier.weight(1.5f)) {
-                            IconButtonHand({ set(slot.copy(spell = null)) }, Modifier.size(24.dp)) {
-                                IconWithTooltip(
-                                    Icons.Outlined.DeleteForever,
-                                    "Remove",
-                                    tint = Color.Red.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
-                    }
-
-                    if (slot.spell == null) {
-                        Text("Empty")
-                        Spacer(Modifier.width(20.dp))
-                        IconButtonHand(
-                            {
-                                searchSlot(LevelKnownSpell(level, slot)) {
-                                    set(slot.copy(spell = it))
-                                }
-                            },
-                            Modifier.size(24.dp)
-                                .background(SavedSearchColors.searchButtonColor.asCompose(), RoundedCornerShape(5.dp))
-                        ) {
-                            IconWithTooltip(Icons.Default.Search, "Find spell")
-                        }
-                    }
-                }
-            }
-
-            if (slot.spell != null) {
-                SpellInfoDrawer(slot.spell!!, drawerOpen) { drawerOpen = it }
-            }
-        }
-    }
-}
-
-enum class SpellDrawerState {
-    Header, Full, Closed;
-
-    val next
-        get() = when (this) {
-            Header -> Full
-            Full -> Closed
-            Closed -> Header
-        }
-
-    val changeExpanded
-        get() = when (this) {
-            Header -> Full
-            Full -> Header
-            else -> Closed
-        }
-}
-
-@Composable
-fun SpellInfoDrawer(spell: Spell, state: SpellDrawerState, setState: (SpellDrawerState) -> Unit) {
-    if (state == SpellDrawerState.Closed) return
-    val focusRequester = remember { FocusRequester() }
-
-    key(state) {
-        SideEffect {
-            if (state == SpellDrawerState.Closed)
-                focusRequester.freeFocus()
-            else
-                focusRequester.requestFocus()
-        }
-    }
-
-    Box(Modifier
-        .focusRequester(focusRequester)
-        .focusable()
-        .onEscape { setState(SpellDrawerState.Closed) }
-        .onEnter { setState(state.next) }
-    ) {
-        SpellDisplay(spell, null, state == SpellDrawerState.Full) {
-            setState(state.changeExpanded)
-        }
-    }
-}
-
-@Composable
-fun PreparedLevel(
-    spells: SpellLevel.Prepared,
-    level: Int,
-    set: (SpellLevel.Prepared) -> Unit,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
-) {
-
-}

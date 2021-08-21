@@ -43,8 +43,9 @@ import com.rnett.spellbook.pages.SpellbooksPage
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spellbook.LevelKnownSpell
-import com.rnett.spellbook.spellbook.SpellbookType
+import com.rnett.spellbook.spellbook.Spellbook
 import com.rnett.spellbook.spellbook.Spellcasting
+import com.rnett.spellbook.spellbook.SpellcastingType
 import com.rnett.spellbook.spellbook.withLevel
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -131,21 +132,41 @@ sealed class PageState {
         @Composable
         override fun show(main: MainState) = with(main) {
             val spells = mutableStateListOf(
-                "Main" to Spellcasting.fullCaster(
-                    SpellbookType.Spontaneous,
-                    setOf(SpellList.Arcane),
-                    4
-                ).let {
-                    it.withLevel(3, it[3].let {
-                        it.withKnown(0, allSpells.first { it.name == "Fireball" })
-                    })
-                }
+                "Main" to Spellbook(
+                    mapOf(
+                        "Sorcerer" to Spellcasting.fullCaster(
+                            SpellcastingType.Spontaneous,
+                            setOf(SpellList.Arcane),
+                            4
+                        ).let {
+                            it.withLevel(3, it[3].let {
+                                it.withKnown(0, allSpells.first { it.name == "Fireball" })
+                            })
+                        },
+                        "Wizard Archetype" to Spellcasting.archetypeCaster(
+                            SpellcastingType.Prepared,
+                            setOf(SpellList.Arcane)
+                        ).let {
+                            it.withLevel(3, it[3].let {
+                                it.withKnown(0, allSpells.first { it.name == "Fireball" })
+                            })
+                        },
+                        "Bard Archetype" to Spellcasting.archetypeCaster(
+                            SpellcastingType.Prepared,
+                            setOf(SpellList.Occult)
+                        ),
+                        "Oracle Archetype" to Spellcasting.archetypeCaster(
+                            SpellcastingType.Prepared,
+                            setOf(SpellList.Divine)
+                        )
+                    )
+                )
             )
             SpellbooksPage(
-                spells,
-                { idx, new ->
-                    spells[idx] = spells[idx].first to new
-                })
+                spells
+            ) { idx, new ->
+                spells[idx] = spells[idx].first to new
+            }
         }
     }
 }

@@ -10,14 +10,18 @@ import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spell.SpellType
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmName
+import kotlin.math.min
 
 @JvmName("forNullableSLot")
 fun SpellFilter.forSlot(slot: LevelKnownSpell?) = if (slot != null) forSlot(slot) else this
 
-fun SpellFilter.forSlot(slot: LevelKnownSpell) = copy(
+fun SpellFilter.forSlot(slot: LevelKnownSpell, strictLevel: Boolean = false) = copy(
     lists = singleOrClauseFilter(slot.slot.lists),
     isFocus = SpellList.Focus in slot.slot.lists,
-    level = LevelFilter(slot.level),
+    level = if (strictLevel) LevelFilter(slot.level) else LevelFilter(
+        min(level.min, slot.level),
+        min(level.max, slot.level)
+    ),
     types = singleOrClauseFilter(setOf(slot.slot.type))
 )
 

@@ -6,9 +6,15 @@ import com.rnett.spellbook.spell.SpellType
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Spellbook(val spellcastings: Map<String, Spellcasting<*>>)
+data class Spellbook(val spellcastings: Map<String, Spellcasting<*>>) {
+    fun withSpellcasting(name: String, spellcasting: Spellcasting<*>): Spellbook = copy(
+        spellcastings = spellcastings.toMutableMap().apply {
+            this[name] = spellcasting
+        }
+    )
+}
 
-enum class SpellbookType {
+enum class SpellcastingType {
     Prepared, Spontaneous;
 }
 
@@ -18,14 +24,15 @@ sealed class SpellLevel {
     abstract fun withKnown(i: Int, spell: Spell): SpellLevel
 
     @Serializable
-    data class Prepared(val known: List<KnownSpell>, val maxPrepared: Int, val prepared: List<Int>) : SpellLevel() {
+    data class Prepared(val known: List<KnownSpell>, val prepared: List<Spell?>) : SpellLevel() {
         companion object {
             fun empty(slots: Int, lists: Set<SpellList>, type: SpellType) = Prepared(
                 List(slots) { KnownSpell(lists, type) },
-                slots,
-                emptyList()
+                List(slots) { null }
             )
         }
+
+        val maxPrepared get() = prepared.size
 
         override fun withKnown(i: Int, spell: Spell): Prepared =
             copy(known = known.withReplace(i) { it.copy(spell = spell) })
@@ -68,8 +75,14 @@ fun <T> List<T>.withReplace(i: Int, new: (T) -> T): List<T> {
     return m.toList()
 }
 
+fun <T> List<T>.without(i: Int): List<T> {
+    val m = toMutableList()
+    m.removeAt(i)
+    return m.toList()
+}
+
 @Serializable
-sealed class Spellcasting<out L : SpellLevel>(val type: SpellbookType) {
+sealed class Spellcasting<out L : SpellLevel>(val type: SpellcastingType) {
     abstract val cantrips: L
     abstract val levels: List<L>
     abstract val defaultLists: Set<SpellList>
@@ -91,32 +104,32 @@ sealed class Spellcasting<out L : SpellLevel>(val type: SpellbookType) {
         override val cantrips: SpellLevel.Prepared,
         override val levels: List<SpellLevel.Prepared>,
         override val defaultLists: Set<SpellList>
-    ) : Spellcasting<SpellLevel.Prepared>(SpellbookType.Prepared)
+    ) : Spellcasting<SpellLevel.Prepared>(SpellcastingType.Prepared)
 
     @Serializable
     data class Spontaneous(
         override val cantrips: SpellLevel.Spontaneous,
         override val levels: List<SpellLevel.Spontaneous>,
         override val defaultLists: Set<SpellList>
-    ) : Spellcasting<SpellLevel.Spontaneous>(SpellbookType.Spontaneous)
+    ) : Spellcasting<SpellLevel.Spontaneous>(SpellcastingType.Spontaneous)
 
     companion object {
         fun fullCaster(
-            type: SpellbookType,
+            type: SpellcastingType,
             lists: Set<SpellList>,
             numSlots: Int,
             numCantrips: Int = 5,
             numLevel10s: Int = 1
         ): Spellcasting<SpellLevel> {
             return when (type) {
-                SpellbookType.Prepared -> Prepared(
+                SpellcastingType.Prepared -> Prepared(
                     SpellLevel.Prepared.empty(numCantrips, lists, SpellType.Cantrip),
                     List(9) {
                         SpellLevel.Prepared.empty(numSlots, lists, SpellType.Spell)
                     } + SpellLevel.Prepared.empty(numLevel10s, lists, SpellType.Spell),
                     lists
                 )
-                SpellbookType.Spontaneous -> Spontaneous(
+                SpellcastingType.Spontaneous -> Spontaneous(
                     SpellLevel.Spontaneous.empty(numCantrips, 0, lists, SpellType.Cantrip),
                     List(9) {
                         SpellLevel.Spontaneous.empty(numSlots, 1, lists, SpellType.Spell)
@@ -127,18 +140,18 @@ sealed class Spellcasting<out L : SpellLevel>(val type: SpellbookType) {
         }
 
         fun archetypeCaster(
-            type: SpellbookType,
+            type: SpellcastingType,
             lists: Set<SpellList>,
             bredth: Boolean = true
         ): Spellcasting<SpellLevel> {
             val slots = List(6) { if (bredth) 2 else 1 } + listOf(1, 1)
             return when (type) {
-                SpellbookType.Prepared -> Prepared(
+                SpellcastingType.Prepared -> Prepared(
                     SpellLevel.Prepared.empty(2, lists, SpellType.Cantrip),
                     slots.map { SpellLevel.Prepared.empty(it, lists, SpellType.Spell) },
                     lists
                 )
-                SpellbookType.Spontaneous -> Spontaneous(
+                SpellcastingType.Spontaneous -> Spontaneous(
                     SpellLevel.Spontaneous.empty(2, 0, lists, SpellType.Cantrip),
                     slots.map { SpellLevel.Spontaneous.empty(it, 0, lists, SpellType.Spell) },
                     lists
