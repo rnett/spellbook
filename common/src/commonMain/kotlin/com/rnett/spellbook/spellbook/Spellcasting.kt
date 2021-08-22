@@ -24,15 +24,14 @@ sealed class SpellLevel {
     abstract fun withKnown(i: Int, spell: Spell): SpellLevel
 
     @Serializable
-    data class Prepared(val known: List<KnownSpell>, val prepared: List<Spell?>) : SpellLevel() {
+    data class Prepared(val known: List<KnownSpell>, val maxPrepared: Int, val prepared: List<Spell>) : SpellLevel() {
         companion object {
             fun empty(slots: Int, lists: Set<SpellList>, type: SpellType) = Prepared(
                 List(slots) { KnownSpell(lists, type) },
-                List(slots) { null }
+                slots,
+                emptyList()
             )
         }
-
-        val maxPrepared get() = prepared.size
 
         override fun withKnown(i: Int, spell: Spell): Prepared =
             copy(known = known.withReplace(i) { it.copy(spell = spell) })

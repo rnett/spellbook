@@ -19,12 +19,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.NoteAdd
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +41,7 @@ import com.rnett.spellbook.components.core.FlowRow
 import com.rnett.spellbook.components.draggableContainer
 import com.rnett.spellbook.components.draggableItem
 import com.rnett.spellbook.components.spell.ActionsTag
-import com.rnett.spellbook.components.spell.SpellListTag
+import com.rnett.spellbook.components.spell.SpellListShortTag
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spellbook.KnownSpell
@@ -49,7 +51,8 @@ sealed class KnownSpellSlotContext {
     data class Spontaneous(val isSignature: Boolean, val setSignature: (Boolean) -> Unit, val canBeSignature: Boolean) :
         KnownSpellSlotContext()
 
-    data class Prepared(val i: Int = 0) : KnownSpellSlotContext()
+    data class Prepared(val prepare: (Spell) -> Unit, val remove: () -> Unit, val canPrepare: Boolean) :
+        KnownSpellSlotContext()
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -62,6 +65,7 @@ fun KnownSpellSlot(
     dragSet: DragSetState<Spell>,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
+    @Suppress("NAME_SHADOWING") val set by rememberUpdatedState(set)
     key(slot.spell) {
         var drawerOpen by remember { mutableStateOf(SpellDrawerState.Closed) }
 
@@ -96,7 +100,7 @@ fun KnownSpellSlot(
                         beingDragged = false
                         set(slot.copy(spell = null))
                     }
-                }.ifLet(slot.spell == null && context is KnownSpellSlotContext.Spontaneous) {
+                }.ifLet(slot.spell == null) {
                     it.draggableContainer(dragSet,
                         accepts = {
                             it.lists.any { it in slot.lists }
@@ -109,13 +113,14 @@ fun KnownSpellSlot(
                         }
                     ) {
                         set(slot.copy(spell = it))
+                        true
                     }
                 }
 
             Row(modifier, verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.width(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (context is KnownSpellSlotContext.Spontaneous) {
-                        if (level > 0) {
+                    if (level > 0) {
+                        if (context is KnownSpellSlotContext.Spontaneous) {
                             if (context.isSignature) {
                                 IconButtonHand({ context.setSignature(false) }, Modifier.size(15.dp)) {
                                     IconWithTooltip(Icons.Filled.Star, "Signature")
@@ -129,48 +134,66 @@ fun KnownSpellSlot(
                                     IconWithTooltip(Icons.Outlined.StarOutline, "Make Signature")
                                 }
                             }
+                        } else if (context is KnownSpellSlotContext.Prepared) {
+                            if (slot.spell != null) {
+                                IconButtonHand(
+                                    { context.prepare(slot.spell!!) },
+                                    Modifier.size(15.dp),
+                                    enabled = context.canPrepare
+                                ) {
+                                    IconWithTooltip(Icons.Outlined.NoteAdd, "Prepare")
+                                }
+                            }
                         }
                     }
                 }
 
                 Spacer(Modifier.width(10.dp))
 
-                Row(Modifier.width(120.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.widthIn(min = 100.dp), verticalAlignment = Alignment.CenterVertically) {
                     ListsIcon(slot.lists) { set(slot.copy(lists = it)) }
                 }
 
                 Spacer(Modifier.width(10.dp))
 
                 if (beingDragged) {
-                    Divider(Modifier.fillMaxWidth(0.6f).height(1.dp).background(Color.White))
+                    Divider(Modifier.fillMaxWidth(0.7f).height(1.dp).background(Color.White))
                 } else {
                     slot.spell?.let { spell ->
-                        Row(Modifier.weight(0.15f), verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            Modifier.widthIn(min = 200.dp)
+                                .weight(0.2f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(spell.name)
                         }
 
                         Row(
-                            Modifier.weight(0.05f).height(20.dp).widthIn(min = 24.dp),
+                            Modifier.height(20.dp).widthIn(min = 30.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             ActionsTag(spell.actions)
                         }
 
-                        FlowRow(Modifier.weight(0.3f).widthIn(min = 50.dp, max = 200.dp), horizontalGap = 10.dp) {
+                        Spacer(Modifier.width(30.dp))
+
+                        FlowRow(Modifier.widthIn(min = 50.dp).weight(0.1f), horizontalGap = 10.dp) {
                             spell.lists.forEach {
-                                //TODO make small tags
-                                SpellListTag(it)
+                                SpellListShortTag(it)
                             }
                         }
-                        Row(Modifier.weight(1.5f)) {
-                            IconButtonHand({ set(slot.copy(spell = null)) }, Modifier.size(24.dp)) {
-                                IconWithTooltip(
-                                    Icons.Outlined.DeleteForever,
-                                    "Remove",
-                                    tint = Color.Red.copy(alpha = 0.7f)
-                                )
-                            }
+
+                        Spacer(Modifier.weight(0.4f).widthIn(min = 40.dp))
+
+                        IconButtonHand({ set(slot.copy(spell = null)) }, Modifier.size(24.dp)) {
+                            IconWithTooltip(
+                                Icons.Outlined.DeleteForever,
+                                "Remove",
+                                tint = Color.Red.copy(alpha = 0.7f)
+                            )
                         }
+
+                        Spacer(Modifier.weight(0.2f).widthIn(min = 20.dp))
                     }
 
                     if (slot.spell == null) {
@@ -186,6 +209,19 @@ fun KnownSpellSlot(
                                 .background(SavedSearchColors.searchButtonColor.asCompose(), RoundedCornerShape(5.dp))
                         ) {
                             IconWithTooltip(Icons.Default.Search, "Find spell")
+                        }
+                        if (context is KnownSpellSlotContext.Prepared) {
+                            Spacer(Modifier.weight(0.67f).widthIn(30.dp))
+
+                            IconButtonHand(context.remove, Modifier.size(24.dp)) {
+                                IconWithTooltip(
+                                    Icons.Outlined.DeleteForever,
+                                    "Remove",
+                                    tint = Color.Red.copy(alpha = 0.7f)
+                                )
+                            }
+
+                            Spacer(Modifier.weight(0.2f).widthIn(30.dp))
                         }
                     }
                 }

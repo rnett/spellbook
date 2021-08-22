@@ -59,9 +59,19 @@ fun SpellTag(
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
+    noHorizontalPadding: Boolean = false,
     textColor: Color? = null,
 ) =
-    SpellTag(content, color.asCompose(), tooltip, modifier, sidebarInfo, noVerticalPadding, textColor?.asCompose())
+    SpellTag(
+        content,
+        color.asCompose(),
+        tooltip,
+        modifier,
+        sidebarInfo,
+        noVerticalPadding,
+        noHorizontalPadding,
+        textColor?.asCompose()
+    )
 
 @Composable
 fun SpellTag(
@@ -71,8 +81,9 @@ fun SpellTag(
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
+    noHorizontalPadding: Boolean = false,
     textColor: androidx.compose.ui.graphics.Color? = null,
-) = SpellTag(color, tooltip, modifier, sidebarInfo, noVerticalPadding, textColor) {
+) = SpellTag(color, tooltip, modifier, sidebarInfo, noVerticalPadding, noVerticalPadding, textColor) {
     Text(
         content,
         color = textColor ?: androidx.compose.ui.graphics.Color.Unspecified
@@ -86,10 +97,20 @@ fun SpellTag(
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
+    noHorizontalPadding: Boolean = false,
     textColor: Color? = null,
     content: @Composable () -> Unit,
 ): Unit =
-    SpellTag(color.asCompose(), tooltip, modifier, sidebarInfo, noVerticalPadding, textColor?.asCompose(), content)
+    SpellTag(
+        color.asCompose(),
+        tooltip,
+        modifier,
+        sidebarInfo,
+        noVerticalPadding,
+        noHorizontalPadding,
+        textColor?.asCompose(),
+        content
+    )
 
 @Composable
 fun SpellTag(
@@ -98,6 +119,7 @@ fun SpellTag(
     modifier: Modifier = Modifier,
     sidebarInfo: SidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
+    noHorizontalPadding: Boolean = false,
     textColor: androidx.compose.ui.graphics.Color?,
     content: @Composable () -> Unit,
 ) {
@@ -112,6 +134,11 @@ fun SpellTag(
 
 
     val vertPadding = if (noVerticalPadding) 0.dp else 3.dp
+    val horizPadding = if (noHorizontalPadding) 0.dp else 5.dp
+
+    if (!(noHorizontalPadding && noVerticalPadding)) {
+        myModifier = myModifier.padding(horizPadding, vertPadding)
+    }
 
     Surface(shape = RoundedCornerShape(8.dp), color = color, contentColor = textColor ?: contentColorFor(color)) {
         val innerContent: @Composable () -> Unit = {
@@ -128,9 +155,9 @@ fun SpellTag(
         if (tooltip != null) {
             BoxWithTooltip({
                 TextTooltip(tooltip)
-            }, myModifier.padding(5.dp, vertPadding), content = innerContent)
+            }, myModifier, content = innerContent)
         } else {
-            Box(myModifier.padding(5.dp, vertPadding)) {
+            Box(myModifier) {
                 innerContent()
             }
         }
@@ -154,7 +181,7 @@ fun ActionsTag(actions: Actions) {
         is Actions.Time -> "Time"
         else -> error("Unknown actions $actions")
     } + if (actions.hasTrigger) ", With Trigger" else ""
-    SpellTag(Color.Transparent, tooptip, noVerticalPadding = true) {
+    SpellTag(Color.Transparent, tooptip, noVerticalPadding = true, noHorizontalPadding = true) {
         Row {
             Row {
                 when (actions) {
@@ -180,9 +207,9 @@ fun ActionsTag(actions: Actions) {
                 }
             }
 
-            Spacer(Modifier.width(3.dp))
-
             if (actions.hasTrigger) {
+                Spacer(Modifier.width(3.dp))
+
                 Row {
                     Text(
                         "*",

@@ -28,6 +28,8 @@ import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 
+//TODO flag for incapacitate
+
 @Composable
 fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: ((Spell) -> Unit)?) {
 

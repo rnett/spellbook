@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Divider
 import androidx.compose.material.IconButton
 import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
@@ -33,7 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.CenterPopup
@@ -54,10 +52,6 @@ import com.rnett.spellbook.spell.SpellType
 import com.rnett.spellbook.spellbook.KnownSpell
 import com.rnett.spellbook.spellbook.LevelKnownSpell
 
-@Composable
-fun SpellbookDivider() {
-    Divider(Modifier.fillMaxWidth(), color = FilterColors.dividerColor.asCompose().copy(alpha = 0.4f))
-}
 
 @Composable
 fun KnownSpellAdder(

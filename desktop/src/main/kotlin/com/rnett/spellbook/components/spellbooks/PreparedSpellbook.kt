@@ -1,33 +1,35 @@
 package com.rnett.spellbook.components.spellbooks
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidthIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Surface
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.OfflineBolt
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.OfflineBolt
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.components.DragSetState
+import com.rnett.spellbook.components.IconButtonHand
+import com.rnett.spellbook.components.IconMaxSetter
+import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.rememberDragSetState
-import com.rnett.spellbook.ifLet
+import com.rnett.spellbook.components.spell.ActionsTag
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spellbook.KnownSpell
@@ -42,53 +44,63 @@ fun PreparedLevel(
     spells: SpellLevel.Prepared,
     defaultLists: Set<SpellList>,
     level: Int,
-    set: (SpellLevel.Prepared) -> Unit,
+    setLevel: (SpellLevel.Prepared) -> Unit,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
+
+    @Suppress("NAME_SHADOWING") val setLevel = rememberUpdatedState(setLevel)
+
+    fun set(level: SpellLevel.Prepared) {
+        setLevel.value(level.copy(prepared = level.prepared.filter { level.known.any { l -> l.spell == it } }))
+    }
+
     val dragSet = rememberDragSetState<Spell>()
 
-    Column(Modifier.fillMaxWidth()) {
-        dragSet.display {
-            Row {
-                Spacer(Modifier.width(15.dp))
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    border = BorderStroke(1.dp, Color.Black),
-                    color = Color.DarkGray.copy(alpha = 0.8f).compositeOver(Color.LightGray),
-                    elevation = 20.dp
-                ) {
-                    Row(Modifier.padding(12.dp, 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(it.name)
-                    }
-                }
-            }
-        }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Row(Modifier.weight(0.1f), verticalAlignment = Alignment.CenterVertically) {
-                if (level == 0) {
-                    Text("Cantrips")
-                } else {
-                    Text("Level $level")
-                }
+    SpellcastingLevelDisplay(dragSet, {
+        Row(Modifier.weight(0.1f), verticalAlignment = Alignment.CenterVertically) {
+            if (level == 0) {
+                Text("Cantrips")
+            } else {
+                Text("Level $level")
             }
         }
 
-        SpellbookDivider()
+        Row(Modifier.weight(0.3f), verticalAlignment = Alignment.CenterVertically) {
+            IconMaxSetter(
+                spells.prepared.size,
+                spells.maxPrepared,
+                {
+                    set(spells.copy(maxPrepared = it))
+                },
+                {
+                    Icon(Icons.Filled.OfflineBolt, "Filled spell slot")
+                }) {
+                Icon(Icons.Outlined.OfflineBolt, "Empty spell slot")
+            }
+        }
+
+    }) {
 
         spells.prepared.forEachIndexed { idx, it ->
             PreparedSlot(it, dragSet) {
-                set(spells.copy(prepared = spells.prepared.withReplace(idx, it)))
+                set(spells.copy(prepared = spells.prepared.without(idx)))
             }
         }
 
-        SpellbookDivider()
-
+        SpellbookDivider(noStartPadding = true)
 
         spells.known.forEachIndexed { idx, slot ->
             PreparedKnownSpell(
                 slot, level,
                 { set(spells.copy(known = spells.known.withReplace(idx, it))) },
                 { set(spells.copy(known = spells.known.without(idx))) },
+                {
+                    set(spells.copy(prepared = spells.prepared.toMutableList().apply {
+                        add(it)
+                        sort()
+                    }))
+                },
+                spells.prepared.size < spells.maxPrepared,
                 dragSet,
                 searchSlot
             )
@@ -107,36 +119,44 @@ fun PreparedLevel(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PreparedSlot(
-    spell: Spell?,
+    spell: Spell,
     dragSet: DragSetState<Spell>,
-    set: (Spell?) -> Unit
+    remove: () -> Unit
 ) {
+
     key(spell) {
-        var drawerOpen by remember { mutableStateOf(SpellDrawerState.Closed) }
 
-        var draggingOver by remember { mutableStateOf(false) }
-
-        Column(Modifier.fillMaxWidth().ifLet(draggingOver) {
-            it.background(Color.White.copy(alpha = 0.2f))
-        }) {
+        Column(
+            Modifier.fillMaxWidth()
+                .padding(start = 5.dp)
+        ) {
             Row(
-                Modifier.fillMaxWidth().padding(vertical = 3.dp)
-                    .combinedClickable {
-                        if (spell != null)
-                            drawerOpen = drawerOpen.next
-                    },
+                Modifier.fillMaxWidth().padding(vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(Modifier.width(10.dp))
-                if (spell != null) {
+                Row(Modifier.weight(0.2f).requiredWidthIn(min = 200.dp)) {
                     Text(spell.name)
-                } else {
-                    Text("Empty")
                 }
-            }
 
-            if (spell != null) {
-                SpellInfoDrawer(spell, drawerOpen) { drawerOpen = it }
+                Row(
+                    Modifier.height(20.dp).widthIn(min = 30.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ActionsTag(spell.actions)
+                }
+
+                Spacer(Modifier.weight(0.6f).widthIn(min = 30.dp))
+
+                IconButtonHand({ remove() }, Modifier.size(24.dp)) {
+                    IconWithTooltip(
+                        Icons.Outlined.DeleteForever,
+                        "Remove",
+                        tint = Color.Red.copy(alpha = 0.7f)
+                    )
+                }
+
+                Spacer(Modifier.weight(0.2f).widthIn(min = 30.dp))
             }
         }
     }
@@ -149,8 +169,10 @@ fun PreparedKnownSpell(
     level: Int,
     set: (KnownSpell) -> Unit,
     remove: () -> Unit,
+    prepare: (Spell) -> Unit,
+    canPrepare: Boolean,
     dragSet: DragSetState<Spell>,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
-    KnownSpellSlot(slot, level, set, KnownSpellSlotContext.Prepared(), dragSet, searchSlot)
+    KnownSpellSlot(slot, level, set, KnownSpellSlotContext.Prepared(prepare, remove, canPrepare), dragSet, searchSlot)
 }

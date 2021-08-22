@@ -62,10 +62,10 @@ class DragSetState<T>(val composer: Composer, val scope: CoroutineScope) {
         if (!isDragging) return false
         val handler = containers.values
             .firstOrNull { it.bounds.contains(windowPosition!!) && it.accepts.value(item!!) }
-        handler?.onDrop?.invoke(item!!)
+        val result = handler?.onDrop?.invoke(item!!)
         cancelDrag()
 
-        return handler != null
+        return result == true
     }
 
     internal fun cancelDrag() {
@@ -116,7 +116,7 @@ class DragSetState<T>(val composer: Composer, val scope: CoroutineScope) {
         val onEnter: (T) -> Unit,
         val onLeave: (T) -> Unit,
         val onIn: (T, Offset) -> Unit,
-        val onDrop: (T) -> Unit
+        val onDrop: (T) -> Boolean
     )
 
     private val containers = WeakHashMap<ContainerKey, DragHandler<T>>()
@@ -211,10 +211,8 @@ fun <T> Modifier.draggableContainer(
     onLeave: (T) -> Unit = {},
     onIn: (T, Offset) -> Unit = { _, _ -> },
     accepts: (T) -> Boolean = { true },
-    onDrop: (T) -> Unit
+    onDrop: (T) -> Boolean
 ) = composed {
-
-    val eventHandler = SideEffectHandler(2)
 
     val onEnter = rememberUpdatedState(onEnter)
     val onLeave = rememberUpdatedState(onLeave)
@@ -233,7 +231,7 @@ fun <T> Modifier.draggableContainer(
         { onEnter.value(it) },
         { onLeave.value(it) },
         { it, offset -> onIn.value(it, offset) },
-        { eventHandler { onDrop.value(it) } }
+        { onDrop.value(it) }
     )
 
     DisposableEffect(bounds, set) {

@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IconSetter(n: Int, set: (Int) -> Unit, icon: @Composable () -> Unit) {
-    IconMaxSetter(n, n, set, icon, icon)
+    IconMaxSetter(0, n, set, icon, icon)
 }
 
 @OptIn(ExperimentalFoundationApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
@@ -51,8 +51,11 @@ fun IconMaxSetter(
                             true
                         }
                         Key.Minus, Key.DirectionLeft -> {
-                            setMax(max - 1)
-                            true
+                            if (max > 0 && max > n) {
+                                setMax(max - 1)
+                                true
+                            } else
+                                false
                         }
                         else -> false
                     }
