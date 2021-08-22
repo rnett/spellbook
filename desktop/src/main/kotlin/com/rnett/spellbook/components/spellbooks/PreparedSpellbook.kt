@@ -1,6 +1,7 @@
 package com.rnett.spellbook.components.spellbooks
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +46,7 @@ fun PreparedLevel(
     defaultLists: Set<SpellList>,
     level: Int,
     setLevel: (SpellLevel.Prepared) -> Unit,
+    openInfoDrawer: (Spell) -> Unit,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
 
@@ -82,9 +84,14 @@ fun PreparedLevel(
     }) {
 
         spells.prepared.forEachIndexed { idx, it ->
-            PreparedSlot(it, dragSet) {
-                set(spells.copy(prepared = spells.prepared.without(idx)))
-            }
+            PreparedSlot(
+                it,
+                dragSet,
+                {
+                    set(spells.copy(prepared = spells.prepared.without(idx)))
+                },
+                openInfoDrawer
+            )
         }
 
         SpellbookDivider(noStartPadding = true)
@@ -102,6 +109,7 @@ fun PreparedLevel(
                 },
                 spells.prepared.size < spells.maxPrepared,
                 dragSet,
+                openInfoDrawer,
                 searchSlot
             )
         }
@@ -121,7 +129,8 @@ fun PreparedLevel(
 fun PreparedSlot(
     spell: Spell,
     dragSet: DragSetState<Spell>,
-    remove: () -> Unit
+    remove: () -> Unit,
+    openInfoDrawer: (Spell) -> Unit
 ) {
 
     key(spell) {
@@ -131,7 +140,12 @@ fun PreparedSlot(
                 .padding(start = 5.dp)
         ) {
             Row(
-                Modifier.fillMaxWidth().padding(vertical = 5.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 5.dp)
+                    .clickable {
+                        openInfoDrawer(spell)
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(Modifier.width(10.dp))
@@ -172,7 +186,16 @@ fun PreparedKnownSpell(
     prepare: (Spell) -> Unit,
     canPrepare: Boolean,
     dragSet: DragSetState<Spell>,
+    openInfoDrawer: (Spell) -> Unit,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
-    KnownSpellSlot(slot, level, set, KnownSpellSlotContext.Prepared(prepare, remove, canPrepare), dragSet, searchSlot)
+    KnownSpellSlot(
+        slot,
+        level,
+        set,
+        KnownSpellSlotContext.Prepared(prepare, remove, canPrepare),
+        dragSet,
+        openInfoDrawer,
+        searchSlot
+    )
 }

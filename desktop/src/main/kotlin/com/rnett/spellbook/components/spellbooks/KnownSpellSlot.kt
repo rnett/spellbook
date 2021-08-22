@@ -63,11 +63,11 @@ fun KnownSpellSlot(
     set: (KnownSpell) -> Unit,
     context: KnownSpellSlotContext,
     dragSet: DragSetState<Spell>,
+    openInfoDrawer: (Spell) -> Unit,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
     @Suppress("NAME_SHADOWING") val set by rememberUpdatedState(set)
     key(slot.spell) {
-        var drawerOpen by remember { mutableStateOf(SpellDrawerState.Closed) }
 
         var draggingOver by remember { mutableStateOf(false) }
         var beingDragged by remember { mutableStateOf(false) }
@@ -83,10 +83,10 @@ fun KnownSpellSlot(
                             set(slot.copy(spell = it))
                         }
                     else
-                        drawerOpen = drawerOpen.next
+                        openInfoDrawer(slot.spell!!)
                 }) {
                     if (slot.spell != null)
-                        drawerOpen = drawerOpen.next
+                        openInfoDrawer(slot.spell!!)
                 }.ifLet(slot.spell != null) {
                     it.draggableItem(
                         dragSet, slot.spell!!,
@@ -225,10 +225,6 @@ fun KnownSpellSlot(
                         }
                     }
                 }
-            }
-
-            if (slot.spell != null) {
-                SpellInfoDrawer(slot.spell!!, drawerOpen) { drawerOpen = it }
             }
         }
     }

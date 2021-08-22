@@ -1,6 +1,8 @@
 package com.rnett.spellbook.components.spellbooks
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -34,16 +36,12 @@ enum class SpellDrawerState {
 }
 
 @Composable
-fun SpellInfoDrawer(spell: Spell, state: SpellDrawerState, setState: (SpellDrawerState) -> Unit) {
-    if (state == SpellDrawerState.Closed) return
+fun SpellInfoDrawer(spell: Spell, close: () -> Unit) {
     val focusRequester = remember { FocusRequester() }
 
-    key(state) {
+    key(spell) {
         SideEffect {
-            if (state == SpellDrawerState.Closed)
-                focusRequester.freeFocus()
-            else
-                focusRequester.requestFocus()
+            focusRequester.requestFocus()
         }
     }
 
@@ -51,11 +49,10 @@ fun SpellInfoDrawer(spell: Spell, state: SpellDrawerState, setState: (SpellDrawe
         Modifier
             .focusRequester(focusRequester)
             .focusable()
-            .onEscape { setState(SpellDrawerState.Closed) }
-            .onEnter { setState(state.next) }
+            .onEscape { close() }
+            .onEnter { close() }
+            .clickable(remember { MutableInteractionSource() }, indication = null) { close() }
     ) {
-        SpellDisplay(spell, null, state == SpellDrawerState.Full) {
-            setState(state.changeExpanded)
-        }
+        SpellDisplay(spell, null, true, close)
     }
 }

@@ -39,6 +39,7 @@ fun SpellcastingLevel(
     spellcasting: Spellcasting<*>,
     level: Int,
     set: (Spellcasting<*>) -> Unit,
+    openInfoDrawer: (Spell) -> Unit,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
     @Suppress("NAME_SHADOWING") val set by rememberUpdatedState(set)
@@ -49,9 +50,8 @@ fun SpellcastingLevel(
             spellcasting[level] as SpellLevel.Spontaneous,
             spellcasting.defaultLists,
             level,
-            {
-                set(spellcasting.withLevel(level, it))
-            },
+            { set(spellcasting.withLevel(level, it)) },
+            openInfoDrawer,
             searchSlot
         )
     } else {
@@ -60,6 +60,7 @@ fun SpellcastingLevel(
             spellcasting.defaultLists,
             level,
             { set(spellcasting.withLevel(level, it)) },
+            openInfoDrawer,
             searchSlot
         )
     }

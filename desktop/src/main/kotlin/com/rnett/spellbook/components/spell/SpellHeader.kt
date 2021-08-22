@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,7 +34,9 @@ fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: (
 
     Column(modifier.fillMaxWidth().padding(10.dp)) {
 
-        Row(Modifier.fillMaxHeight(0.5f), verticalAlignment = Alignment.CenterVertically) {
+        val rowMod = Modifier
+
+        Row(rowMod, verticalAlignment = Alignment.CenterVertically) {
             var textModifier = Modifier.fillMaxWidth(0.15f).widthIn(min = 200.dp).weight(0.3f)
             if (setSelectedSpell != null) {
                 IconButtonHand({ setSelectedSpell(spell) }, Modifier.size(24.dp)) {
@@ -100,7 +101,7 @@ fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: (
         }
         Divider(Modifier.padding(vertical = 10.dp), color = MainColors.spellBodyColor.asCompose())
 
-        Row(Modifier.fillMaxHeight(0.5f)) {
+        Row(rowMod, verticalAlignment = Alignment.CenterVertically) {
             //TODO consider moving duration to top row, rest to body.  Maybe no color for traits except rarity?
             Row(Modifier.fillMaxWidth(0.1f)) {
                 DurationTag(spell.duration, spell.sustained)

@@ -35,6 +35,7 @@ fun SpontaneousLevel(
     defaultLists: Set<SpellList>,
     level: Int,
     set: (SpellLevel.Spontaneous) -> Unit,
+    openInfoDrawer: (Spell) -> Unit,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit,
 ) {
     @Suppress("NAME_SHADOWING") val set by rememberUpdatedState(set)
@@ -82,6 +83,7 @@ fun SpontaneousLevel(
                 { set(spells.copy(signatures = if (it) spells.signatures + idx else spells.signatures - idx)) },
                 spells.signatures.size < spells.maxSignatures,
                 dragSet,
+                openInfoDrawer,
                 searchSlot
             )
         }
@@ -107,6 +109,7 @@ fun SpontaneousSlot(
     setSignature: (Boolean) -> Unit,
     canBeSignature: Boolean,
     dragSet: DragSetState<Spell>,
+    openInfoDrawer: (Spell) -> Unit,
     searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
 ) {
     KnownSpellSlot(
@@ -115,6 +118,7 @@ fun SpontaneousSlot(
         set,
         KnownSpellSlotContext.Spontaneous(isSignature, setSignature, canBeSignature),
         dragSet,
+        openInfoDrawer,
         searchSlot
     )
 }

@@ -5,7 +5,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,7 +33,7 @@ fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?, expanded: B
         color = MainColors.spellBorderColor.asCompose()
     ) {
 
-        Column {
+        Column(Modifier) {
             SpellHeader(
                 spell,
                 Modifier.clickable(remember { MutableInteractionSource() }, null) { headerClick() },
@@ -54,7 +53,7 @@ fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?, expanded: B
                         ClickableText(
                             annotatedText,
                             style = TextStyle(color = MainColors.textColor.asCompose()),
-                            modifier = Modifier.fillMaxSize().padding(20.dp)
+                            modifier = Modifier.fillMaxWidth().padding(20.dp)
                         ) {
                             val link = annotatedText.getStringAnnotations("URL", it, it).firstOrNull()?.item
                             if (link != null) {

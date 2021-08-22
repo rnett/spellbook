@@ -1,5 +1,7 @@
 package com.rnett.spellbook.pages
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
@@ -7,8 +9,10 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -29,15 +33,18 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.zIndex
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.spellbooks.SearchPopup
+import com.rnett.spellbook.components.spellbooks.SpellInfoDrawer
 import com.rnett.spellbook.components.spellbooks.SpellcastingHeader
 import com.rnett.spellbook.components.spellbooks.SpellcastingLevel
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.Spellbook
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SpellbooksPage(
     spellbooks: List<Pair<String, Spellbook>>,
@@ -53,6 +60,8 @@ fun SpellbooksPage(
     val verticalScrollState = rememberScrollState()
     val horizontalScrollState = rememberScrollState()
 
+    var infoDrawerSpell by remember { mutableStateOf<Spell?>(null) }
+
     Surface(
         Modifier.fillMaxSize(),
         color = MainColors.outsideColor.asCompose(),
@@ -63,37 +72,47 @@ fun SpellbooksPage(
             var width by remember { mutableStateOf(0.dp) }
             Column(
                 Modifier
-                    .padding(start = 10.dp, top = 10.dp)
+                    .padding(top = 10.dp)
                     .onGloballyPositioned { with(density) { width = it.size.width.toDp() } }
             ) {
+
                 if (currentSpellbook != null) {
-                    val (name, spellbook) = spellbooks[currentSpellbook!!]
-                    Text(name, fontSize = 2.em, fontWeight = FontWeight.Bold)
+                    Column(Modifier.padding(top = 10.dp).weight(1f)) {
+                        val (name, spellbook) = spellbooks[currentSpellbook!!]
+                        Text(name, fontSize = 2.em, fontWeight = FontWeight.Bold)
 
-                    Divider(Modifier.fillMaxWidth().padding(vertical = 4.dp))
+                        Divider(Modifier.fillMaxWidth().padding(vertical = 4.dp))
 
-                    Row(Modifier.fillMaxWidth().horizontalScroll(horizontalScrollState)) {
-                        spellbook.spellcastings.forEach {
-                            Box(Modifier.width(width / castingsPerPage)) {
-                                SpellcastingHeader(it.key, it.value)
+                        Row(Modifier.fillMaxWidth().horizontalScroll(horizontalScrollState)) {
+                            spellbook.spellcastings.forEach {
+                                Box(Modifier.width(width / castingsPerPage)) {
+                                    SpellcastingHeader(it.key, it.value)
+                                }
                             }
                         }
-                    }
 
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(verticalScrollState)
-                    ) {
-                        val maxLevel = spellbook.spellcastings.maxOf { it.value.maxLevel }
-                        (0..maxLevel).forEach { level ->
-                            Row(Modifier.fillMaxWidth().horizontalScroll(horizontalScrollState)) {
-                                spellbook.spellcastings.forEach { (castingName, casting) ->
-                                    Column(Modifier.width(width / castingsPerPage)) {
-                                        SpellcastingLevel(casting, level, {
-                                            set(currentSpellbook!!, spellbook.withSpellcasting(castingName, it))
-                                        }) { slot, setter ->
-                                            currentSearch = slot to setter
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(verticalScrollState)
+                        ) {
+                            val maxLevel = spellbook.spellcastings.maxOf { it.value.maxLevel }
+                            (0..maxLevel).forEach { level ->
+                                Row(Modifier.fillMaxWidth().horizontalScroll(horizontalScrollState)) {
+                                    spellbook.spellcastings.forEach { (castingName, casting) ->
+                                        Column(Modifier.width(width / castingsPerPage)) {
+                                            SpellcastingLevel(
+                                                casting,
+                                                level,
+                                                {
+                                                    set(currentSpellbook!!, spellbook.withSpellcasting(castingName, it))
+                                                },
+                                                {
+                                                    infoDrawerSpell = it
+                                                }
+                                            ) { slot, setter ->
+                                                currentSearch = slot to setter
+                                            }
                                         }
                                     }
                                 }
@@ -101,17 +120,33 @@ fun SpellbooksPage(
                         }
                     }
                 }
+
+                AnimatedVisibility(
+                    infoDrawerSpell != null,
+                    Modifier.fillMaxWidth()
+                ) {
+                    Column {
+                        //TODO button to open in search (needs name search first)
+                        //TODO close button?
+                        infoDrawerSpell?.let {
+                            SpellInfoDrawer(it) { infoDrawerSpell = null }
+                        }
+                        Spacer(Modifier.height(scrollStyle.thickness))
+                    }
+                }
             }
-//
+
             VerticalScrollbar(
                 rememberScrollbarAdapter(verticalScrollState),
                 Modifier.align(Alignment.TopEnd),
                 style = scrollStyle
             )
 
+
+
             HorizontalScrollbar(
                 rememberScrollbarAdapter(horizontalScrollState),
-                Modifier.align(Alignment.BottomStart),
+                Modifier.align(Alignment.BottomStart).zIndex(3f),
                 style = scrollStyle
             )
         }
