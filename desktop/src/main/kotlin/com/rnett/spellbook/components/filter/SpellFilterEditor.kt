@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -24,12 +26,17 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.FilterColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
+import com.rnett.spellbook.components.SmallTextField
+import com.rnett.spellbook.components.onEnter
+import com.rnett.spellbook.components.onEscape
 import com.rnett.spellbook.components.spell.ActionTypeTag
 import com.rnett.spellbook.components.spell.ActionsTag
 import com.rnett.spellbook.components.spell.AttackTag
@@ -85,6 +92,16 @@ class ExpansionManager {
         }
     }
 
+    private val onExpand = mutableStateListOf<() -> Unit>()
+
+    fun onExpanded(handler: () -> Unit) {
+        onExpand += handler
+    }
+
+    fun whenExpanded() {
+        onExpand.forEach { it() }
+    }
+
     @Composable
     fun component(): Component = remember {
         components.add(false)
@@ -94,6 +111,8 @@ class ExpansionManager {
     inner class Component(val idx: Int) {
         inline fun expand(expanded: Boolean) {
             closeAll()
+            if (expanded)
+                whenExpanded()
             components[idx] = expanded
         }
 
@@ -111,8 +130,34 @@ fun SpellFilterEditor(
 ) {
     Box {
         val scrollState = remember { ScrollState(0) }
-        Column(Modifier.padding(top = 10.dp, bottom = 10.dp, start = 10.dp, end = 20.dp).verticalScroll(scrollState)) {
-            val expandedStates = remember { ExpansionManager() }
+        Column(
+            Modifier.padding(top = 10.dp, bottom = 10.dp, start = 10.dp, end = 20.dp).verticalScroll(scrollState)
+        ) {
+
+            val focusManager = LocalFocusManager.current
+            fun clearFocus() {
+                focusManager.clearFocus()
+            }
+
+            val expandedStates = remember { ExpansionManager().apply { onExpanded { clearFocus() } } }
+
+            SmallTextField(filter.name,
+                { update(filter.copy(name = it)) },
+                Modifier.height(38.dp).fillMaxWidth()
+                    .onEscape { clearFocus() }
+                    .onEnter { clearFocus() },
+                placeholder = {
+                    Text("Name", color = Color.White)
+                },
+                singleLine = true,
+                colors = TextFieldDefaults.textFieldColors(
+                    cursorColor = FilterColors.dividerColor.asCompose(),
+                    errorCursorColor = FilterColors.dividerColor.asCompose(),
+                    focusedIndicatorColor = FilterColors.dividerColor.asCompose()
+                )
+            )
+
+            Spacer(Modifier.height(20.dp))
 
             if (presetSlot == null) {
                 FilterEditor(filter.lists,
@@ -141,16 +186,24 @@ fun SpellFilterEditor(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Min Level")
                 Spacer(Modifier.weight(1f))
-                IconButtonHand({
-                    update(filter.copy(level = filter.level.copy(min = filter.level.min - 1)))
-                }, enabled = filter.level.min > 1) {
+                IconButtonHand(
+                    {
+                        update(filter.copy(level = filter.level.copy(min = filter.level.min - 1)))
+                    },
+                    Modifier.size(20.dp),
+                    enabled = filter.level.min > 1
+                ) {
                     IconWithTooltip(Icons.Default.Remove, "Minus")
                 }
                 Text(filter.level.min.toString())
-                IconButtonHand({
-                    val newValue = filter.level.min + 1
-                    update(filter.copy(level = LevelFilter(newValue, max(filter.level.max, newValue))))
-                }, enabled = filter.level.min < levelLimit) {
+                IconButtonHand(
+                    {
+                        val newValue = filter.level.min + 1
+                        update(filter.copy(level = LevelFilter(newValue, max(filter.level.max, newValue))))
+                    },
+                    Modifier.size(20.dp),
+                    enabled = filter.level.min < levelLimit
+                ) {
                     IconWithTooltip(Icons.Default.Add, "Plus")
                 }
             }
@@ -158,16 +211,24 @@ fun SpellFilterEditor(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Max Level")
                 Spacer(Modifier.weight(1f))
-                IconButtonHand({
-                    val newValue = filter.level.max - 1
-                    update(filter.copy(level = LevelFilter(min(newValue, filter.level.min), newValue)))
-                }, enabled = filter.level.max > 1) {
+                IconButtonHand(
+                    {
+                        val newValue = filter.level.max - 1
+                        update(filter.copy(level = LevelFilter(min(newValue, filter.level.min), newValue)))
+                    },
+                    Modifier.size(20.dp),
+                    enabled = filter.level.max > 1
+                ) {
                     IconWithTooltip(Icons.Default.Remove, "Minus")
                 }
                 Text(filter.level.max.toString())
-                IconButtonHand({
-                    update(filter.copy(level = filter.level.copy(max = filter.level.max + 1)))
-                }, enabled = filter.level.max < levelLimit) {
+                IconButtonHand(
+                    {
+                        update(filter.copy(level = filter.level.copy(max = filter.level.max + 1)))
+                    },
+                    Modifier.size(20.dp),
+                    enabled = filter.level.max < levelLimit
+                ) {
                     IconWithTooltip(Icons.Default.Add, "Plus")
                 }
             }
@@ -251,7 +312,10 @@ fun SpellFilterEditor(
                 ActionTypeTag(it)
             }
 
-            FilterEditor(filter.rarity, Rarity.traits, { update(filter.copy(rarity = it)) }, expandedStates.component(),
+            FilterEditor(filter.rarity,
+                Rarity.traits,
+                { update(filter.copy(rarity = it)) },
+                expandedStates.component(),
                 { Text("Rarity") }) {
                 Box(Modifier.height(24.dp)) {
                     TraitTag(traitsByName.getValue(it.name), sidebar = false)

@@ -37,7 +37,8 @@ data class DurationFilter(val duration: String?) : SpellFilterPart {
 sealed class AttackTypeFilter : SpellFilterPart {
     @Serializable
     data class TargetSave(val save: Save, val isBasic: Boolean?) : AttackTypeFilter() {
-        override fun matches(spell: Spell): Boolean = spell.save == save && (isBasic?.let { it == spell.basicSave } ?: true)
+        override fun matches(spell: Spell): Boolean =
+            spell.save == save && (isBasic?.let { it == spell.basicSave } ?: true)
     }
 
     @Serializable
@@ -95,7 +96,8 @@ sealed class ActionFilter : SpellFilterPart {
     }
 }
 
-fun <T : SpellFilterPart> singleOrClauseFilter(clause: Set<T>): Filter<T> = Filter(listOf(FilterClause(clause)), Operation.AND, Operation.OR, false)
+fun <T : SpellFilterPart> singleOrClauseFilter(clause: Set<T>): Filter<T> =
+    Filter(listOf(FilterClause(clause)), Operation.AND, Operation.OR, false)
 
 fun <T : SpellFilterPart> defaultOrFilter(): Filter<T> = Filter(emptyList(), Operation.OR, Operation.OR, false)
 
@@ -127,6 +129,7 @@ inline fun and(block: Ander.() -> Unit): Boolean =
 @Serializable
 //TODO should be @Immutable for compose
 data class SpellFilter(
+    val name: String = "",
     val lists: Filter<SpellList> = defaultOrFilter(),
     val isFocus: Boolean? = false,
     val attackTypes: Filter<AttackTypeFilter> = defaultOrFilter(),
@@ -150,6 +153,7 @@ data class SpellFilter(
 ) : SpellFilterPart {
     override fun matches(spell: Spell): Boolean =
         and {
+            +{ spell.name.contains(name, true) }
             +{ lists.matches(spell) }
             +{ level.matches(spell) }
             +{ types.matches(spell) }

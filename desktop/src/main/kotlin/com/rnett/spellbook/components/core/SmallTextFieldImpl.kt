@@ -309,5 +309,5 @@ private const val PlaceholderAnimationDelayOrDuration = 67
 
 private val IndicatorUnfocusedWidth = 1.dp
 private val IndicatorFocusedWidth = 2.dp
-internal val TextFieldPadding = 1.dp
+internal val TextFieldPadding = 0.dp
 internal val HorizontalIconPadding = 4.dp

@@ -61,6 +61,7 @@ import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.SmallTextField
 import com.rnett.spellbook.components.filter.SpellFilterEditor
+import com.rnett.spellbook.components.onEnter
 import com.rnett.spellbook.components.onEscape
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
@@ -112,6 +113,17 @@ fun SavedSearchPage(
 
                     val focusRequester = FocusRequester()
 
+                    fun closeEditing() {
+                        editingName?.let {
+                            if (it !in filters.all) {
+                                rename(name, it)
+                                mainState.updateSavedFilters(rename(name, it))
+                            }
+                            editingName = null
+                        }
+                        focusRequester.freeFocus()
+                    }
+
                     Row(
                         Modifier.fillMaxWidth()
                             .ifLet(name == openFilter) {
@@ -122,13 +134,7 @@ fun SavedSearchPage(
                             .focusRequester(focusRequester)
                             .onFocusChanged {
                                 if (!it.hasFocus) {
-                                    editingName?.let {
-                                        if (it !in filters.all) {
-                                            rename(name, it)
-                                            mainState.updateSavedFilters(rename(name, it))
-                                        }
-                                        editingName = null
-                                    }
+                                    closeEditing()
                                 }
                             }
                             .focusTarget()
@@ -142,6 +148,11 @@ fun SavedSearchPage(
                                     editingName = name
                                 }
                             )
+                            .onEscape {
+                                closeEditing()
+                            }.onEnter {
+                                closeEditing()
+                            }
                             .padding(vertical = 10.dp, horizontal = 5.dp),
                         verticalAlignment = Alignment.CenterVertically) {
 
