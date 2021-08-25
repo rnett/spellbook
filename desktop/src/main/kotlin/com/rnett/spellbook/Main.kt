@@ -10,15 +10,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.IconToggleButton
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -41,7 +45,6 @@ import androidx.compose.ui.window.singleWindowApplication
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.core.ScaleDensityToHeight
 import com.rnett.spellbook.components.handPointer
-import com.rnett.spellbook.components.spell.SpellListTag
 import com.rnett.spellbook.data.allDurations
 import com.rnett.spellbook.data.allSpellConditions
 import com.rnett.spellbook.data.allSpellTraits
@@ -81,7 +84,6 @@ class MainState(
     val savedSearchRepo: LocalNamedObjectRepo<SpellFilter>, //TODO just use mutable state + LaunchedEffect keyed on it to save?
     initialPage: Pages
 ) {
-    var lookingForSpell by mutableStateOf<LevelKnownSpell?>(null)
 
     val searchPage = PageState.Search()
     val spellbookPage = PageState.Spellbooks()
@@ -224,18 +226,6 @@ fun main() {
                             LocalMainState.provides(mainState)
                         ) {
 
-                            mainState.lookingForSpell?.let {
-                                Row {
-                                    Text("Selecting level ${it.level} ${it.slot.type.longName} from {")
-                                    Spacer(Modifier.width(0.5.dp))
-                                    it.slot.lists.forEach {
-                                        SpellListTag(it)
-                                        Spacer(Modifier.width(0.5.dp))
-                                    }
-                                    Text("}")
-                                }
-                            }
-
                             Row(Modifier.fillMaxWidth().background(MainColors.spellBodyColor.asCompose())) {
 
                                 TabRow(
@@ -255,15 +245,22 @@ fun main() {
                                     }
                                 }
 
-                                Divider(Modifier.fillMaxHeight(), thickness = Dp.Hairline, color = Color.White)
-
                                 Spacer(Modifier.width(20.dp))
 
-                                IconToggleButton(mainState.cartOpen, {
-                                    mainState.cartOpen = !mainState.cartOpen
-                                }, Modifier.handPointer()) {
-                                    IconWithTooltip(Icons.Outlined.ShoppingCart, "Cart")
+                                IconToggleButton(
+                                    mainState.cartOpen,
+                                    {
+                                        mainState.cartOpen = !mainState.cartOpen
+                                    },
+                                    Modifier.padding(top = 3.dp).handPointer()
+                                        .ifLet(mainState.cartOpen) {
+                                            it.background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(40, 40, 0, 0))
+                                        }
+                                ) {
+                                    IconWithTooltip(if(mainState.cartOpen) Icons.Filled.ShoppingCart else Icons.Outlined.ShoppingCart, "Cart")
                                 }
+                                //TODO some kind of button like this for the info pane?  probably not
+                                //TODO display cart (do I want groups in the same display? probably, but also separately)
 
                                 Spacer(Modifier.width(20.dp))
 
