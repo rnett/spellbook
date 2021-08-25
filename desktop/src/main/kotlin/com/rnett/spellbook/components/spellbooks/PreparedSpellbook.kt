@@ -2,7 +2,6 @@ package com.rnett.spellbook.components.spellbooks
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -134,44 +133,38 @@ fun PreparedSlot(
 ) {
 
     key(spell) {
-
-        Column(
-            Modifier.fillMaxWidth()
-                .padding(start = 5.dp)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 5.dp)
+                .clickable {
+                    openInfoDrawer(spell)
+                },
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Spacer(Modifier.width(10.dp))
+            Row(Modifier.weight(0.2f).requiredWidthIn(min = 200.dp)) {
+                Text(spell.name)
+            }
+
             Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 5.dp)
-                    .clickable {
-                        openInfoDrawer(spell)
-                    },
+                Modifier.height(20.dp).widthIn(min = 30.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(Modifier.width(10.dp))
-                Row(Modifier.weight(0.2f).requiredWidthIn(min = 200.dp)) {
-                    Text(spell.name)
-                }
-
-                Row(
-                    Modifier.height(20.dp).widthIn(min = 30.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ActionsTag(spell.actions)
-                }
-
-                Spacer(Modifier.weight(0.6f).widthIn(min = 30.dp))
-
-                IconButtonHand({ remove() }, Modifier.size(24.dp)) {
-                    IconWithTooltip(
-                        Icons.Outlined.DeleteForever,
-                        "Remove",
-                        tint = Color.Red.copy(alpha = 0.7f)
-                    )
-                }
-
-                Spacer(Modifier.weight(0.2f).widthIn(min = 30.dp))
+                ActionsTag(spell.actions)
             }
+
+            Spacer(Modifier.weight(0.6f).widthIn(min = 30.dp))
+
+            IconButtonHand({ remove() }, Modifier.size(24.dp)) {
+                IconWithTooltip(
+                    Icons.Outlined.DeleteForever,
+                    "Remove",
+                    tint = Color.Red.copy(alpha = 0.7f)
+                )
+            }
+
+            Spacer(Modifier.weight(0.2f).widthIn(min = 30.dp))
         }
     }
 }

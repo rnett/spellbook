@@ -1,18 +1,25 @@
 package com.rnett.spellbook
 
 import androidx.compose.desktop.DesktopMaterialTheme
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.Divider
+import androidx.compose.material.IconToggleButton
 import androidx.compose.material.Surface
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -24,12 +31,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.singleWindowApplication
+import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.core.ScaleDensityToHeight
+import com.rnett.spellbook.components.handPointer
 import com.rnett.spellbook.components.spell.SpellListTag
 import com.rnett.spellbook.data.allDurations
 import com.rnett.spellbook.data.allSpellConditions
@@ -74,6 +85,8 @@ class MainState(
 
     val searchPage = PageState.Search()
     val spellbookPage = PageState.Spellbooks()
+
+    var cartOpen by mutableStateOf(false)
 
     private val derivedHelper by derivedStateOf { page.page }
 
@@ -223,20 +236,37 @@ fun main() {
                                 }
                             }
 
-                            TabRow(
-                                mainState.currentPage.ordinal,
-                                backgroundColor = MainColors.spellBodyColor.asCompose()
-                            ) {
-                                Tab(mainState.currentPage == Pages.Spellbooks, {
-                                    mainState.currentPage = Pages.Spellbooks
-                                }) {
-                                    Text("Spellbooks", Modifier.padding(10.dp))
+                            Row(Modifier.fillMaxWidth().background(MainColors.spellBodyColor.asCompose())) {
+
+                                TabRow(
+                                    mainState.currentPage.ordinal,
+                                    Modifier.weight(1f),
+                                    backgroundColor = MainColors.spellBodyColor.asCompose()
+                                ) {
+                                    Tab(mainState.currentPage == Pages.Spellbooks, {
+                                        mainState.currentPage = Pages.Spellbooks
+                                    }) {
+                                        Text("Spellbooks", Modifier.padding(10.dp))
+                                    }
+                                    Tab(mainState.currentPage == Pages.SpellSearch, {
+                                        mainState.currentPage = Pages.SpellSearch
+                                    }) {
+                                        Text("Search", Modifier.padding(10.dp))
+                                    }
                                 }
-                                Tab(mainState.currentPage == Pages.SpellSearch, {
-                                    mainState.currentPage = Pages.SpellSearch
-                                }) {
-                                    Text("Search", Modifier.padding(10.dp))
+
+                                Divider(Modifier.fillMaxHeight(), thickness = Dp.Hairline, color = Color.White)
+
+                                Spacer(Modifier.width(20.dp))
+
+                                IconToggleButton(mainState.cartOpen, {
+                                    mainState.cartOpen = !mainState.cartOpen
+                                }, Modifier.handPointer()) {
+                                    IconWithTooltip(Icons.Outlined.ShoppingCart, "Cart")
                                 }
+
+                                Spacer(Modifier.width(20.dp))
+
                             }
 
                             mainState.page.show(mainState)

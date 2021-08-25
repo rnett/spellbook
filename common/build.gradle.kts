@@ -1,17 +1,7 @@
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization")
+    id(libs.plugins.kotlin.multiplatform.get().pluginId)
+    id(libs.plugins.kotlinx.serialization.get().pluginId)
 }
-
-val serialization_version: String by project
-val ktor_version: String by project
-val coroutines_version: String by project
-
-val exposed_version: String by project
-val pgjdbc_ng_version: String by project
-val h2_version: String by project
-
-val jsoup_version: String by project
 
 repositories {
     mavenCentral()
@@ -42,33 +32,29 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api("org.jetbrains.kotlinx:kotlinx-serialization-core:$serialization_version")
-                api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version")
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
-                api("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
+                api(libs.bundles.kotlinx.serialization)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.collections.immutable)
             }
         }
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test-common"))
-                implementation(kotlin("test-annotations-common"))
+                implementation(kotlin("test"))
             }
         }
         val jvmMain by getting {
             dependencies {
-                api("ch.qos.logback:logback-classic:1.2.3")
+                api(libs.logback)
 
-                api("org.jetbrains.exposed:exposed-core:$exposed_version")
-                api("org.jetbrains.exposed:exposed-dao:$exposed_version")
-                api("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
+                api(libs.bundles.exposed)
 
-                implementation("com.impossibl.pgjdbc-ng:pgjdbc-ng:$pgjdbc_ng_version")
+                implementation(libs.pgjdbc)
                 //TODO I need this for loading, but it should be in Desktop
-                implementation("com.h2database:h2:$h2_version")
+                implementation(libs.h2)
 
-                api("io.ktor:ktor-client-apache:$ktor_version")
-                api("org.jsoup:jsoup:$jsoup_version")
-                implementation("me.tongfei:progressbar:0.9.0")
+                api(libs.ktor.client)
+                api(libs.jsoup)
+                implementation(libs.progressbar)
             }
         }
         val jvmTest by getting {
