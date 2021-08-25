@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.singleWindowApplication
+import com.rnett.spellbook.components.core.ScaleDensityToHeight
 import com.rnett.spellbook.components.spell.SpellListTag
 import com.rnett.spellbook.data.allDurations
 import com.rnett.spellbook.data.allSpellConditions
@@ -199,42 +200,47 @@ fun main() {
             contentColor = MainColors.textColor.asCompose()
         ) {
             DesktopMaterialTheme() {
-                Column(Modifier.fillMaxSize()) {
+                ScaleDensityToHeight(1300f, 0.6f) {
+                    Column(Modifier.fillMaxSize()) {
 
-                    val savedSearchRepo = remember { LocalSavedSearchRepo({}) }
+                        val savedSearchRepo = remember { LocalSavedSearchRepo({}) }
 
-                    val mainState = remember { MainState(savedSearchRepo, Pages.Spellbooks) }
+                        val mainState = remember { MainState(savedSearchRepo, Pages.Spellbooks) }
 
-                    CompositionLocalProvider(
-                        LocalMainState.provides(mainState)
-                    ) {
+                        CompositionLocalProvider(
+                            LocalMainState.provides(mainState)
+                        ) {
 
-                        mainState.lookingForSpell?.let {
-                            Row {
-                                Text("Selecting level ${it.level} ${it.slot.type.longName} from {")
-                                Spacer(Modifier.width(0.5.dp))
-                                it.slot.lists.forEach {
-                                    SpellListTag(it)
+                            mainState.lookingForSpell?.let {
+                                Row {
+                                    Text("Selecting level ${it.level} ${it.slot.type.longName} from {")
                                     Spacer(Modifier.width(0.5.dp))
+                                    it.slot.lists.forEach {
+                                        SpellListTag(it)
+                                        Spacer(Modifier.width(0.5.dp))
+                                    }
+                                    Text("}")
                                 }
-                                Text("}")
                             }
-                        }
 
-                        TabRow(mainState.currentPage.ordinal, backgroundColor = MainColors.spellBodyColor.asCompose()) {
-                            Tab(mainState.currentPage == Pages.Spellbooks, {
-                                mainState.currentPage = Pages.Spellbooks
-                            }) {
-                                Text("Spellbooks", Modifier.padding(10.dp))
+                            TabRow(
+                                mainState.currentPage.ordinal,
+                                backgroundColor = MainColors.spellBodyColor.asCompose()
+                            ) {
+                                Tab(mainState.currentPage == Pages.Spellbooks, {
+                                    mainState.currentPage = Pages.Spellbooks
+                                }) {
+                                    Text("Spellbooks", Modifier.padding(10.dp))
+                                }
+                                Tab(mainState.currentPage == Pages.SpellSearch, {
+                                    mainState.currentPage = Pages.SpellSearch
+                                }) {
+                                    Text("Search", Modifier.padding(10.dp))
+                                }
                             }
-                            Tab(mainState.currentPage == Pages.SpellSearch, {
-                                mainState.currentPage = Pages.SpellSearch
-                            }) {
-                                Text("Search", Modifier.padding(10.dp))
-                            }
-                        }
 
-                        mainState.page.show(mainState)
+                            mainState.page.show(mainState)
+                        }
                     }
                 }
             }

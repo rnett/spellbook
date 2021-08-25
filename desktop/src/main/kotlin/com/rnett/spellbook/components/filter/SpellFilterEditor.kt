@@ -2,16 +2,17 @@ package com.rnett.spellbook.components.filter
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalScrollbarStyle
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
@@ -128,10 +129,13 @@ fun SpellFilterEditor(
     showReset: Boolean = true,
     update: (SpellFilter) -> Unit
 ) {
-    Box {
-        val scrollState = remember { ScrollState(0) }
+    Box(Modifier.fillMaxHeight()) {
+        val scrollState = rememberScrollState()
         Column(
-            Modifier.padding(top = 10.dp, bottom = 10.dp, start = 10.dp, end = 20.dp).verticalScroll(scrollState)
+            Modifier
+                .padding(top = 10.dp, bottom = 10.dp, start = 10.dp, end = 20.dp)
+                .verticalScroll(scrollState)
+                .fillMaxHeight()
         ) {
 
             val focusManager = LocalFocusManager.current
@@ -157,7 +161,7 @@ fun SpellFilterEditor(
                 )
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(15.dp))
 
             if (presetSlot == null) {
                 FilterEditor(filter.lists,
@@ -317,9 +321,7 @@ fun SpellFilterEditor(
                 { update(filter.copy(rarity = it)) },
                 expandedStates.component(),
                 { Text("Rarity") }) {
-                Box(Modifier.height(24.dp)) {
-                    TraitTag(traitsByName.getValue(it.name), sidebar = false)
-                }
+                TraitTag(traitsByName.getValue(it.name), sidebar = false)
             }
 
             FilterEditor(filter.schools,
@@ -360,7 +362,6 @@ fun SpellFilterEditor(
                     Text("RESET", textAlign = TextAlign.Center)
                 }
             }
-
         }
         val scrollStyle = LocalScrollbarStyle.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
         VerticalScrollbar(

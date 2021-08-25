@@ -84,7 +84,7 @@ inline fun EndSpacer() {
 
 @Composable
 fun OperationBadge(operation: Operation, modifier: Modifier = Modifier) {
-    Box(modifier.height(20.dp).padding(4.dp, 1.dp), contentAlignment = Alignment.TopCenter) {
+    Box(modifier.height(20.dp).padding(4.dp, 1.dp), contentAlignment = Alignment.Center) {
         Text(operation.name, textAlign = TextAlign.Center, fontSize = 14.sp, maxLines = 1)
     }
 }
@@ -261,13 +261,13 @@ fun <T : SpellFilterPart> FilterEditor(
     render: @Composable (T) -> Unit,
 ) {
     Column(modifier.fillMaxWidth()) {
-        Box(Modifier.fillMaxWidth().clickable { expanded.expand(!expanded.expanded) }.padding(bottom = 4.dp)) {
+        Box(Modifier.fillMaxWidth().clickable { expanded.expand(!expanded.expanded) }.padding(bottom = 2.dp)) {
             Box(Modifier.align(Alignment.CenterStart).handPointer()) {
                 title()
             }
 
             Row(
-                Modifier.align(Alignment.CenterEnd).padding(bottom = 5.dp, start = 5.dp),
+                Modifier.align(Alignment.CenterEnd),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 NegateButton(current.negate) { set(current.copy(negate = it)) }
@@ -281,7 +281,7 @@ fun <T : SpellFilterPart> FilterEditor(
                 Spacer(Modifier.width(8.dp))
                 IconToggleButton(expanded.expanded, {
                     expanded.expand(it)
-                }, Modifier.size(30.dp).handPointer()) {
+                }, Modifier.size(26.dp).handPointer()) {
                     if (expanded.expanded) {
                         IconWithTooltip(Icons.Default.Done, "Finish Edit")
                     } else {

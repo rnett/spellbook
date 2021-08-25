@@ -157,15 +157,11 @@ fun SpellbooksPage(
     }
 }
 
-//TODO(now) make this look nice, do prepared and focus
-
-//TODO move spell detail panel to bottom panel?
+//TODO(now) make this look nice, do focus
 
 //TODO something like a shopping cart.  Add from search page, drag out into spellbooks and groups
 
 //TODO groups
-
-//TODO search by name
 
 //TODO options to open spells and sidebar pages in browser
 
