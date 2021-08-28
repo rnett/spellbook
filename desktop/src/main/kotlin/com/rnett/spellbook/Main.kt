@@ -7,16 +7,12 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.IconToggleButton
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
@@ -37,7 +33,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
@@ -215,7 +210,7 @@ fun main() {
             contentColor = MainColors.textColor.asCompose()
         ) {
             DesktopMaterialTheme() {
-                ScaleDensityToHeight(1300f, 0.6f) {
+                ScaleDensityToHeight(1300f, 0.6f, scale = 0.6f, offset = 0.3f) {
                     Column(Modifier.fillMaxSize()) {
 
                         val savedSearchRepo = remember { LocalSavedSearchRepo({}) }
@@ -254,10 +249,16 @@ fun main() {
                                     },
                                     Modifier.padding(top = 3.dp).handPointer()
                                         .ifLet(mainState.cartOpen) {
-                                            it.background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(40, 40, 0, 0))
+                                            it.background(
+                                                Color.White.copy(alpha = 0.3f),
+                                                RoundedCornerShape(40, 40, 0, 0)
+                                            )
                                         }
                                 ) {
-                                    IconWithTooltip(if(mainState.cartOpen) Icons.Filled.ShoppingCart else Icons.Outlined.ShoppingCart, "Cart")
+                                    IconWithTooltip(
+                                        if (mainState.cartOpen) Icons.Filled.ShoppingCart else Icons.Outlined.ShoppingCart,
+                                        "Cart"
+                                    )
                                 }
                                 //TODO some kind of button like this for the info pane?  probably not
                                 //TODO display cart (do I want groups in the same display? probably, but also separately)

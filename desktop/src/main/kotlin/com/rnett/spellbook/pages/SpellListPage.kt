@@ -8,18 +8,24 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.UnfoldLess
+import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.IconButtonHand
+import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.SidebarDisplay
 import com.rnett.spellbook.components.SidebarState
 import com.rnett.spellbook.components.filter.FilterDivider
@@ -44,6 +52,7 @@ import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.forSlot
 import com.rnett.spellbook.spellbook.withoutAnySlot
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.withContext
 
 
@@ -87,6 +96,15 @@ fun SpellListPage(
 
         val sidebarState = remember { SidebarState() }
 
+        key(state.filter) {
+            if (state.filter == SpellFilter().forSlot(state.level)) {
+                LaunchedEffect(state.filter) {
+                    scrollState.animateScrollToItem(0)
+                }
+            }
+        }
+
+        val globalExpanded = MutableSharedFlow<Boolean>(extraBufferCapacity = 3)
 
         Row {
             Column(Modifier.fillMaxWidth(0.15f)) {
@@ -104,9 +122,25 @@ fun SpellListPage(
                         loadingSavedFilter = false
                     }
                 } else {
-                    SpellFilterSaver(state.filter, { filter ->
-                        filter.ifLet(state.level != null) { it.withoutAnySlot() }
-                    }) { loadingSavedFilter = true }
+                    SpellFilterSaver(
+                        state.filter,
+                        { filter ->
+                            filter.ifLet(state.level != null) { it.withoutAnySlot() }
+                        },
+                        { loadingSavedFilter = true }
+                    ) {
+                        Spacer(Modifier.width(5.dp))
+                        IconButtonHand({
+                            globalExpanded.tryEmit(true)
+                        }, Modifier.width(24.dp)) {
+                            IconWithTooltip(Icons.Default.UnfoldMore, "Expand All")
+                        }
+                        IconButtonHand({
+                            globalExpanded.tryEmit(false)
+                        }, Modifier.width(24.dp)) {
+                            IconWithTooltip(Icons.Default.UnfoldLess, "Collapse All")
+                        }
+                    }
                     FilterDivider()
                     SpellFilterEditor(state.filter, state.level) {
                         state.filter = it.forSlot(state.level)
@@ -123,7 +157,8 @@ fun SpellListPage(
                                     Box(Modifier.padding(bottom = 10.dp)) {
                                         SpellDisplay(
                                             it,
-                                            if (state is SpellListState.FindForSpellbook) state.setSpell else null
+                                            if (state is SpellListState.FindForSpellbook) state.setSpell else null,
+                                            globalExpanded
                                         )
                                     }
                                 }
@@ -145,7 +180,6 @@ fun SpellListPage(
                     SidebarDisplay(sidebarState.current!!, sidebarState)
                 }
             }
-
         }
     }
 }

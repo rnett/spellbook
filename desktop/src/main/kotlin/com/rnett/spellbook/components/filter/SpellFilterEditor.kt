@@ -129,8 +129,8 @@ fun SpellFilterEditor(
     showReset: Boolean = true,
     update: (SpellFilter) -> Unit
 ) {
+    val scrollState = rememberScrollState()
     Box(Modifier.fillMaxHeight()) {
-        val scrollState = rememberScrollState()
         Column(
             Modifier
                 .padding(top = 10.dp, bottom = 10.dp, start = 10.dp, end = 20.dp)

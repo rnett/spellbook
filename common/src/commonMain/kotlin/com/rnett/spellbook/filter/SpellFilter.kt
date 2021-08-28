@@ -10,6 +10,7 @@ import com.rnett.spellbook.spell.SpellType
 import com.rnett.spellbook.spell.TargetingType
 import com.rnett.spellbook.spell.TraitKey
 import kotlinx.serialization.Serializable
+import kotlin.js.JsName
 
 interface SpellFilterPart {
     fun matches(spell: Spell): Boolean
@@ -105,6 +106,7 @@ fun <T : SpellFilterPart> defaultAndFilter(): Filter<T> = Filter(emptyList(), Op
 
 class Ander {
     @Deprecated("Internal")
+    @JsName("internalResult")
     var result: Boolean = true
 
     inline fun and(clause: () -> Boolean) {

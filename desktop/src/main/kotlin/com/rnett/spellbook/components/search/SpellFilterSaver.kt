@@ -35,6 +35,7 @@ fun SpellFilterSaver(
     filter: SpellFilter,
     adjustFilter: (SpellFilter) -> SpellFilter,
     load: () -> Unit,
+    leftContent: @Composable () -> Unit
 ) {
     val mainState = LocalMainState.current
     val savedFilters by mainState.savedFilters()
@@ -55,6 +56,7 @@ fun SpellFilterSaver(
             }) {
                 IconWithTooltip(Icons.Default.Bookmarks, "Saved Searches")
             }
+            leftContent()
         } else {
             var filterName: String? by remember { mutableStateOf(null) }
             if (filterName == null) {
@@ -69,6 +71,7 @@ fun SpellFilterSaver(
                 }) {
                     IconWithTooltip(Icons.Default.Bookmarks, "Saved Searches")
                 }
+                leftContent()
             } else {
                 IconButtonHand({
                     filterName = null

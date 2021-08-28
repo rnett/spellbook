@@ -135,9 +135,18 @@ fun OptionalBoolean(
     modifier: Modifier = Modifier,
     title: @Composable() () -> Unit
 ) {
+    fun update() {
+        set(
+            when (current) {
+                false -> null
+                null -> true
+                true -> false
+            }
+        )
+    }
     Column {
         Spacer(Modifier.height(5.dp))
-        Box(modifier.fillMaxWidth()) {
+        Box(modifier.fillMaxWidth().clickable { update() }) {
             Box(Modifier.align(Alignment.CenterStart)) {
                 title()
             }
@@ -153,13 +162,7 @@ fun OptionalBoolean(
                 }
             ) {
                 IconButtonHand({
-                    set(
-                        when (current) {
-                            false -> null
-                            null -> true
-                            true -> false
-                        }
-                    )
+                    update()
                 }) {
                     when (current) {
                         null -> IconWithTooltip(Icons.Default.HorizontalRule, "Either")

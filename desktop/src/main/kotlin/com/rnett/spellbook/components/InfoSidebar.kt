@@ -45,6 +45,8 @@ import java.util.Stack
 
 typealias SidebarNavigator = (SidebarData<*>) -> Unit
 
+//TODO make closable by escape
+
 object SidebarNav {
     val Ambient = compositionLocalOf<SidebarNavigator> { {} }
 
