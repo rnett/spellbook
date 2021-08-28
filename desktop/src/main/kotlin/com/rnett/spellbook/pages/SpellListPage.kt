@@ -84,7 +84,10 @@ sealed class SpellListState {
 fun SpellListPage(
     state: SpellListState
 ) {
-    Surface(color = MainColors.outsideColor.asCompose(), contentColor = MainColors.textColor.asCompose()) {
+    Surface(
+        color = MainColors.outsideColor.asCompose(),
+        contentColor = MainColors.textColor.asCompose()
+    ) {
         var loadingSavedFilter by remember { mutableStateOf(false) }
 
         var spells by remember { mutableStateOf<List<Spell>?>(null) }
