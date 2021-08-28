@@ -115,7 +115,6 @@ enum class SpellType(val longName: String) : SpellFilterPart {
 
 private val spellComparator = compareBy<Spell> { it.level }.thenBy { it.type }.thenBy { it.name }
 
-//TODO track conditions
 //TODO track source by book, allow filtering
 //TODO add persistent damage flag (and to filter)
 //TODO add has area/has target filters

@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
@@ -94,8 +96,6 @@ fun SpellListPage(
             }
         }
 
-        val sidebarState = remember { SidebarState() }
-
         key(state.filter) {
             if (state.filter == SpellFilter().forSlot(state.level)) {
                 LaunchedEffect(state.filter) {
@@ -148,38 +148,55 @@ fun SpellListPage(
                 }
             }
 
-            sidebarState.withNew {
-                if (spells != null) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth().weight(0.8f)) {
-                        Box(Modifier.padding(top = 10.dp, start = 10.dp, end = 20.dp)) {
-                            LazyColumn(state = scrollState) {
-                                items(spells!!.toList(), { it.name }) {
-                                    Box(Modifier.padding(bottom = 10.dp)) {
-                                        SpellDisplay(
-                                            it,
-                                            if (state is SpellListState.FindForSpellbook) state.setSpell else null,
-                                            globalExpanded
-                                        )
-                                    }
-                                }
-                            }
+            if (state is SpellListState.Search) {
+
+                val sidebarState = remember { SidebarState() }
+
+                sidebarState.withNew {
+                    SpellList(scrollState, spells, state, globalExpanded)
+                }
+
+                AnimatedVisibility(sidebarState.active, Modifier.fillMaxWidth().weight(0.2f)) {
+                    if (sidebarState.current != null) {
+                        SidebarDisplay(sidebarState.current!!, sidebarState)
+                    }
+                }
+            } else {
+                SpellList(scrollState, spells, state, globalExpanded)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.SpellList(
+    scrollState: LazyListState,
+    spells: List<Spell>?,
+    state: SpellListState,
+    globalExpanded: MutableSharedFlow<Boolean>
+) {
+    if (spells != null) {
+        Box(Modifier.fillMaxHeight().fillMaxWidth().weight(0.8f)) {
+            Box(Modifier.padding(top = 10.dp, start = 10.dp, end = 20.dp)) {
+                LazyColumn(state = scrollState) {
+                    items(spells.toList(), { it.name }) {
+                        Box(Modifier.padding(bottom = 10.dp)) {
+                            SpellDisplay(
+                                it,
+                                if (state is SpellListState.FindForSpellbook) state.setSpell else null,
+                                globalExpanded
+                            )
                         }
-                        val scrollStyle =
-                            LocalScrollbarStyle.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
-                        VerticalScrollbar(
-                            rememberScrollbarAdapter(scrollState),
-                            Modifier.align(Alignment.CenterEnd),
-                            style = scrollStyle
-                        )
                     }
                 }
             }
-
-            AnimatedVisibility(sidebarState.active, Modifier.fillMaxWidth().weight(0.2f)) {
-                if (sidebarState.current != null) {
-                    SidebarDisplay(sidebarState.current!!, sidebarState)
-                }
-            }
+            val scrollStyle =
+                LocalScrollbarStyle.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
+            VerticalScrollbar(
+                rememberScrollbarAdapter(scrollState),
+                Modifier.align(Alignment.CenterEnd),
+                style = scrollStyle
+            )
         }
     }
 }

@@ -44,6 +44,19 @@ import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.ifLet
 
+fun Int.ordinalWord(): String {
+    val word = this.toString()
+    if (this in 11..19)
+        return word + "th"
+
+    return word + when (word.last()) {
+        '1' -> "st"
+        '2' -> "nd"
+        '3' -> "rd"
+        else -> "th"
+    }
+}
+
 @Composable
 fun Tooltip(content: @Composable () -> Unit) {
     Surface(

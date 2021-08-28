@@ -151,7 +151,7 @@ fun SpellFilterEditor(
                     .onEscape { clearFocus() }
                     .onEnter { clearFocus() },
                 placeholder = {
-                    Text("Name", color = Color.White)
+                    Text("Name", color = Color.White.copy(alpha = 0.6f))
                 },
                 singleLine = true,
                 colors = TextFieldDefaults.textFieldColors(

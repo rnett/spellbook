@@ -195,6 +195,7 @@ class AonUrl(url: String) : SidebarData<Pair<String, AnnotatedString>>() {
     }
 }
 
+
 @Composable
 fun <D> SidebarDisplay(dataLoader: SidebarData<D>, sidebarState: SidebarState) {
     Surface(contentColor = MainColors.textColor.asCompose(), color = MainColors.infoBoxColor.asCompose()) {
