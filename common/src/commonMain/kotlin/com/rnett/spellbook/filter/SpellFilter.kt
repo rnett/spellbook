@@ -125,9 +125,7 @@ class Ander {
 inline fun and(block: Ander.() -> Unit): Boolean =
     Ander().apply(block).result()
 
-//TODO area, range.
-// damage, but need in spell
-// option to show hightenable spells at their hightened levels like AoN
+//TODO damage, but need in spell
 @Serializable
 //TODO should be @Immutable for compose
 data class SpellFilter(

@@ -4,8 +4,6 @@ import com.rnett.spellbook.filter.SpellFilterPart
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-//TODO differentiate between area types.
-
 @Serializable
 sealed class TargetingType(open val name: String) : SpellFilterPart {
 
@@ -162,13 +160,6 @@ data class Spell(
 
     override fun compareTo(other: Spell): Int = spellComparator.compare(this, other)
     override val aonPage: String = "Spells"
-}
-
-object SpellComparator : Comparator<Spell> {
-    override fun compare(a: Spell, b: Spell): Int {
-        TODO("Not yet implemented")
-    }
-
 }
 
 

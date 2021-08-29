@@ -50,9 +50,7 @@ import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.pages.SpellListPage
 import com.rnett.spellbook.pages.SpellListState
 import com.rnett.spellbook.pages.SpellbooksPage
-import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.Spellbook
 import com.rnett.spellbook.spellbook.Spellcasting
 import com.rnett.spellbook.spellbook.SpellcastingType
@@ -118,7 +116,6 @@ class MainState(
 
 }
 
-//TODO finish
 sealed class PageState {
     abstract val page: Pages
 
@@ -180,16 +177,6 @@ sealed class PageState {
             }
         }
     }
-}
-
-//TODO need a cohesive global state
-sealed class NextSearch {
-    data class Filter(val filter: SpellFilter) : NextSearch()
-    data class Slot(val slot: LevelKnownSpell, val set: (Spell) -> Unit) : NextSearch()
-
-    inline val filterOrNull get() = if (this is Filter) filter else null
-    inline val slotOrNull get() = if (this is Slot) slot else null
-    inline val slotSetterOrNull get() = if (this is Slot) set else null
 }
 
 fun main() {

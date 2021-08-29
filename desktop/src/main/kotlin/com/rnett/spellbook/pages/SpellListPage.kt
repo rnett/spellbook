@@ -79,6 +79,8 @@ sealed class SpellListState {
 
 }
 
+//TODO option to show hightenable spells at their hightened levels like AoN
+
 @OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
 fun SpellListPage(

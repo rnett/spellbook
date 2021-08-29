@@ -29,6 +29,9 @@ import com.rnett.spellbook.spell.SpellList
 
 //TODO flag for incapacitate
 
+//TODO area, range.
+//TODO Value range (<, >) for range, duration
+
 @Composable
 fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: ((Spell) -> Unit)?) {
 
