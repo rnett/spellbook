@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -15,7 +14,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.OfflineBolt
-import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.OfflineBolt
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -143,28 +142,29 @@ fun PreparedSlot(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Spacer(Modifier.width(10.dp))
-            Row(Modifier.weight(0.2f).requiredWidthIn(min = 200.dp)) {
-                Text(spell.name)
-            }
-
-            Row(
-                Modifier.height(20.dp).widthIn(min = 30.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ActionsTag(spell.actions)
-            }
-
-            Spacer(Modifier.weight(0.6f).widthIn(min = 30.dp))
 
             IconButtonHand({ remove() }, Modifier.size(24.dp)) {
                 IconWithTooltip(
-                    Icons.Outlined.DeleteForever,
+                    Icons.Outlined.Close,
                     "Remove",
                     tint = Color.Red.copy(alpha = 0.7f)
                 )
             }
 
-            Spacer(Modifier.weight(0.2f).widthIn(min = 30.dp))
+            Spacer(Modifier.width(20.dp))
+
+            Row(Modifier.weight(0.2f).widthIn(min = 200.dp)) {
+                Text(spell.name)
+            }
+
+            Row(
+                Modifier.height(20.dp).width(40.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ActionsTag(spell.actions)
+            }
+
+            Spacer(Modifier.weight(0.6f).widthIn(min = 40.dp))
         }
     }
 }

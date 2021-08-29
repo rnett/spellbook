@@ -187,6 +187,7 @@ class AonUrl(url: String) : SidebarData<Pair<String, AnnotatedString>>() {
     @Composable
     override fun BoxScope.display(data: Pair<String, AnnotatedString>) {
         val sidebar = SidebarNav.currentSidebar()
+
         ClickableText(
             data.second,
             style = TextStyle(color = MainColors.textColor.asCompose())
@@ -235,7 +236,6 @@ fun <D> SidebarDisplay(dataLoader: SidebarData<D>, sidebarState: SidebarState) {
             var data by remember { mutableStateOf<D?>(null) }
 
             LaunchedEffect(dataLoader) {
-                println("Loading $dataLoader")
                 try {
                     data = dataLoader.load()
                 } catch (e: Exception) {

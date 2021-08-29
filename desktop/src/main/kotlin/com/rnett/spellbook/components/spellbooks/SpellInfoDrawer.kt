@@ -35,6 +35,8 @@ enum class SpellDrawerState {
         }
 }
 
+//TODO does not handle things like summons well.  Do I want sidebar here, too?
+
 @Composable
 fun SpellInfoDrawer(spell: Spell, close: () -> Unit) {
     val focusRequester = remember { FocusRequester() }

@@ -169,7 +169,7 @@ fun KnownSpellSlot(
                         }
 
                         Row(
-                            Modifier.height(20.dp).widthIn(min = 30.dp),
+                            Modifier.height(20.dp).width(40.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             ActionsTag(spell.actions)
@@ -177,13 +177,13 @@ fun KnownSpellSlot(
 
                         Spacer(Modifier.width(30.dp))
 
-                        FlowRow(Modifier.widthIn(min = 50.dp).weight(0.1f), horizontalGap = 10.dp) {
+                        FlowRow(Modifier.widthIn(min = 50.dp).weight(0.4f), horizontalGap = 10.dp) {
                             spell.lists.forEach {
                                 SpellListShortTag(it)
                             }
                         }
 
-                        Spacer(Modifier.weight(0.4f).widthIn(min = 40.dp))
+                        Spacer(Modifier.weight(0.1f).widthIn(min = 40.dp))
 
                         IconButtonHand({ set(slot.copy(spell = null)) }, Modifier.size(24.dp)) {
                             IconWithTooltip(

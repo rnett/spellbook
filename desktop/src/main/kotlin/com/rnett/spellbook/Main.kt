@@ -149,6 +149,7 @@ sealed class PageState {
                         ).let {
                             it.withLevel(3, it[3].let {
                                 it.withKnown(0, allSpells.first { it.name == "Fireball" })
+                                    .withKnown(1, allSpells.first { it.name == "Animate Dead" })
                             })
                         },
                         "Wizard Archetype" to Spellcasting.archetypeCaster(
@@ -157,6 +158,7 @@ sealed class PageState {
                         ).let {
                             it.withLevel(3, it[3].let {
                                 it.withKnown(0, allSpells.first { it.name == "Fireball" })
+                                    .withKnown(1, allSpells.first { it.name == "Animate Dead" })
                             })
                         },
                         "Bard Archetype" to Spellcasting.archetypeCaster(
