@@ -42,7 +42,7 @@ abstract class TraitFamily(val familyName: String) {
 infix fun Trait.assertIn(traitFamily: TraitFamily) = traitFamily assertIn this
 
 @Serializable
-data class Trait(val name: String, val aonId: Int, val description: String) {
+data class Trait(val name: String, override val aonId: Int, val description: String) : AonItem {
 
     companion object {
         val Attack = TraitKey("Attack")
@@ -52,6 +52,7 @@ data class Trait(val name: String, val aonId: Int, val description: String) {
     val isInteresting by lazy { name !in uninterestingConditions && this !in School && this !in Rarity }
 
     val key by lazy { TraitKey(name) }
+    override val aonPage: String = "Traits"
 }
 
 

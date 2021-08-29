@@ -2,6 +2,7 @@ package com.rnett.spellbook.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.BoxWithTooltip
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -33,6 +34,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerIcon
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -206,4 +208,13 @@ inline fun onEscape(crossinline handler: () -> Unit): (KeyEvent) -> Boolean = {
 @OptIn(ExperimentalComposeUiApi::class)
 fun Modifier.onEnter(handler: () -> Unit) = onKeyDown(setOf(Key.Enter, Key.NumPadEnter)) {
     handler()
+}
+
+fun Modifier.clickableNoIndication(
+    enabled: Boolean = true,
+    onClickLabel: String? = null,
+    role: Role? = null,
+    onClick: () -> Unit
+) = composed {
+    Modifier.clickable(remember { MutableInteractionSource() }, null, enabled, onClickLabel, role, onClick)
 }

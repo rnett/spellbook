@@ -284,7 +284,7 @@ fun ConditionTag(condition: Condition, sidebar: Boolean = true) = SpellTag(
     condition.name,
     if (condition.positive == true) TagColors.Condition.Positive else TagColors.Condition.Negative,
     "Condition: ${condition.name} - ${condition.description}",
-    sidebarInfo = if (sidebar) AonUrl("Conditions.aspx?ID=${condition.aonId}") else null
+    sidebarInfo = if (sidebar) AonUrl(condition) else null
 )
 
 @Composable
@@ -332,7 +332,7 @@ fun DurationTag(duration: String?, isSustained: Boolean) {
 
 @Composable
 fun TraitTag(trait: Trait, specialTraits: Boolean = true, sidebar: Boolean = true) {
-    val sidebarInfo = if (sidebar) AonUrl("Traits.aspx?ID=${trait.aonId}") else null
+    val sidebarInfo = if (sidebar) AonUrl(trait) else null
     if (specialTraits) {
         val (color, prefix) = when (trait) {
             in Rarity -> TagColors.Rarity(trait) to "Rarity"

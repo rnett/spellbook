@@ -107,7 +107,7 @@ fun SpellListPage(
             }
         }
 
-        val globalExpanded = MutableSharedFlow<Boolean>(extraBufferCapacity = 3)
+        val globalExpanded = remember { MutableSharedFlow<Boolean>(extraBufferCapacity = 3) }
 
         Row {
             Column(Modifier.fillMaxWidth(0.15f)) {

@@ -16,4 +16,6 @@ sealed class Summons {
 }
 
 @Serializable
-data class Creature(val name: String, val aonId: Int)
+data class Creature(val name: String, override val aonId: Int) : AonItem {
+    override val aonPage: String = "Monsters"
+}

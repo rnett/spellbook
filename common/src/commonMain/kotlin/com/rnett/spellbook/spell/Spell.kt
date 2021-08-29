@@ -122,7 +122,7 @@ private val spellComparator = compareBy<Spell> { it.level }.thenBy { it.type }.t
 data class Spell(
     val name: String,
     val level: Int,
-    val aonId: Int,
+    override val aonId: Int,
     val type: SpellType,
     val lists: Set<SpellList>,
     val traits: Set<Trait>,
@@ -144,7 +144,7 @@ data class Spell(
     val postfix: String?,
     val spoilersFor: String?,
     val conditions: Set<Condition>,
-) : Comparable<Spell> {
+) : Comparable<Spell>, AonItem {
     val isFocus: Boolean by lazy { SpellList.Focus in lists || type == SpellType.Focus }
     val school: Trait? by lazy { traits.singleOrNull { it in School } }
     val rarity: Trait by lazy { traits.single { it in Rarity } }
@@ -161,6 +161,7 @@ data class Spell(
     }
 
     override fun compareTo(other: Spell): Int = spellComparator.compare(this, other)
+    override val aonPage: String = "Spells"
 }
 
 object SpellComparator : Comparator<Spell> {

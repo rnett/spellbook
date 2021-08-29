@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,13 +20,12 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,12 +40,13 @@ import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.core.HtmlText
-import com.rnett.spellbook.spell.Condition
-import com.rnett.spellbook.spell.Trait
+import com.rnett.spellbook.spell.AonLinkable
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.request.get
 import org.jsoup.Jsoup
+import java.awt.Desktop
+import java.net.URI
 import java.util.Stack
 
 typealias SidebarNavigator = (SidebarData<*>) -> Unit
@@ -91,6 +92,11 @@ sealed class SidebarData<D> {
 
     @Composable
     abstract fun BoxScope.title(data: D)
+
+    @Composable
+    open fun RowScope.controlButtons(data: D) {
+
+    }
 
     @Composable
     abstract fun BoxScope.display(data: D)
@@ -157,21 +163,7 @@ class AonUrl(url: String) : SidebarData<Pair<String, AnnotatedString>>() {
         this.url = url
     }
 
-    constructor(trait: Trait) : this("Traits.aspx?ID=${trait.aonId}")
-    constructor(condition: Condition) : this("Conditions.aspx?ID=${condition.aonId}")
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is AonUrl) return false
-
-        if (url != other.url) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return url.hashCode()
-    }
+    constructor(linkable: AonLinkable) : this(linkable.aonUrl)
 
     override suspend fun load(): Pair<String, AnnotatedString> {
         return getAonDana(url)
@@ -180,6 +172,16 @@ class AonUrl(url: String) : SidebarData<Pair<String, AnnotatedString>>() {
     @Composable
     override fun BoxScope.title(data: Pair<String, AnnotatedString>) {
         Text(data.first, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.CenterStart))
+    }
+
+    @Composable
+    override fun RowScope.controlButtons(data: Pair<String, AnnotatedString>) {
+        IconButtonHand({
+            Desktop.getDesktop().browse(URI(url))
+        }
+        ) {
+            IconWithTooltip(Icons.Filled.OpenInNew, "Open in browser")
+        }
     }
 
     @Composable
@@ -196,6 +198,23 @@ class AonUrl(url: String) : SidebarData<Pair<String, AnnotatedString>>() {
             }
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AonUrl) return false
+
+        if (url != other.url) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return url.hashCode()
+    }
+
+    override fun toString(): String {
+        return "AonUrl($url)"
+    }
 }
 
 
@@ -206,7 +225,8 @@ fun <D> SidebarDisplay(dataLoader: SidebarData<D>, sidebarState: SidebarState) {
         Modifier
             .focusRequester(focusRequester)
             .focusable(sidebarState.active)
-            .onEscape { sidebarState.close() },
+            .onEscape { sidebarState.close() }
+            .clickableNoIndication { focusRequester.requestFocus() },
         contentColor = MainColors.textColor.asCompose(),
         color = MainColors.infoBoxColor.asCompose()
     ) {
@@ -215,6 +235,7 @@ fun <D> SidebarDisplay(dataLoader: SidebarData<D>, sidebarState: SidebarState) {
             var data by remember { mutableStateOf<D?>(null) }
 
             LaunchedEffect(dataLoader) {
+                println("Loading $dataLoader")
                 try {
                     data = dataLoader.load()
                 } catch (e: Exception) {
@@ -222,12 +243,9 @@ fun <D> SidebarDisplay(dataLoader: SidebarData<D>, sidebarState: SidebarState) {
                 }
             }
 
-            key(data) {
-                if (data != null) {
-                    SideEffect {
-                        focusRequester.requestFocus()
-                    }
-                }
+            LaunchedEffect(data) {
+                if (data != null)
+                    focusRequester.requestFocus()
             }
 
             if (data == null) {
@@ -243,6 +261,8 @@ fun <D> SidebarDisplay(dataLoader: SidebarData<D>, sidebarState: SidebarState) {
                             dataLoader.apply { title(data!!) }
 
                             Row(Modifier.align(Alignment.CenterEnd)) {
+                                dataLoader.apply { controlButtons(data!!) }
+
                                 if (sidebarState.hasStack) {
                                     IconButton(sidebarState::back) {
                                         IconWithTooltip(Icons.Filled.ArrowBack, "Back")
