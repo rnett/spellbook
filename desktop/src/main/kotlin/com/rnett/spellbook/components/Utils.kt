@@ -15,8 +15,7 @@ import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.key
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -155,13 +154,11 @@ fun Modifier.focusableEditable(
 
     val focusRequester = remember { FocusRequester() }
 
-    key(editing) {
-        SideEffect {
-            if (editing)
-                focusRequester.requestFocus()
-            else
-                focusRequester.freeFocus()
-        }
+    LaunchedEffect(editing) {
+        if (editing)
+            focusRequester.requestFocus()
+        else
+            focusRequester.freeFocus()
     }
 
     Modifier.focusRequester(focusRequester).focusable().onKeyEvent {
