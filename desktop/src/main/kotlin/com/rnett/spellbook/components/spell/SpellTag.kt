@@ -33,7 +33,7 @@ import com.rnett.spellbook.Color
 import com.rnett.spellbook.TagColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.AonUrl
-import com.rnett.spellbook.components.SidebarData
+import com.rnett.spellbook.components.InfoSidebarData
 import com.rnett.spellbook.components.SidebarNav
 import com.rnett.spellbook.components.TextTooltip
 import com.rnett.spellbook.spell.Actions
@@ -57,7 +57,7 @@ fun SpellTag(
     color: Color,
     tooltip: String?,
     modifier: Modifier = Modifier,
-    sidebarInfo: SidebarData<*>? = null,
+    sidebarInfo: InfoSidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
     noHorizontalPadding: Boolean = false,
     textColor: Color? = null,
@@ -79,7 +79,7 @@ fun SpellTag(
     color: androidx.compose.ui.graphics.Color,
     tooltip: String?,
     modifier: Modifier = Modifier,
-    sidebarInfo: SidebarData<*>? = null,
+    sidebarInfo: InfoSidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
     noHorizontalPadding: Boolean = false,
     textColor: androidx.compose.ui.graphics.Color? = null,
@@ -95,7 +95,7 @@ fun SpellTag(
     color: Color,
     tooltip: String?,
     modifier: Modifier = Modifier,
-    sidebarInfo: SidebarData<*>? = null,
+    sidebarInfo: InfoSidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
     noHorizontalPadding: Boolean = false,
     textColor: Color? = null,
@@ -117,7 +117,7 @@ fun SpellTag(
     color: androidx.compose.ui.graphics.Color,
     tooltip: String?,
     modifier: Modifier = Modifier,
-    sidebarInfo: SidebarData<*>? = null,
+    sidebarInfo: InfoSidebarData<*>? = null,
     noVerticalPadding: Boolean = false,
     noHorizontalPadding: Boolean = false,
     textColor: androidx.compose.ui.graphics.Color?,

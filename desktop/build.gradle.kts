@@ -11,6 +11,7 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.preview)
     implementation(compose.materialIconsExtended)
+    implementation(compose.desktop.components.splitPane)
 
     implementation(project(":common"))
 }

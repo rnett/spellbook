@@ -38,6 +38,7 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.singleWindowApplication
 import com.rnett.spellbook.components.IconWithTooltip
+import com.rnett.spellbook.components.InfoSidebarState
 import com.rnett.spellbook.components.core.ScaleDensityToHeight
 import com.rnett.spellbook.components.handPointer
 import com.rnett.spellbook.data.allDurations
@@ -50,6 +51,7 @@ import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.pages.SpellListPage
 import com.rnett.spellbook.pages.SpellListState
 import com.rnett.spellbook.pages.SpellbooksPage
+import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spellbook.Spellbook
 import com.rnett.spellbook.spellbook.Spellcasting
@@ -73,6 +75,22 @@ fun initCaches() {
 
 val LocalMainState = staticCompositionLocalOf<MainState> { error("MainState not set") }
 
+class ShoppingCart(private val items: MutableList<Spell>) : List<Spell> by items {
+
+    fun add(item: Spell) {
+        if (item !in items)
+            items += item
+    }
+
+    operator fun plusAssign(item: Spell) = add(item)
+
+    fun remove(item: Spell) {
+        items.removeIf { item.name == it.name }
+    }
+
+    operator fun minusAssign(item: Spell) = remove(item)
+}
+
 class MainState(
     val savedSearchRepo: LocalNamedObjectRepo<SpellFilter>, //TODO just use mutable state + LaunchedEffect keyed on it to save?
     initialPage: Pages
@@ -82,6 +100,8 @@ class MainState(
     val spellbookPage = PageState.Spellbooks()
 
     var cartOpen by mutableStateOf(false)
+    val shoppingCart = ShoppingCart(mutableStateListOf())
+    val sidebarState = InfoSidebarState()
 
     private val derivedHelper by derivedStateOf { page.page }
 

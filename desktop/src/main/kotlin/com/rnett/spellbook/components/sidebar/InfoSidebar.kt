@@ -49,7 +49,7 @@ import java.awt.Desktop
 import java.net.URI
 import java.util.Stack
 
-typealias SidebarNavigator = (SidebarData<*>) -> Unit
+typealias SidebarNavigator = (InfoSidebarData<*>) -> Unit
 
 object SidebarNav {
     val Ambient = compositionLocalOf<SidebarNavigator> { {} }
@@ -58,14 +58,14 @@ object SidebarNav {
     fun currentSidebar() = Ambient.current
 
     @Composable
-    fun withNew(sidebarState: SidebarState, content: @Composable () -> Unit) {
+    fun withNew(sidebarState: InfoSidebarState, content: @Composable () -> Unit) {
         CompositionLocalProvider(Ambient provides sidebarState::new) {
             content()
         }
     }
 
     @Composable
-    fun withGoto(sidebarState: SidebarState, content: @Composable () -> Unit) {
+    fun withGoto(sidebarState: InfoSidebarState, content: @Composable () -> Unit) {
         CompositionLocalProvider(Ambient provides sidebarState::goto) {
             content()
         }
@@ -87,7 +87,7 @@ private suspend fun getAonDana(url: String): Pair<String, AnnotatedString> {
     return title.text() to HtmlText(body)
 }
 
-sealed class SidebarData<D> {
+sealed class InfoSidebarData<D> {
     abstract suspend fun load(): D
 
     @Composable
@@ -102,21 +102,21 @@ sealed class SidebarData<D> {
     abstract fun BoxScope.display(data: D)
 }
 
-class SidebarState() {
-    private val backstack = Stack<SidebarData<*>>()
+class InfoSidebarState() {
+    private val backstack = Stack<InfoSidebarData<*>>()
 
-    var current: SidebarData<*>? by mutableStateOf(null)
+    var current: InfoSidebarData<*>? by mutableStateOf(null)
         private set
 
     val active get() = current != null
     val hasStack get() = backstack.isNotEmpty()
 
-    fun new(url: SidebarData<*>) {
+    fun new(url: InfoSidebarData<*>) {
         backstack.clear()
         current = url
     }
 
-    fun goto(url: SidebarData<*>) {
+    fun goto(url: InfoSidebarData<*>) {
         current?.let(backstack::push)
         current = url
     }
@@ -145,7 +145,7 @@ class SidebarState() {
     }
 }
 
-class AonUrl(url: String) : SidebarData<Pair<String, AnnotatedString>>() {
+class AonUrl(url: String) : InfoSidebarData<Pair<String, AnnotatedString>>() {
     val url: String
 
     init {
@@ -220,7 +220,7 @@ class AonUrl(url: String) : SidebarData<Pair<String, AnnotatedString>>() {
 
 
 @Composable
-fun <D> SidebarDisplay(dataLoader: SidebarData<D>, sidebarState: SidebarState) {
+fun <D> SidebarInfoDisplay(dataLoader: InfoSidebarData<D>, sidebarState: InfoSidebarState) {
     val focusRequester = remember { FocusRequester() }
     Surface(
         Modifier

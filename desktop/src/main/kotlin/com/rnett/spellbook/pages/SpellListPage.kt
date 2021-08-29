@@ -39,8 +39,8 @@ import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
-import com.rnett.spellbook.components.SidebarDisplay
-import com.rnett.spellbook.components.SidebarState
+import com.rnett.spellbook.components.InfoSidebarState
+import com.rnett.spellbook.components.SidebarInfoDisplay
 import com.rnett.spellbook.components.filter.FilterDivider
 import com.rnett.spellbook.components.filter.SpellFilterEditor
 import com.rnett.spellbook.components.search.SpellFilterLoader
@@ -155,7 +155,7 @@ fun SpellListPage(
 
             if (state is SpellListState.Search) {
 
-                val sidebarState = remember { SidebarState() }
+                val sidebarState = remember { InfoSidebarState() }
 
                 sidebarState.withNew {
                     SpellList(scrollState, spells, state, globalExpanded)
@@ -163,7 +163,7 @@ fun SpellListPage(
 
                 AnimatedVisibility(sidebarState.active, Modifier.fillMaxWidth().weight(0.2f)) {
                     if (sidebarState.current != null) {
-                        SidebarDisplay(sidebarState.current!!, sidebarState)
+                        SidebarInfoDisplay(sidebarState.current!!, sidebarState)
                     }
                 }
             } else {
