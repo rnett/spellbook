@@ -25,12 +25,17 @@ import com.rnett.spellbook.spell.Summons
 import com.rnett.spellbook.spell.Trait
 import com.rnett.spellbook.spell.TraitKey
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.features.defaultRequest
+import io.ktor.client.request.accept
 import io.ktor.client.request.get
+import io.ktor.http.ContentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collect
@@ -45,6 +50,7 @@ import kotlinx.coroutines.runBlocking
 import me.tongfei.progressbar.ProgressBar
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.deleteAll
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jsoup.Jsoup
@@ -53,17 +59,42 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.pow
+import kotlin.time.Duration
 
-val client = HttpClient() {
+val client = HttpClient(Apache) {
+    defaultRequest {
+        accept(ContentType.Text.Html)
+    }
+}
+
+
+private suspend fun makeRequest(url: String, retries: Int = 10): String {
+    var caught: Throwable? = null
+    repeat(retries) {
+        try {
+            return client.get<String>(url)
+        } catch (e: Throwable) {
+            caught = e
+            delay(Duration.milliseconds(10 + 2.0.pow(it)))
+        }
+    }
+    throw caught!!
 }
 
 suspend fun loadPage(url: String): Document {
-    return Jsoup.parse(client.get<String>(url)).also {
+    return Jsoup.parse(makeRequest(url)).also {
         it.setBaseUri(url)
     }
 }
 
 class SpellData(val spell: Spell, val conditionNames: Set<String>, val traits: Set<TraitKey>)
+
+const val mainContentId = "ctl00_RadDrawer1_Content_MainContent_DetailedOutput"
+val spoilerRegexes = listOf(
+    Regex("This Spell is from the ([\\w ]+) and may contain Spoilers"),
+    Regex("This Spell may contain spoilers from the ([\\w ]+)", RegexOption.DOT_MATCHES_ALL)
+)
 
 fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): SpellData? {
     val name = doc.select("h1.title").textNodes().single().text()
@@ -74,23 +105,29 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
     try {
         val levelStr = doc.select("h1.title > span").text()
 
-        val spoilerRegex = Regex("This Spell is from the ([\\w ]+) and may contain Spoilers")
         val spoilerWarnings =
-            doc.select("#ctl00_MainContent_DetailedOutput h2.title").filter { it.text().matches(spoilerRegex) }
+            doc.select("#$mainContentId h2.title").mapNotNull {
+                val text = it.text()
+                val warning = spoilerRegexes.firstNotNullOfOrNull {
+                    it.matchEntire(text)
+                } ?: return@mapNotNull null
+                it to warning.groupValues[1]
+            }
         assert(spoilerWarnings.size <= 1) { "More than one spoiler warning" }
-        val spoilers = spoilerWarnings.singleOrNull()?.let { spoilerRegex.matchEntire(it.text())!!.groupValues[1] }
+        val spoilers = spoilerWarnings.firstOrNull()?.second
 
-        val statblock = doc.select("#ctl00_MainContent_DetailedOutput").single().childNode(0)
+        val statblock = doc.select("#$mainContentId").single().childNode(0)
             .siblingsUntilElement { it.normalTagName == "hr" }
+            .filterNot { it is TextNode && it.isBlank }
 
-        spoilerWarnings.forEach { it.remove() }
+        spoilerWarnings.forEach { it.first.remove() }
 
-        val otherHs = doc.select("#ctl00_MainContent_DetailedOutput > h2.title")
+        val otherHs = doc.select("#$mainContentId > h2.title")
 
         val postfix = otherHs.firstOrNull()?.siblingsUntil { false }?.let { listOf(otherHs.first()) + it }
         postfix?.forEach { it.remove() }
 
-        val fullText = doc.select("#ctl00_MainContent_DetailedOutput").text()
+        val fullText = doc.select("#$mainContentId").text()
         val fullTextLower = fullText.lowercase(Locale.getDefault())
 
         val type = when {
@@ -103,16 +140,13 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
 
         val aonId = doc.baseUri().substringAfter("ID=").toInt()
 
-        val lists = doc.select("#ctl00_MainContent_DetailedOutput > u > a")
+        val lists = doc.select("#$mainContentId > u > a")
             .filter { it.attr("href").startsWith("Spells.aspx?Tradition=") }
             .map { SpellList(it.text()) }.let {
-                if (it.isEmpty())
-                    listOf(SpellList.Focus)
-                else
-                    it
+                it.ifEmpty { listOf(SpellList.Focus) }
             }
 
-        val traits = doc.select("#ctl00_MainContent_DetailedOutput > span")
+        val traits = doc.select("#$mainContentId > span")
             .filter { it.classNames().any { it.startsWith("trait") } }
             .map { TraitKey(it.text()) }
             .toMutableSet()
@@ -159,17 +193,23 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
             !(it is Element && (it.text() == "Requirements" || it.text() == "Cost" || it.normalTagName == "b"))
         }
         val actionValues = actionsElements.filterIsInstance<Element>().filter { it.className() == "actiondark" }
-            .map { actionNumForText(it.attr("alt")) }
+            .map { actionNumForText(it.attr("alt")) }.toMutableList()
 
-        val actionsText = (
+        var actionsText = (
                 if (actionsElements.filterIsInstance<Element>().count { it.className() == "actiondark" } > 1)
                     actionsElements.takeLastWhile { it !is Element || !it.className().startsWith("action") }
                 else
                     actionsElements).textWithNewlines(false).replace("\n", " ").trim(' ', ';').ifBlank { null }
 
+        if (actionsText == "to 2 rounds") {
+            actionValues.add(6)
+            actionsText = null
+        }
+
         var actionTypes: List<CastActionType>? =
-            if (!actionValues.isEmpty() || (actionsText != null && '(' in actionsText && ')' in actionsText))
-                actionsText?.substringAfter("(")?.substringBefore(")")?.split(",", " or ")
+            if (actionValues.isNotEmpty() || (actionsText != null && '(' in actionsText && ')' in actionsText))
+                actionsText?.substringAfter("(", "")?.substringBefore(")")?.split(",", " or ")
+                    ?.filter { it.isNotBlank() }
                     ?.map { CastActionType.valueOf(it.trim().enumFormat()) }
             else
                 null
@@ -220,12 +260,12 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
 
         val sustained = duration?.let { "sustained" in it.lowercase(Locale.getDefault()) } == true
 
-        val hrs = doc.select("#ctl00_MainContent_DetailedOutput > hr").toList()
+        val hrs = doc.select("#$mainContentId > hr").toList()
 
         assert(hrs.isNotEmpty()) { "Didn't find any <hr>s?!?!?" }
 
         val description = adjustAonHtml(
-            doc.select("#ctl00_MainContent_DetailedOutput > hr").first()
+            doc.select("#$mainContentId > hr").first()
                 .siblingsUntilElement { it.normalTagName == "hr" }
                 .map { if (it is Element) adjustAonElement(it) else it }
                 .map { it.outerHtml() }
@@ -233,7 +273,7 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         )
 
         val heightening: Heightening?
-        if (hrs.size > 1) {
+        if (hrs.size > 1 && hrs[1].nextElementSibling() != null) {
             val start = hrs[1]
             val first = start.nextElementSibling().text().substringAfter('(').substringBefore(')')
             if ('+' in first) {
@@ -416,7 +456,7 @@ suspend fun doInserts(spells: List<SpellData>) {
 
 suspend fun loadConditions(url: String = "https://2e.aonprd.com/Conditions.aspx"): Set<Condition> {
     val doc = loadPage(url)
-    val headers = doc.select("#ctl00_MainContent_DetailedOutput > h2.title")
+    val headers = doc.select("#$mainContentId > h2.title")
 
     return headers.map {
         val name = it.text()
@@ -459,10 +499,10 @@ suspend fun insertConditions(conditions: Iterable<Condition>) {
 
 suspend fun loadTrait(url: String): Trait {
     val doc = loadPage(url)
-    val name = doc.select("#ctl00_MainContent_DetailedOutput > h1 > a").text()
+    val name = doc.select("#$mainContentId > h1 > a").text()
     val aonId = url.substringAfter("?ID=").toInt()
 
-    val body = doc.select("#ctl00_MainContent_DetailedOutput").single()
+    val body = doc.select("#$mainContentId").single()
 
     val descStart = body.childNodes().first { it is TextNode }
 
@@ -473,7 +513,7 @@ suspend fun loadTrait(url: String): Trait {
 @OptIn(FlowPreview::class)
 suspend fun loadTraits(url: String = "https://2e.aonprd.com/Traits.aspx"): Set<Trait> {
     val doc = loadPage(url)
-    val urls = doc.select("#ctl00_MainContent_DetailedOutput > span.trait > a").map {
+    val urls = doc.select("#$mainContentId > span.trait > a").map {
         "https://2e.aonprd.com/" + it.attr("href")
     }
 
@@ -503,7 +543,6 @@ suspend fun spellsFromPage(url: String) = loadPage(url).select("a")
     .filter { it.startsWith("Spells.aspx?ID=") }
     .map { "https://2e.aonprd.com/$it" }
 
-//TODO track conditions
 @OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
 suspend fun loadSpells(
     spells: Collection<String>,
@@ -570,6 +609,21 @@ suspend fun loadSpells(
     }
 }
 
+suspend fun addToSpellList(spellListUrl: String, spellList: SpellList) {
+    val spells = newSuspendedTransaction {
+        spellsFromPage(spellListUrl).map {
+            val aonId = it.substringAfterLast('=').toInt()
+            Spells.select { Spells.aonId eq aonId }.adjustSlice { slice(Spells.name) }.first()[Spells.name].value
+        }
+    }.toSet()
+    newSuspendedTransaction {
+        SpellLists.batchInsert(spells, shouldReturnGeneratedValues = false) {
+            this[SpellLists.spell] = it
+            this[SpellLists.spellList] = spellList
+        }
+    }
+}
+
 fun main(args: Array<String>): Unit = runBlocking {
     if (args.isEmpty() || args[0].lowercase(Locale.getDefault()).let { it != "pg" && it != "postgres" }) {
         println("Loading to H2")
@@ -590,13 +644,16 @@ fun main(args: Array<String>): Unit = runBlocking {
     val traits = loadTraits()
     insertTraits(traits)
 
-//    parse(loadPage("https://2e.aonprd.com/Spells.aspx?ID=508"), emptySet())
+    parse(loadPage("https://2e.aonprd.com/Spells.aspx?ID=968"), conditions.map { it.name }.toSet(), emptySet())
+    //TODO some spells have multiple versions, only use the latest
     val pages = listOf(
         "https://2e.aonprd.com/Spells.aspx?Tradition=1",
         "https://2e.aonprd.com/Spells.aspx?Tradition=2",
         "https://2e.aonprd.com/Spells.aspx?Tradition=3",
         "https://2e.aonprd.com/Spells.aspx?Tradition=4",
+        "https://2e.aonprd.com/SpellLists.aspx?Tradition=5",
         "https://2e.aonprd.com/Spells.aspx?Focus=true&Tradition=0"
     )
     loadSpells(pages.flatMap { spellsFromPage(it) }.toSet(), conditions.map { it.name }.toSet())
+    addToSpellList("https://2e.aonprd.com/SpellLists.aspx?Tradition=5", SpellList.Elemental)
 }

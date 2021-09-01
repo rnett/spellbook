@@ -165,7 +165,7 @@ fun SpellFilterEditor(
 
             if (presetSlot == null) {
                 FilterEditor(filter.lists,
-                    SpellList.lists,
+                    SpellList.lists.minus(SpellList.Other),
                     { update(filter.copy(lists = it)) },
                     expandedStates.component(),
                     { Text("Spell Lists") }) {

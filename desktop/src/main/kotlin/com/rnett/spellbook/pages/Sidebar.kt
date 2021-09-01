@@ -12,7 +12,7 @@ sealed class SidebarState {
     data class ShoppingCart(val cart: com.rnett.spellbook.ShoppingCart) : SidebarState()
 }
 
-//TODO use
+//TODO use.  going to want to make spell search in page form spellbooks
 @Composable
 fun Sidebar(state: SidebarState) {
     when (state) {

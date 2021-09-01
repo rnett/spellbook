@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.core.HtmlText
+import com.rnett.spellbook.load.mainContentId
 import com.rnett.spellbook.spell.AonLinkable
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
@@ -78,9 +79,9 @@ val client = HttpClient(Apache)
 private suspend fun getAonDana(url: String): Pair<String, AnnotatedString> {
     val document = Jsoup.parse(client.get(url))
 
-    val title = document.select("#ctl00_MainContent_DetailedOutput > h1.title").first()
+    val title = document.select("#$mainContentId > h1.title").first()
 
-    val body = document.select("#ctl00_MainContent_DetailedOutput").single().html().removePrefix(title.outerHtml())
+    val body = document.select("#$mainContentId").single().html().removePrefix(title.outerHtml())
         .substringBefore("<h2")
         .substringBefore("<hr")
 

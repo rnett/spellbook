@@ -16,6 +16,7 @@ import com.rnett.spellbook.spell.Trait
 import com.rnett.spellbook.spell.TraitKey
 import kotlinx.serialization.builtins.ListSerializer
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SizedCollection
@@ -45,15 +46,18 @@ class DbTrait(id: EntityID<String>) : StringEntity(id) {
 }
 
 object SpellTraits : Table("spell_traits") {
-    val spell = reference("spell", Spells, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE).index()
-    val trait = reference("trait", Traits, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE).index()
+    val spell =
+        reference("spell", Spells, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE).index()
+    val trait =
+        reference("trait", Traits, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE).index()
 
     override val primaryKey = PrimaryKey(spell, trait)
 }
 
 object SpellLists : Table("spell_lists") {
-    val spell = reference("spell", Spells, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE).index()
-    val spellList = enumeration("list", SpellList::class)
+    val spell =
+        reference("spell", Spells, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE).index()
+    val spellList = enumerationByName("list", 20, SpellList::class)
 
     override val primaryKey = PrimaryKey(spell, spellList)
 }
@@ -80,17 +84,24 @@ class DbCondition(id: EntityID<String>) : StringEntity(id) {
 }
 
 object SpellConditions : Table("spell_conditions") {
-    val spell = reference("spell", Spells, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE).index()
-    val condition = reference("condition", Conditions, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE).index()
+    val spell =
+        reference("spell", Spells, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE).index()
+    val condition = reference(
+        "condition",
+        Conditions,
+        onDelete = ReferenceOption.CASCADE,
+        onUpdate = ReferenceOption.CASCADE
+    ).index()
 
     override val primaryKey = PrimaryKey(spell, condition)
 }
 
 object Spells : StringIdTable("spells", "name", 200) {
+    val name = primaryKey.columns[0] as Column<EntityID<String>>
     val level = integer("level").index()
     val aonId = integer("aon_id")
-    val type = enumeration("type", SpellType::class).index()
-    val save = enumeration("save", Save::class).nullable().index()
+    val type = enumerationByName("type", 20, SpellType::class).index()
+    val save = enumerationByName("save", 20, Save::class).nullable().index()
     val basicSave = bool("basic_save")
     val requiresAttackRoll = bool("required_attack_roll").index()
     val spellSource = varchar("source", 100)
@@ -225,7 +236,8 @@ class DbSpell(id: EntityID<String>) : StringEntity(id) {
     }
 
     var spellLists
-        get() = SpellLists.slice(SpellLists.spellList).select { SpellLists.spell eq id }.map { it[SpellLists.spellList] }.toSet()
+        get() = SpellLists.slice(SpellLists.spellList).select { SpellLists.spell eq id }
+            .map { it[SpellLists.spellList] }.toSet()
         @Deprecated("Will force a flush, you probably want to use batch updates")
         set(value) {
             SpellLists.deleteWhere { SpellLists.spell eq id }
@@ -248,7 +260,12 @@ class DbSpell(id: EntityID<String>) : StringEntity(id) {
         }
 
     var actionTypes
-        get() = actionTypesJson?.let { SpellbookDB.json.decodeFromString(ListSerializer(CastActionType.serializer()), it) }
+        get() = actionTypesJson?.let {
+            SpellbookDB.json.decodeFromString(
+                ListSerializer(CastActionType.serializer()),
+                it
+            )
+        }
         set(value) {
             if (value != null) {
                 actionTypesJson = SpellbookDB.json.encodeToString(ListSerializer(CastActionType.serializer()), value)

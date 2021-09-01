@@ -11,7 +11,7 @@ sealed class Actions {
     data class Constant(val actions: Int, override val trigger: String?) : Actions()
 
     /**
-     * [min] and [max] are inclusive
+     * [min] and [max] are inclusive.  Max may be 6 for 2 round spells
      */
     @Serializable
     data class Variable(val min: Int, val max: Int, override val trigger: String?) : Actions()
