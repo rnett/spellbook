@@ -44,7 +44,7 @@ sealed class AttackTypeFilter : SpellFilterPart {
 
     @Serializable
     object Attack : AttackTypeFilter() {
-        override fun matches(spell: Spell): Boolean = spell.attackTrait
+        override fun matches(spell: Spell): Boolean = spell.requiresAttackRoll || spell.attackTrait
     }
 }
 
