@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.ClickableText
@@ -200,25 +201,30 @@ fun SpellBody(spell: Spell) {
                 }
 
                 Column {
-
-                    spell.actions.trigger?.let {
-                        LabeledText("Trigger", it)
-                    }
-
-                    Row {
-
-                        spell.range?.let {
-                            LabeledText("Range", it)
-                            Spacer(Modifier.width(8.dp))
+                    Column(Modifier.heightIn(min = 20.dp)) {
+                        spell.actions.trigger?.let {
+                            LabeledText("Trigger", it.replace("\n", ""))
                         }
 
-                        spell.targets?.let {
-                            LabeledText("Targets", it)
+                        spell.requirements?.let {
+                            LabeledText("Requirements", it.replace("\n", ""))
                         }
-                    }
 
-                    spell.area?.let {
-                        LabeledText("Area", it)
+                        Row {
+
+                            spell.range?.let {
+                                LabeledText("Range", it)
+                                Spacer(Modifier.width(8.dp))
+                            }
+
+                            spell.targets?.let {
+                                LabeledText("Targets", it)
+                            }
+                        }
+
+                        spell.area?.let {
+                            LabeledText("Area", it)
+                        }
                     }
 
                     SpellBodyDivider()

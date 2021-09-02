@@ -64,7 +64,7 @@ fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: (
                 ActionsTag(spell.actions)
             }
 
-            Row(Modifier.fillMaxWidth(0.2f).weight(0.3f), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Row(Modifier.fillMaxWidth(0.3f).weight(0.35f), horizontalArrangement = Arrangement.SpaceEvenly) {
                 SpellList.lists.minus(SpellList.Other).forEach {
                     SpellListTag(it, it !in spell.lists)
                 }

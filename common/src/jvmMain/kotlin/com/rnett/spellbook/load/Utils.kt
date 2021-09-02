@@ -92,15 +92,24 @@ inline fun Node.siblingsUntilElement(stop: (Element) -> Boolean) = siblingsUntil
 fun Node.siblingsToBreak(): List<Node> =
     siblingsUntilElement { it.normalTagName == "br" || it.normalTagName == "hr" || it.normalTagName.let { it.length == 2 && it[0] == 'h' } }
 
+fun Node.siblingsToBreakOrBold(): List<Node> =
+    siblingsUntilElement { it.normalTagName == "b" || it.normalTagName == "br" || it.normalTagName == "hr" || it.normalTagName.let { it.length == 2 && it[0] == 'h' } }
+
 fun Node.elementSiblingsToBreak() = siblingsToBreak().filterIsInstance<Element>()
 
 fun List<Node>.elements() = filterIsInstance<Element>()
 
 val Element.normalTagName get() = tag().normalName()
 
-fun List<Node>.textWithNewlines(trim: Boolean = true): String = joinToString("") {
+private val inlineElements = setOf("a", "b", "i", "u")
+
+fun List<Node>.textWithNewlines(trim: Boolean = false): String = joinToString("") {
     when (it) {
-        is Element -> if (it.tagName() == "br") "\n" else it.childNodes().textWithNewlines() + "\n"
+        is Element -> when {
+            it.tagName() == "br" -> "\n"
+            it.normalTagName in inlineElements -> it.childNodes().textWithNewlines(trim)
+            else -> it.childNodes().textWithNewlines(trim) + "\n"
+        }
         is TextNode -> it.text().let {
             if (trim)
                 it.trim()

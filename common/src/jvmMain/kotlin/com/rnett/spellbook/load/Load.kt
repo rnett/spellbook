@@ -186,7 +186,8 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         assert(sourceElement.attr("href").startsWith("https://paizo.com")) { "Didn't find source?" }
         val source = sourceElement.text()
 
-        val trigger = Bs.singleOrNull { it.text() == "Trigger" }?.siblingsToBreak()?.textWithNewlines()
+        val trigger = Bs.singleOrNull { it.text() == "Trigger" }?.siblingsToBreakOrBold()?.textWithNewlines()
+            ?.trim(' ', ';')
 
         //TODO handle cost
         val actionsElements = Bs.single { it.text() == "Cast" }.siblingsToBreak().takeWhile {

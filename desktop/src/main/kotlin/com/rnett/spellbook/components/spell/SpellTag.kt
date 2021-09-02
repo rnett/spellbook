@@ -17,6 +17,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.rnett.spellbook.Color
 import com.rnett.spellbook.TagColors
@@ -176,14 +178,19 @@ fun TypeTag(type: SpellType) {
 fun ActionsTag(actions: Actions) {
     val tooptip = when (actions) {
         is Actions.Constant -> if (actions.actions == 1) "1 Action" else "${actions.actions} Actions"
-        is Actions.Variable -> "${actions.min} to ${actions.max} Actions"
+        is Actions.Variable -> "${actions.min} to ${
+            if (actions.max == 6)
+                "2 Rounds"
+            else
+                "${actions.max} Actions"
+        }"
         is Actions.Reaction -> "Reaction"
         is Actions.Time -> "Time"
         else -> error("Unknown actions $actions")
     } + if (actions.hasTrigger) ", With Trigger" else ""
     SpellTag(Color.Transparent, tooptip, noVerticalPadding = true, noHorizontalPadding = true) {
-        Row {
-            Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 when (actions) {
                     is Actions.Constant -> {
                         Icon(
@@ -195,7 +202,20 @@ fun ActionsTag(actions: Actions) {
                         Row {
                             Icon(useResource(constantActionImg(actions.min), ::loadImageBitmap), actions.min.toString())
                             Icon(Icons.Default.ArrowForward, "to", Modifier.padding(horizontal = 3.dp))
-                            Icon(useResource(constantActionImg(actions.max), ::loadImageBitmap), actions.max.toString())
+                            if (actions.max == 6) {
+                                Text(
+                                    "2",
+                                    fontSize = 1.em,
+                                    fontWeight = FontWeight.Normal,
+                                    modifier = Modifier.padding(bottom = 3.dp)
+                                )
+                                Icon(Icons.Default.Refresh, "Turns")
+                            } else {
+                                Icon(
+                                    useResource(constantActionImg(actions.max), ::loadImageBitmap),
+                                    actions.max.toString(),
+                                )
+                            }
                         }
                     }
                     is Actions.Reaction -> {
