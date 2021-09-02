@@ -1,16 +1,22 @@
 package com.rnett.spellbook.components.sidebar
 
+import androidx.compose.foundation.LocalScrollbarStyle
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -83,48 +89,62 @@ fun ShoppingCartDisplay(cart: ShoppingCart, close: () -> Unit) {
         ),
         focusRequester = focusRequester
     ) {
-        if (cart.isEmpty()) {
-            val text = buildAnnotatedString {
-                append("Cart is empty!  Add spells by dragging here from the search page, or clicking the ")
-                appendInlineContent("addToCart", "[Add to shopping cart]")
-                append(" icon in the spell header.")
+        Row(Modifier.fillMaxSize()
+            .ifLet(isDraggingOver) {
+                it.background(Color.White.copy(alpha = 0.1f))
             }
-
-            Text(text, inlineContent = mapOf(
-                "addToCart" to InlineTextContent(Placeholder(1.em, 1.em, PlaceholderVerticalAlign.TextCenter)) {
-                    Icon(Icons.Outlined.AddShoppingCart, "Add to shopping cart")
+        ) {
+            if (cart.isEmpty()) {
+                val text = buildAnnotatedString {
+                    append("Cart is empty!  Add spells by dragging here from the search page, or clicking the ")
+                    appendInlineContent("addToCart", "[Add to shopping cart]")
+                    append(" icon in the spell header.")
                 }
-            ))
-        } else {
-            Column(
-                Modifier.fillMaxSize().ifLet(isDraggingOver) {
-                    it.background(Color.White.copy(alpha = 0.1f))
-                }.padding(10.dp)
-            ) {
-                cart.join({
-                    Divider(Modifier.fillMaxWidth().background(Color.LightGray.copy(alpha = 0.3f)))
-                }) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ShortSpellDisplay(it, Modifier.fillMaxWidth(0.9f))
-                        Spacer(Modifier.weight(1f))
-                        IconButtonHand(
-                            {
-                                cart.remove(it)
-                            },
-                            Modifier.height(24.dp)
+
+                Text(text, Modifier.padding(horizontal = 10.dp), inlineContent = mapOf(
+                    "addToCart" to InlineTextContent(Placeholder(1.em, 1.em, PlaceholderVerticalAlign.TextCenter)) {
+                        Icon(Icons.Outlined.AddShoppingCart, "Add to shopping cart")
+                    }
+                ))
+            } else {
+                val scrollState = rememberScrollState()
+                Column(
+                    Modifier.weight(1f)
+                        .fillMaxHeight()
+                        .verticalScroll(scrollState)
+                        .padding(start = 10.dp)
+                ) {
+                    cart.join({
+                        Divider(Modifier.fillMaxWidth().background(Color.LightGray.copy(alpha = 0.3f)))
+                    }) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            IconWithTooltip(
-                                Icons.Outlined.RemoveShoppingCart,
-                                "Remove from Cart",
-                                tint = Color.Red.copy(alpha = 0.6f)
-                            )
+                            ShortSpellDisplay(it, Modifier.fillMaxWidth(0.9f))
+                            Spacer(Modifier.weight(1f))
+                            IconButtonHand(
+                                {
+                                    cart.remove(it)
+                                },
+                                Modifier.height(24.dp)
+                            ) {
+                                IconWithTooltip(
+                                    Icons.Outlined.RemoveShoppingCart,
+                                    "Remove from Cart",
+                                    tint = Color.Red.copy(alpha = 0.6f)
+                                )
+                            }
+                            Spacer(Modifier.weight(0.1f).widthIn(max = 10.dp))
                         }
-                        Spacer(Modifier.weight(0.1f).widthIn(max = 10.dp))
                     }
                 }
+                val scrollStyle =
+                    LocalScrollbarStyle.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
+                VerticalScrollbar(
+                    rememberScrollbarAdapter(scrollState),
+                    style = scrollStyle
+                )
             }
         }
     }

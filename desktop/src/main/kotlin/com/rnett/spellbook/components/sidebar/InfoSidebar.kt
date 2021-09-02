@@ -256,6 +256,9 @@ fun SidebarInfoDisplay(sidebarState: InfoSidebarState) {
             focusRequester.requestFocus()
     }
 
+
+    val modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp)
+
     SidebarSurface(
         if (data is InfoData.Data) {
             {
@@ -281,19 +284,19 @@ fun SidebarInfoDisplay(sidebarState: InfoSidebarState) {
             is InfoData.Data -> {
                 val value = d.data
                 sidebarState.withGoto {
-                    Box(Modifier.fillMaxSize()) {
+                    Box(modifier) {
                         dataLoader.apply { display(value) }
                     }
                 }
             }
             is InfoData.Waiting -> {
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                Box(modifier, Alignment.Center) {
                     CircularProgressIndicator(Modifier.fillMaxWidth(0.3f))
                 }
             }
             is InfoData.Error -> {
                 Column(
-                    Modifier.fillMaxSize().padding(top = 40.dp),
+                    modifier.padding(top = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     dataLoader.apply { errorMessage(d.exception) }

@@ -319,7 +319,7 @@ fun main() {
                                 DraggingSpell(it)
                             }
 
-                            val splitState = rememberSplitPaneState(0.8f)
+                            val splitState = rememberSplitPaneState(0.95f)
 
                             HorizontalSplitPane(Modifier, splitState) {
                                 first(200.dp) {

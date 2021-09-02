@@ -34,7 +34,6 @@ fun SidebarSurface(
     modifier: Modifier = Modifier,
     body: @Composable ColumnScope.() -> Unit
 ) {
-
     Surface(
         modifier
             .focusRequester(focusRequester)
@@ -44,15 +43,17 @@ fun SidebarSurface(
         contentColor = MainColors.textColor.asCompose(),
         color = MainColors.infoBoxColor.asCompose()
     ) {
-        Column(Modifier.fillMaxSize().padding(12.dp)) {
+        Column(Modifier.fillMaxSize().padding(top = 12.dp)) {
             if (header != null) {
-                Surface(
-                    Modifier.fillMaxWidth(),
-                    color = MainColors.infoHeaderColor.asCompose(),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Box(Modifier.padding(vertical = 4.dp, horizontal = 20.dp)) {
-                        header()
+                Box(Modifier.padding(start = 12.dp, end = 12.dp)) {
+                    Surface(
+                        Modifier.fillMaxWidth(),
+                        color = MainColors.infoHeaderColor.asCompose(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Box(Modifier.padding(vertical = 4.dp, horizontal = 20.dp)) {
+                            header()
+                        }
                     }
                 }
                 Spacer(Modifier.height(20.dp))
