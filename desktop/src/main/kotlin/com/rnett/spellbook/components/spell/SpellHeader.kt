@@ -15,11 +15,15 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.outlined.AddShoppingCart
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.rnett.spellbook.LocalMainState
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.IconButtonHand
@@ -33,7 +37,11 @@ import com.rnett.spellbook.spell.SpellList
 //TODO Value range (<, >) for range, duration
 
 @Composable
-fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: ((Spell) -> Unit)?) {
+fun SpellHeader(
+    spell: Spell,
+    modifier: Modifier = Modifier,
+    setSelectedSpell: ((Spell) -> Unit)?
+) {
 
     Column(modifier.fillMaxWidth().padding(10.dp)) {
 
@@ -105,6 +113,21 @@ fun SpellHeader(spell: Spell, modifier: Modifier = Modifier, setSelectedSpell: (
         Divider(Modifier.padding(vertical = 10.dp), color = MainColors.spellBodyColor.asCompose())
 
         Row(rowMod, verticalAlignment = Alignment.CenterVertically) {
+
+            val cart by rememberUpdatedState(LocalMainState.current.shoppingCart)
+
+            Row(Modifier.fillMaxWidth(0.05f)) {
+                IconButtonHand(
+                    {
+                        cart.add(spell)
+                    },
+                    Modifier.height(24.dp),
+                    enabled = spell !in LocalMainState.current.shoppingCart
+                ) {
+                    IconWithTooltip(Icons.Outlined.AddShoppingCart, "Add to cart")
+                }
+            }
+
             //TODO consider moving duration to top row, rest to body.  Maybe no color for traits except rarity?
             Row(Modifier.fillMaxWidth(0.1f)) {
                 DurationTag(spell.duration, spell.sustained)

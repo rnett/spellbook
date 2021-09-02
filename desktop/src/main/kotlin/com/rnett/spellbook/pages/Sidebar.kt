@@ -72,7 +72,7 @@ fun MainState.CloseSidebarButton() {
     }
 }
 
-data class SidebarState(val info: InfoSidebarState, val cart: ShoppingCart) {
+data class SidebarState(val info: InfoSidebarState, val cart: ShoppingCart, val close: () -> Unit) {
 }
 
 //TODO use.  going to want to make spell search in page form spellbooks
@@ -83,7 +83,7 @@ fun Sidebar(state: SidebarState, page: SidebarPage) {
             SidebarInfoDisplay(state.info)
         }
         SidebarPage.Cart -> {
-            ShoppingCartDisplay(state.cart)
+            ShoppingCartDisplay(state.cart, state.close)
         }
     }
 }

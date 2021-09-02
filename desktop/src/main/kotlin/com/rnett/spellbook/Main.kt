@@ -112,7 +112,7 @@ class MainState(
 
     val shoppingCart = ShoppingCart(mutableStateListOf())
     val infoState = InfoSidebarState({ sidebarPage = SidebarPage.Info }) { sidebarPage = null }
-    val sidebarState = SidebarState(infoState, shoppingCart)
+    val sidebarState = SidebarState(infoState, shoppingCart) { sidebarPage = null }
 
     private val derivedHelper by derivedStateOf { page.page }
 

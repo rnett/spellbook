@@ -1,7 +1,6 @@
 package com.rnett.spellbook.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -11,14 +10,11 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.IconButton
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -34,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -44,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.core.HtmlText
+import com.rnett.spellbook.components.sidebar.SidebarSurface
 import com.rnett.spellbook.load.mainContentId
 import com.rnett.spellbook.spell.AonLinkable
 import com.rnett.spellbook.withBackoff
@@ -243,74 +239,64 @@ sealed class InfoData {
 @Composable
 fun SidebarInfoDisplay(sidebarState: InfoSidebarState) {
     val dataLoader = (sidebarState.current ?: return) as InfoSidebarData<Any?>
+    var data by remember { mutableStateOf<InfoData>(InfoData.Waiting) }
+
+    LaunchedEffect(dataLoader) {
+        data = try {
+            InfoData.Data(withBackoff { dataLoader.load() })
+        } catch (t: Throwable) {
+            InfoData.Error(t)
+        }
+    }
+
     val focusRequester = remember { FocusRequester() }
-    Surface(
-        Modifier
-            .focusRequester(focusRequester)
-            .focusable(sidebarState.hasCurrent)
-            .onEscape { sidebarState.closeSidebar() }
-            .clickableNoIndication { focusRequester.requestFocus() },
-        contentColor = MainColors.textColor.asCompose(),
-        color = MainColors.infoBoxColor.asCompose()
+
+    LaunchedEffect(data) {
+        if (data is InfoData.Data)
+            focusRequester.requestFocus()
+    }
+
+    SidebarSurface(
+        if (data is InfoData.Data) {
+            {
+                val value = (data as InfoData.Data).data
+                dataLoader.apply { title(value) }
+
+                Row(Modifier.align(Alignment.CenterEnd)) {
+                    if (sidebarState.hasStack) {
+                        IconButton(sidebarState::back) {
+                            IconWithTooltip(Icons.Filled.ArrowBack, "Back")
+                        }
+                    }
+
+                    dataLoader.apply { controlButtons(value) }
+                }
+            }
+        } else null,
+        sidebarState.closeSidebar,
+        sidebarState.hasCurrent,
+        focusRequester
     ) {
-        Column(Modifier.fillMaxSize().padding(12.dp)) {
-
-            var data by remember { mutableStateOf<InfoData>(InfoData.Waiting) }
-
-            LaunchedEffect(dataLoader) {
-                data = try {
-                    InfoData.Data(withBackoff { dataLoader.load() })
-                } catch (t: Throwable) {
-                    InfoData.Error(t)
+        when (val d = data) {
+            is InfoData.Data -> {
+                val value = d.data
+                sidebarState.withGoto {
+                    Box(Modifier.fillMaxSize()) {
+                        dataLoader.apply { display(value) }
+                    }
                 }
             }
-
-            LaunchedEffect(data) {
-                if (data is InfoData.Data)
-                    focusRequester.requestFocus()
+            is InfoData.Waiting -> {
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    CircularProgressIndicator(Modifier.fillMaxWidth(0.3f))
+                }
             }
-
-            when (val d = data) {
-                is InfoData.Data -> {
-                    val value = d.data
-                    sidebarState.withGoto {
-                        Surface(
-                            Modifier.fillMaxWidth(),
-                            color = MainColors.infoHeaderColor.asCompose(),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Box(Modifier.padding(vertical = 4.dp, horizontal = 20.dp)) {
-                                dataLoader.apply { title(value) }
-
-                                Row(Modifier.align(Alignment.CenterEnd)) {
-                                    if (sidebarState.hasStack) {
-                                        IconButton(sidebarState::back) {
-                                            IconWithTooltip(Icons.Filled.ArrowBack, "Back")
-                                        }
-                                    }
-
-                                    dataLoader.apply { controlButtons(value) }
-                                }
-                            }
-                        }
-                        Spacer(Modifier.height(20.dp))
-                        Box(Modifier.fillMaxSize()) {
-                            dataLoader.apply { display(value) }
-                        }
-                    }
-                }
-                is InfoData.Waiting -> {
-                    Box(Modifier.fillMaxSize(), Alignment.Center) {
-                        CircularProgressIndicator(Modifier.fillMaxWidth(0.3f))
-                    }
-                }
-                is InfoData.Error -> {
-                    Column(
-                        Modifier.fillMaxSize().padding(top = 46.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        dataLoader.apply { errorMessage(d.exception) }
-                    }
+            is InfoData.Error -> {
+                Column(
+                    Modifier.fillMaxSize().padding(top = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    dataLoader.apply { errorMessage(d.exception) }
                 }
             }
         }

@@ -4,13 +4,11 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Composer
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.InternalComposeApi
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,12 +34,13 @@ import java.util.WeakHashMap
 
 @Composable
 fun <T> rememberDragSetState(): DragSetState<T> {
-    val composer = currentComposer
     val scope = rememberCoroutineScope()
-    return remember { DragSetState<T>(composer, scope) }
+    return remember { DragSetState<T>(scope) }
 }
 
-class DragSetState<T>(val composer: Composer, val scope: CoroutineScope) {
+class DragSetState<T>(val scope: CoroutineScope) {
+    var enabled by mutableStateOf(true)
+
     var item: T? by mutableStateOf(null)
         private set
     var windowPosition by mutableStateOf<Offset?>(null)
@@ -180,7 +179,7 @@ fun <T> Modifier.draggableItem(
 
     val eventHandler = SideEffectHandler(2)
 
-    if (coords != null) {
+    if (coords != null && set.enabled) {
         mod.pointerInput(coords, set, item) {
             detectDragGesturesAfterLongPress(
                 onDragStart = {
