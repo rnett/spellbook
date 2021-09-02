@@ -1,5 +1,11 @@
 package com.rnett.spellbook
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.desktop.DesktopMaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,14 +17,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.IconToggleButton
 import androidx.compose.material.Surface
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -30,17 +36,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.singleWindowApplication
-import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.InfoSidebarState
 import com.rnett.spellbook.components.core.ScaleDensityToHeight
-import com.rnett.spellbook.components.handPointer
 import com.rnett.spellbook.data.allDurations
 import com.rnett.spellbook.data.allSpellConditions
 import com.rnett.spellbook.data.allSpellTraits
@@ -48,6 +52,11 @@ import com.rnett.spellbook.data.allSpells
 import com.rnett.spellbook.data.allTargeting
 import com.rnett.spellbook.data.allTraits
 import com.rnett.spellbook.filter.SpellFilter
+import com.rnett.spellbook.pages.CloseSidebarButton
+import com.rnett.spellbook.pages.Sidebar
+import com.rnett.spellbook.pages.SidebarPage
+import com.rnett.spellbook.pages.SidebarState
+import com.rnett.spellbook.pages.SidebarToggle
 import com.rnett.spellbook.pages.SpellListPage
 import com.rnett.spellbook.pages.SpellListState
 import com.rnett.spellbook.pages.SpellbooksPage
@@ -99,9 +108,11 @@ class MainState(
     val searchPage = PageState.Search()
     val spellbookPage = PageState.Spellbooks()
 
-    var cartOpen by mutableStateOf(false)
+    var sidebarPage by mutableStateOf<SidebarPage?>(null)
+
     val shoppingCart = ShoppingCart(mutableStateListOf())
-    val sidebarState = InfoSidebarState()
+    val infoState = InfoSidebarState({ sidebarPage = SidebarPage.Info }) { sidebarPage = null }
+    val sidebarState = SidebarState(infoState, shoppingCart)
 
     private val derivedHelper by derivedStateOf { page.page }
 
@@ -201,6 +212,25 @@ sealed class PageState {
     }
 }
 
+@Composable
+private fun WithMainState(
+    savedSearchRepo: LocalNamedObjectRepo<SpellFilter>,
+    initialPage: Pages,
+    content: @Composable MainState.() -> Unit
+) {
+
+    val mainState = remember { MainState(savedSearchRepo, initialPage) }
+
+    CompositionLocalProvider(
+        LocalMainState.provides(mainState)
+    ) {
+        with(mainState) {
+            content()
+        }
+    }
+}
+
+@OptIn(ExperimentalAnimationApi::class)
 fun main() {
 //    SpellbookDB.initH2()
 
@@ -224,26 +254,22 @@ fun main() {
 
                         val savedSearchRepo = remember { LocalSavedSearchRepo({}) }
 
-                        val mainState = remember { MainState(savedSearchRepo, Pages.Spellbooks) }
-
-                        CompositionLocalProvider(
-                            LocalMainState.provides(mainState)
-                        ) {
+                        WithMainState(savedSearchRepo, Pages.Spellbooks) {
 
                             Row(Modifier.fillMaxWidth().background(MainColors.spellBodyColor.asCompose())) {
 
                                 TabRow(
-                                    mainState.currentPage.ordinal,
+                                    currentPage.ordinal,
                                     Modifier.weight(1f),
                                     backgroundColor = MainColors.spellBodyColor.asCompose()
                                 ) {
-                                    Tab(mainState.currentPage == Pages.Spellbooks, {
-                                        mainState.currentPage = Pages.Spellbooks
+                                    Tab(currentPage == Pages.Spellbooks, {
+                                        currentPage = Pages.Spellbooks
                                     }) {
                                         Text("Spellbooks", Modifier.padding(10.dp))
                                     }
-                                    Tab(mainState.currentPage == Pages.SpellSearch, {
-                                        mainState.currentPage = Pages.SpellSearch
+                                    Tab(currentPage == Pages.SpellSearch, {
+                                        currentPage = Pages.SpellSearch
                                     }) {
                                         Text("Search", Modifier.padding(10.dp))
                                     }
@@ -251,32 +277,44 @@ fun main() {
 
                                 Spacer(Modifier.width(20.dp))
 
-                                IconToggleButton(
-                                    mainState.cartOpen,
-                                    {
-                                        mainState.cartOpen = !mainState.cartOpen
-                                    },
-                                    Modifier.padding(top = 3.dp).handPointer()
-                                        .ifLet(mainState.cartOpen) {
-                                            it.background(
-                                                Color.White.copy(alpha = 0.3f),
-                                                RoundedCornerShape(40, 40, 0, 0)
-                                            )
-                                        }
-                                ) {
-                                    IconWithTooltip(
-                                        if (mainState.cartOpen) Icons.Filled.ShoppingCart else Icons.Outlined.ShoppingCart,
-                                        "Cart"
-                                    )
-                                }
-                                //TODO some kind of button like this for the info pane?  probably not
-                                //TODO display cart (do I want groups in the same display? probably, but also separately)
+                                SidebarToggle(SidebarPage.Cart, Icons.Filled.ShoppingCart, Icons.Outlined.ShoppingCart)
 
-                                Spacer(Modifier.width(20.dp))
+                                Spacer(Modifier.width(10.dp))
+
+                                SidebarToggle(
+                                    SidebarPage.Info,
+                                    Icons.Filled.Info,
+                                    Icons.Outlined.Info,
+                                    infoState.hasCurrent
+                                )
+
+                                Spacer(Modifier.width(10.dp))
+
+                                CloseSidebarButton()
+
+                                Spacer(Modifier.width(10.dp))
 
                             }
 
-                            mainState.page.show(mainState)
+                            Row(Modifier.fillMaxSize()) {
+
+                                Row(Modifier.weight(0.8f)) {
+                                    infoState.withNew {
+                                        page.show(this@WithMainState)
+                                    }
+                                }
+
+                                AnimatedVisibility(
+                                    sidebarPage != null,
+                                    Modifier.fillMaxWidth().weight(0.2f),
+                                    enter = fadeIn() + expandHorizontally(Alignment.End),
+                                    exit = shrinkHorizontally(Alignment.Start) + fadeOut()
+                                ) {
+                                    sidebarPage?.let {
+                                        Sidebar(sidebarState, it)
+                                    }
+                                }
+                            }
                         }
                     }
                 }

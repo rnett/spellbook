@@ -1,6 +1,5 @@
 package com.rnett.spellbook.pages
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
@@ -39,8 +38,6 @@ import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
-import com.rnett.spellbook.components.InfoSidebarState
-import com.rnett.spellbook.components.SidebarInfoDisplay
 import com.rnett.spellbook.components.filter.FilterDivider
 import com.rnett.spellbook.components.filter.SpellFilterEditor
 import com.rnett.spellbook.components.search.SpellFilterLoader
@@ -152,23 +149,7 @@ fun SpellListPage(
                     }
                 }
             }
-
-            if (state is SpellListState.Search) {
-
-                val sidebarState = remember { InfoSidebarState() }
-
-                sidebarState.withNew {
-                    SpellList(scrollState, spells, state, globalExpanded)
-                }
-
-                AnimatedVisibility(sidebarState.active, Modifier.fillMaxWidth().weight(0.2f)) {
-                    if (sidebarState.current != null) {
-                        SidebarInfoDisplay(sidebarState.current!!, sidebarState)
-                    }
-                }
-            } else {
-                SpellList(scrollState, spells, state, globalExpanded)
-            }
+            SpellList(scrollState, spells, state, globalExpanded)
         }
     }
 }

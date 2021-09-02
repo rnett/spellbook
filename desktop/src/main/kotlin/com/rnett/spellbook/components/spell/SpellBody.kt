@@ -50,13 +50,12 @@ import com.rnett.spellbook.components.SidebarNav
 import com.rnett.spellbook.components.core.FlowRow
 import com.rnett.spellbook.components.core.HtmlText
 import com.rnett.spellbook.components.core.WithOriginalDensity
+import com.rnett.spellbook.components.openInBrowser
 import com.rnett.spellbook.components.ordinalWord
 import com.rnett.spellbook.spell.Creature
 import com.rnett.spellbook.spell.Heightening
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.Summons
-import java.awt.Desktop
-import java.net.URI
 
 
 @Composable
@@ -191,7 +190,7 @@ fun SpellBody(spell: Spell) {
                     Modifier
                         .align(Alignment.TopEnd)
                         .clickable {
-                            Desktop.getDesktop().browse(URI(AonUrl(spell).url))
+                            openInBrowser(AonUrl(spell).url)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {

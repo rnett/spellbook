@@ -24,6 +24,7 @@ import com.rnett.spellbook.spell.SpellType
 import com.rnett.spellbook.spell.Summons
 import com.rnett.spellbook.spell.Trait
 import com.rnett.spellbook.spell.TraitKey
+import com.rnett.spellbook.withBackoff
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.defaultRequest
@@ -35,7 +36,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collect
@@ -59,8 +59,6 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.pow
-import kotlin.time.Duration
 
 val client = HttpClient(Apache) {
     defaultRequest {
@@ -69,18 +67,8 @@ val client = HttpClient(Apache) {
 }
 
 
-private suspend fun makeRequest(url: String, retries: Int = 10): String {
-    var caught: Throwable? = null
-    repeat(retries) {
-        try {
-            return client.get<String>(url)
-        } catch (e: Throwable) {
-            caught = e
-            delay(Duration.milliseconds(10 + 2.0.pow(it)))
-        }
-    }
-    throw caught!!
-}
+private suspend fun makeRequest(url: String, retries: Int = 10): String =
+    withBackoff(retries = retries) { client.get(url) }
 
 suspend fun loadPage(url: String): Document {
     return Jsoup.parse(makeRequest(url)).also {

@@ -44,6 +44,14 @@ import androidx.compose.ui.window.PopupPositionProvider
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.ifLet
+import java.awt.Desktop
+import java.net.URI
+
+fun openInBrowser(url: String) {
+    if (Desktop.isDesktopSupported()) {
+        Desktop.getDesktop().browse(URI(url))
+    }
+}
 
 fun Int.ordinalWord(): String {
     val word = this.toString()

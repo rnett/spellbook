@@ -18,16 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
-import com.rnett.spellbook.data.allSpells
 import com.rnett.spellbook.spell.Spell
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-
-@Composable
-//@Preview
-internal fun PreviewSpell() {
-    SpellDisplay(allSpells.first { it.name == "Fireball" }, null, true, {})
-}
 
 
 @OptIn(ExperimentalAnimationApi::class)

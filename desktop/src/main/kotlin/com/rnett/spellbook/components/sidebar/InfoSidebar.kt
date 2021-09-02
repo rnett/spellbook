@@ -1,9 +1,11 @@
 package com.rnett.spellbook.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.CircularProgressIndicator
@@ -19,7 +22,6 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -35,39 +37,40 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.core.HtmlText
 import com.rnett.spellbook.load.mainContentId
 import com.rnett.spellbook.spell.AonLinkable
+import com.rnett.spellbook.withBackoff
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.request.get
 import org.jsoup.Jsoup
-import java.awt.Desktop
-import java.net.URI
 import java.util.Stack
 
 typealias SidebarNavigator = (InfoSidebarData<*>) -> Unit
 
 object SidebarNav {
-    val Ambient = compositionLocalOf<SidebarNavigator> { {} }
+    val LocalSidebar = compositionLocalOf<SidebarNavigator> { {} }
 
     @Composable
-    fun currentSidebar() = Ambient.current
+    fun currentSidebar() = LocalSidebar.current
 
     @Composable
     fun withNew(sidebarState: InfoSidebarState, content: @Composable () -> Unit) {
-        CompositionLocalProvider(Ambient provides sidebarState::new) {
+        CompositionLocalProvider(LocalSidebar provides sidebarState::new) {
             content()
         }
     }
 
     @Composable
     fun withGoto(sidebarState: InfoSidebarState, content: @Composable () -> Unit) {
-        CompositionLocalProvider(Ambient provides sidebarState::goto) {
+        CompositionLocalProvider(LocalSidebar provides sidebarState::goto) {
             content()
         }
     }
@@ -88,7 +91,7 @@ private suspend fun getAonDana(url: String): Pair<String, AnnotatedString> {
     return title.text() to HtmlText(body)
 }
 
-sealed class InfoSidebarData<D> {
+abstract class InfoSidebarData<D> {
     abstract suspend fun load(): D
 
     @Composable
@@ -101,38 +104,38 @@ sealed class InfoSidebarData<D> {
 
     @Composable
     abstract fun BoxScope.display(data: D)
+
+    @Composable
+    abstract fun ColumnScope.errorMessage(exception: Throwable)
 }
 
-class InfoSidebarState() {
+class InfoSidebarState(val openSidebar: () -> Unit, val closeSidebar: () -> Unit) {
     private val backstack = Stack<InfoSidebarData<*>>()
 
     var current: InfoSidebarData<*>? by mutableStateOf(null)
         private set
 
-    val active get() = current != null
+    val hasCurrent get() = current != null
     val hasStack get() = backstack.isNotEmpty()
 
     fun new(url: InfoSidebarData<*>) {
         backstack.clear()
         current = url
+        openSidebar()
     }
 
     fun goto(url: InfoSidebarData<*>) {
         current?.let(backstack::push)
         current = url
+        openSidebar()
     }
 
     fun back() {
         if (backstack.isNotEmpty()) {
             current = backstack.pop()
         } else {
-            close()
+            closeSidebar()
         }
-    }
-
-    fun close() {
-        backstack.clear()
-        current = null
     }
 
     @Composable
@@ -178,7 +181,7 @@ class AonUrl(url: String) : InfoSidebarData<Pair<String, AnnotatedString>>() {
     @Composable
     override fun RowScope.controlButtons(data: Pair<String, AnnotatedString>) {
         IconButtonHand({
-            Desktop.getDesktop().browse(URI(url))
+            openInBrowser(url)
         }
         ) {
             IconWithTooltip(Icons.Filled.OpenInNew, "Open in browser")
@@ -201,6 +204,18 @@ class AonUrl(url: String) : InfoSidebarData<Pair<String, AnnotatedString>>() {
         }
     }
 
+    @Composable
+    override fun ColumnScope.errorMessage(exception: Throwable) {
+        Text("Error loading AoN, are you connected to the internet?")
+        Row {
+            Text("URL:")
+            Spacer(Modifier.width(5.dp))
+            Text(url, Modifier.clickable {
+                openInBrowser(url)
+            }, textDecoration = TextDecoration.Underline, fontStyle = FontStyle.Italic)
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is AonUrl) return false
@@ -219,65 +234,82 @@ class AonUrl(url: String) : InfoSidebarData<Pair<String, AnnotatedString>>() {
     }
 }
 
+sealed class InfoData {
+    data class Data(val data: Any?) : InfoData()
+    object Waiting : InfoData()
+    data class Error(val exception: Throwable) : InfoData()
+}
 
 @Composable
-fun <D> SidebarInfoDisplay(dataLoader: InfoSidebarData<D>, sidebarState: InfoSidebarState) {
+fun SidebarInfoDisplay(sidebarState: InfoSidebarState) {
+    val dataLoader = (sidebarState.current ?: return) as InfoSidebarData<Any?>
     val focusRequester = remember { FocusRequester() }
     Surface(
         Modifier
             .focusRequester(focusRequester)
-            .focusable(sidebarState.active)
-            .onEscape { sidebarState.close() }
+            .focusable(sidebarState.hasCurrent)
+            .onEscape { sidebarState.closeSidebar() }
             .clickableNoIndication { focusRequester.requestFocus() },
         contentColor = MainColors.textColor.asCompose(),
         color = MainColors.infoBoxColor.asCompose()
     ) {
         Column(Modifier.fillMaxSize().padding(12.dp)) {
 
-            var data by remember { mutableStateOf<D?>(null) }
+            var data by remember { mutableStateOf<InfoData>(InfoData.Waiting) }
 
             LaunchedEffect(dataLoader) {
-                try {
-                    data = dataLoader.load()
-                } catch (e: Exception) {
-
+                data = try {
+                    InfoData.Data(withBackoff { dataLoader.load() })
+                } catch (t: Throwable) {
+                    InfoData.Error(t)
                 }
             }
 
             LaunchedEffect(data) {
-                if (data != null)
+                if (data is InfoData.Data)
                     focusRequester.requestFocus()
             }
 
-            if (data == null) {
-                CircularProgressIndicator()
-            } else {
-                sidebarState.withGoto {
-                    Surface(
-                        Modifier.fillMaxWidth(),
-                        color = MainColors.infoHeaderColor.asCompose(),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Box(Modifier.padding(vertical = 4.dp, horizontal = 20.dp)) {
-                            dataLoader.apply { title(data!!) }
+            when (val d = data) {
+                is InfoData.Data -> {
+                    val value = d.data
+                    sidebarState.withGoto {
+                        Surface(
+                            Modifier.fillMaxWidth(),
+                            color = MainColors.infoHeaderColor.asCompose(),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Box(Modifier.padding(vertical = 4.dp, horizontal = 20.dp)) {
+                                dataLoader.apply { title(value) }
 
-                            Row(Modifier.align(Alignment.CenterEnd)) {
-                                dataLoader.apply { controlButtons(data!!) }
-
-                                if (sidebarState.hasStack) {
-                                    IconButton(sidebarState::back) {
-                                        IconWithTooltip(Icons.Filled.ArrowBack, "Back")
+                                Row(Modifier.align(Alignment.CenterEnd)) {
+                                    if (sidebarState.hasStack) {
+                                        IconButton(sidebarState::back) {
+                                            IconWithTooltip(Icons.Filled.ArrowBack, "Back")
+                                        }
                                     }
-                                }
-                                IconButton(sidebarState::close) {
-                                    IconWithTooltip(Icons.Filled.Close, "Close")
+
+                                    dataLoader.apply { controlButtons(value) }
                                 }
                             }
                         }
+                        Spacer(Modifier.height(20.dp))
+                        Box(Modifier.fillMaxSize()) {
+                            dataLoader.apply { display(value) }
+                        }
                     }
-                    Spacer(Modifier.height(20.dp))
-                    Box(Modifier.fillMaxSize()) {
-                        dataLoader.apply { display(data!!) }
+                }
+                is InfoData.Waiting -> {
+                    Box(Modifier.fillMaxSize(), Alignment.Center) {
+                        CircularProgressIndicator(Modifier.fillMaxWidth(0.3f))
+                    }
+                }
+                is InfoData.Error -> {
+                    Column(
+                        Modifier.fillMaxSize().padding(top = 46.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        dataLoader.apply { errorMessage(d.exception) }
                     }
                 }
             }
