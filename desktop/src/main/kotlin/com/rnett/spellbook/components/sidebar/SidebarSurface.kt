@@ -31,11 +31,12 @@ fun SidebarSurface(
     close: () -> Unit,
     canFocus: Boolean = true,
     focusRequester: FocusRequester = remember { FocusRequester() },
+    modifier: Modifier = Modifier,
     body: @Composable ColumnScope.() -> Unit
 ) {
 
     Surface(
-        Modifier
+        modifier
             .focusRequester(focusRequester)
             .focusable(canFocus)
             .onEscape { close() }

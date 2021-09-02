@@ -204,6 +204,9 @@ fun <T> Modifier.draggableItem(
     } else mod
 }
 
+/**
+ * @param onDrop returns whether to call onDrugOut on the item (calls onDragCancel otherwise)
+ */
 fun <T> Modifier.draggableContainer(
     set: DragSetState<T>,
     onEnter: (T) -> Unit = {},

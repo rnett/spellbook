@@ -16,8 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.rnett.spellbook.LocalMainState
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.draggableItem
 import com.rnett.spellbook.spell.Spell
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -26,9 +28,11 @@ import kotlinx.coroutines.flow.collect
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?, expanded: Boolean, headerClick: () -> Unit) {
+    val dragSet = LocalMainState.current.dragSpellsToSide
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = MainColors.spellBorderColor.asCompose()
+        color = MainColors.spellBorderColor.asCompose(),
+        modifier = Modifier.draggableItem(dragSet, spell)
     ) {
 
         Column(Modifier) {

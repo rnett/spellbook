@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -43,8 +44,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.singleWindowApplication
+import com.rnett.spellbook.components.DragSetState
 import com.rnett.spellbook.components.InfoSidebarState
 import com.rnett.spellbook.components.core.ScaleDensityToHeight
+import com.rnett.spellbook.components.spell.DraggingSpell
 import com.rnett.spellbook.data.allDurations
 import com.rnett.spellbook.data.allSpellConditions
 import com.rnett.spellbook.data.allSpellTraits
@@ -66,6 +69,8 @@ import com.rnett.spellbook.spellbook.Spellbook
 import com.rnett.spellbook.spellbook.Spellcasting
 import com.rnett.spellbook.spellbook.SpellcastingType
 import com.rnett.spellbook.spellbook.withLevel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -102,6 +107,7 @@ class ShoppingCart(private val items: MutableList<Spell>) : List<Spell> by items
 
 class MainState(
     val savedSearchRepo: LocalNamedObjectRepo<SpellFilter>, //TODO just use mutable state + LaunchedEffect keyed on it to save?
+    coroutineScope: CoroutineScope,
     initialPage: Pages
 ) {
 
@@ -113,6 +119,8 @@ class MainState(
     val shoppingCart = ShoppingCart(mutableStateListOf())
     val infoState = InfoSidebarState({ sidebarPage = SidebarPage.Info }) { sidebarPage = null }
     val sidebarState = SidebarState(infoState, shoppingCart) { sidebarPage = null }
+
+    val dragSpellsToSide = DragSetState<Spell>(coroutineScope)
 
     private val derivedHelper by derivedStateOf { page.page }
 
@@ -219,7 +227,8 @@ private fun WithMainState(
     content: @Composable MainState.() -> Unit
 ) {
 
-    val mainState = remember { MainState(savedSearchRepo, initialPage) }
+    val scope = rememberCoroutineScope { Dispatchers.Default }
+    val mainState = remember { MainState(savedSearchRepo, scope, initialPage) }
 
     CompositionLocalProvider(
         LocalMainState.provides(mainState)
@@ -294,6 +303,10 @@ fun main() {
 
                                 Spacer(Modifier.width(10.dp))
 
+                            }
+
+                            dragSpellsToSide.display {
+                                DraggingSpell(it)
                             }
 
                             Row(Modifier.fillMaxSize()) {
