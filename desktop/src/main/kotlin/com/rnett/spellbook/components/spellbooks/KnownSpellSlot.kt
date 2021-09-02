@@ -32,11 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.rnett.spellbook.LocalMainState
 import com.rnett.spellbook.SavedSearchColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.DragSetState
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
+import com.rnett.spellbook.components.acceptsSpell
 import com.rnett.spellbook.components.draggableContainer
 import com.rnett.spellbook.components.draggableItem
 import com.rnett.spellbook.components.spell.ShortSpellDisplay
@@ -99,9 +101,9 @@ fun KnownSpellSlot(
                         set(slot.copy(spell = null))
                     }
                 }.ifLet(slot.spell == null) {
-                    it.draggableContainer(dragSet,
+                    it.draggableContainer(dragSet + LocalMainState.current.dragSpellsFromSide,
                         accepts = {
-                            it.lists.any { it in slot.lists }
+                            acceptsSpell(level, slot.lists, it)
                         },
                         onEnter = {
                             draggingOver = true

@@ -38,8 +38,64 @@ fun <T> rememberDragSetState(): DragSetState<T> {
     return remember { DragSetState<T>(scope) }
 }
 
-class DragSetState<T>(val scope: CoroutineScope) {
-    var enabled by mutableStateOf(true)
+interface DragContainerState<T> {
+    interface ContainerKey {
+        fun remove()
+    }
+
+    class ContainerKeyImpl(val container: DragContainerState<*>) : ContainerKey {
+        override fun remove() {
+            container.removeContainer(this)
+        }
+    }
+
+    fun removeContainer(key: ContainerKey)
+    fun registerContainer(handle: DragHandler<T>): ContainerKey
+
+    data class DragHandler<T>(
+        val bounds: Rect,
+        val accepts: State<(T) -> Boolean>,
+        val onEnter: (T) -> Unit,
+        val onLeave: (T) -> Unit,
+        val onIn: (T, Offset) -> Unit,
+        val onDrop: (T) -> Boolean
+    )
+
+    operator fun plus(other: DragContainerState<T>): CompositeDragContainerState<T> = compositeContainerOf(this, other)
+}
+
+fun <T> compositeContainerOf(vararg containers: DragContainerState<T>) =
+    CompositeDragContainerState(containers.flatMap {
+        if (it is CompositeDragContainerState)
+            it.containers
+        else
+            listOf(it)
+    })
+
+class CompositeDragContainerState<T>(internal val containers: List<DragContainerState<T>>) : DragContainerState<T> {
+    private val handlers = WeakHashMap<DragContainerState.ContainerKey, List<DragContainerState.ContainerKey>>()
+    override fun removeContainer(key: DragContainerState.ContainerKey) {
+        handlers[key]?.let { it.forEach { it.remove() } }
+
+    }
+
+    override fun registerContainer(handle: DragContainerState.DragHandler<T>): DragContainerState.ContainerKey {
+        val key = DragContainerState.ContainerKeyImpl(this)
+        handlers[key] = containers.map { it.registerContainer(handle) }
+        return key
+    }
+}
+
+interface DragItemState<T> {
+    val enabled: Boolean
+    fun endDrag(): Boolean
+    fun startDrag(coords: Offset, item: T)
+    fun cancelDrag()
+    fun updateDrag(change: Offset)
+}
+
+class DragSetState<T>(val scope: CoroutineScope) : DragContainerState<T>, DragItemState<T> {
+    override var enabled by mutableStateOf(true)
 
     var item: T? by mutableStateOf(null)
         private set
@@ -48,7 +104,7 @@ class DragSetState<T>(val scope: CoroutineScope) {
 
     val isDragging by derivedStateOf { windowPosition != null }
 
-    internal fun startDrag(coords: Offset, item: T) {
+    override fun startDrag(coords: Offset, item: T) {
         this.item = item
         windowPosition = coords
     }
@@ -57,7 +113,7 @@ class DragSetState<T>(val scope: CoroutineScope) {
      * @return true if the drag ended in an accepting container
      */
     @OptIn(InternalComposeApi::class)
-    internal fun endDrag(): Boolean {
+    override fun endDrag(): Boolean {
         if (!isDragging) return false
         val handler = containers.values
             .firstOrNull { it.bounds.contains(windowPosition!!) && it.accepts.value(item!!) }
@@ -67,7 +123,7 @@ class DragSetState<T>(val scope: CoroutineScope) {
         return result == true
     }
 
-    internal fun cancelDrag() {
+    override fun cancelDrag() {
         if (!isDragging) return
         containers.values.forEach {
             val inBounds = it.bounds.contains(windowPosition!!)
@@ -80,7 +136,7 @@ class DragSetState<T>(val scope: CoroutineScope) {
         windowPosition = null
     }
 
-    internal fun updateDrag(change: Offset) {
+    override fun updateDrag(change: Offset) {
         if (!isDragging) return
         val old = windowPosition!!
         val new = old + change
@@ -103,25 +159,10 @@ class DragSetState<T>(val scope: CoroutineScope) {
         }
     }
 
-    internal inner class ContainerKey {
-        fun remove() {
-            containers.remove(this)
-        }
-    }
+    private val containers = WeakHashMap<DragContainerState.ContainerKey, DragContainerState.DragHandler<T>>()
 
-    data class DragHandler<T>(
-        val bounds: Rect,
-        val accepts: State<(T) -> Boolean>,
-        val onEnter: (T) -> Unit,
-        val onLeave: (T) -> Unit,
-        val onIn: (T, Offset) -> Unit,
-        val onDrop: (T) -> Boolean
-    )
-
-    private val containers = WeakHashMap<ContainerKey, DragHandler<T>>()
-
-    internal fun registerContainer(handle: DragHandler<T>): ContainerKey {
-        val key = ContainerKey()
+    override fun registerContainer(handle: DragContainerState.DragHandler<T>): DragContainerState.ContainerKey {
+        val key = DragContainerState.ContainerKeyImpl(this)
         containers[key] = handle
         return key
     }
@@ -137,6 +178,10 @@ class DragSetState<T>(val scope: CoroutineScope) {
                 }
             }
         }
+    }
+
+    override fun removeContainer(key: DragContainerState.ContainerKey) {
+        containers.remove(key)
     }
 }
 
@@ -161,7 +206,7 @@ inline fun SideEffectHandler(buffer: Int): (() -> Unit) -> Unit {
 }
 
 fun <T> Modifier.draggableItem(
-    set: DragSetState<T>,
+    set: DragItemState<T>,
     item: T,
     onDragStart: () -> Unit = {},
     onDragCancel: () -> Unit = {},
@@ -208,7 +253,7 @@ fun <T> Modifier.draggableItem(
  * @param onDrop returns whether to call onDrugOut on the item (calls onDragCancel otherwise)
  */
 fun <T> Modifier.draggableContainer(
-    set: DragSetState<T>,
+    set: DragContainerState<T>,
     onEnter: (T) -> Unit = {},
     onLeave: (T) -> Unit = {},
     onIn: (T, Offset) -> Unit = { _, _ -> },
@@ -227,7 +272,7 @@ fun <T> Modifier.draggableContainer(
         bounds = it.boundsInWindow()
     }
 
-    val handler = DragSetState.DragHandler(
+    val handler = DragContainerState.DragHandler(
         bounds,
         accepts,
         { onEnter.value(it) },

@@ -128,6 +128,7 @@ class MainState(
     val sidebarState = SidebarState(infoState, shoppingCart) { sidebarPage = null }
 
     val dragSpellsToSide = DragSetState<Spell>(coroutineScope)
+    val dragSpellsFromSide = DragSetState<Spell>(coroutineScope)
 
     private val derivedHelper by derivedStateOf { page.page }
 
@@ -316,6 +317,10 @@ fun main() {
                             }
 
                             dragSpellsToSide.display {
+                                DraggingSpell(it)
+                            }
+
+                            dragSpellsFromSide.display {
                                 DraggingSpell(it)
                             }
 

@@ -44,6 +44,7 @@ import com.rnett.spellbook.ShoppingCart
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.draggableContainer
+import com.rnett.spellbook.components.draggableItem
 import com.rnett.spellbook.components.join
 import com.rnett.spellbook.components.spell.ShortSpellDisplay
 import com.rnett.spellbook.ifLet
@@ -63,7 +64,8 @@ fun ShoppingCartDisplay(cart: ShoppingCart, close: () -> Unit) {
 
     var isDraggingOver by remember { mutableStateOf(false) }
 
-    val dragSet = LocalMainState.current.dragSpellsToSide
+    val dragTo = LocalMainState.current.dragSpellsToSide
+    val dragFrom = LocalMainState.current.dragSpellsFromSide
 
     SidebarSurface(
         {
@@ -73,7 +75,7 @@ fun ShoppingCartDisplay(cart: ShoppingCart, close: () -> Unit) {
         },
         close,
         modifier = Modifier.draggableContainer(
-            dragSet,
+            dragTo,
             onEnter = {
                 isDraggingOver = true
             },
@@ -118,7 +120,10 @@ fun ShoppingCartDisplay(cart: ShoppingCart, close: () -> Unit) {
                         Divider(Modifier.fillMaxWidth().background(Color.LightGray.copy(alpha = 0.3f)))
                     }) {
                         Row(
-                            Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 10.dp)
+                                .draggableItem(dragFrom, it),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             ShortSpellDisplay(it, Modifier.fillMaxWidth(0.9f))
