@@ -10,7 +10,7 @@ exposed = "0.33.1"
 pgjdbc_ng = "0.8.4"
 h2 = "1.4.200"
 
-compose = "1.0.0-alpha3"
+compose = "1.0.0-alpha4-build321"
 
 [libraries]
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }

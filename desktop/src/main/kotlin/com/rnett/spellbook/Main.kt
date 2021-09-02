@@ -10,9 +10,11 @@ import androidx.compose.desktop.DesktopMaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -37,8 +39,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerIcon
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
@@ -73,6 +77,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.splitpane.HorizontalSplitPane
+import org.jetbrains.compose.splitpane.rememberSplitPaneState
+import java.awt.Cursor
 
 enum class Pages {
     Spellbooks, SpellSearch;
@@ -239,7 +246,10 @@ private fun WithMainState(
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(
+    ExperimentalAnimationApi::class, org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi::class,
+    androidx.compose.ui.ExperimentalComposeUiApi::class
+)
 fun main() {
 //    SpellbookDB.initH2()
 
@@ -309,22 +319,46 @@ fun main() {
                                 DraggingSpell(it)
                             }
 
-                            Row(Modifier.fillMaxSize()) {
+                            val splitState = rememberSplitPaneState(0.8f)
 
-                                Row(Modifier.weight(0.8f)) {
+                            HorizontalSplitPane(Modifier, splitState) {
+                                first(200.dp) {
                                     infoState.withNew {
                                         page.show(this@WithMainState)
                                     }
                                 }
+                                if (sidebarPage != null) {
+                                    second(50.dp) {
+                                        AnimatedVisibility(
+                                            sidebarPage != null,
+                                            Modifier.fillMaxWidth().weight(0.2f),
+                                            enter = fadeIn() + expandHorizontally(),
+                                            exit = shrinkHorizontally() + fadeOut()
+                                        ) {
 
-                                AnimatedVisibility(
-                                    sidebarPage != null,
-                                    Modifier.fillMaxWidth().weight(0.2f),
-                                    enter = fadeIn() + expandHorizontally(Alignment.End),
-                                    exit = shrinkHorizontally(Alignment.Start) + fadeOut()
-                                ) {
-                                    sidebarPage?.let {
-                                        Sidebar(sidebarState, it)
+                                            sidebarPage?.let {
+                                                Sidebar(sidebarState, it)
+                                            }
+                                        }
+                                    }
+                                }
+                                splitter {
+                                    visiblePart {
+                                        Box(
+                                            Modifier
+                                                .width(4.dp)
+                                                .fillMaxHeight()
+                                                .background(Color.LightGray)
+                                        )
+                                    }
+                                    handle {
+                                        Box(
+                                            Modifier
+                                                .markAsHandle()
+                                                .pointerIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+                                                .width(12.dp)
+                                                .fillMaxHeight()
+                                        )
                                     }
                                 }
                             }
