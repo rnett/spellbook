@@ -3,7 +3,6 @@ package com.rnett.spellbook.components.spell
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.Text
@@ -15,10 +14,9 @@ import com.rnett.spellbook.components.core.FlowRow
 import com.rnett.spellbook.spell.Spell
 
 @Composable
-fun ShortSpellDisplay(spell: Spell, modifier: Modifier = Modifier) {
+fun ShortSpellDisplay(spell: Spell, modifier: Modifier = Modifier, showLists: Boolean = true) {
     Row(
-        modifier
-            .padding(vertical = 5.dp),
+        modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(Modifier.weight(0.2f).widthIn(min = 200.dp)) {
@@ -34,11 +32,13 @@ fun ShortSpellDisplay(spell: Spell, modifier: Modifier = Modifier) {
             ActionsTag(spell.actions)
         }
 
-        Spacer(Modifier.width(20.dp))
+        if (showLists) {
+            Spacer(Modifier.width(20.dp))
 
-        FlowRow(Modifier.widthIn(min = 50.dp).weight(0.1f), horizontalGap = 10.dp) {
-            spell.lists.forEach {
-                SpellListShortTag(it)
+            FlowRow(Modifier.widthIn(min = 50.dp).weight(0.1f), horizontalGap = 10.dp) {
+                spell.lists.forEach {
+                    SpellListShortTag(it)
+                }
             }
         }
     }

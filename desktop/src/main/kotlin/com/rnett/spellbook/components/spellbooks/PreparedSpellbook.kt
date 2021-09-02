@@ -28,7 +28,7 @@ import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconMaxSetter
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.rememberDragSetState
-import com.rnett.spellbook.components.spell.ActionsTag
+import com.rnett.spellbook.components.spell.ShortSpellDisplay
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spellbook.KnownSpell
@@ -153,16 +153,7 @@ fun PreparedSlot(
 
             Spacer(Modifier.width(20.dp))
 
-            Row(Modifier.weight(0.2f).widthIn(min = 200.dp)) {
-                Text(spell.name)
-            }
-
-            Row(
-                Modifier.height(20.dp).width(40.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ActionsTag(spell.actions)
-            }
+            ShortSpellDisplay(spell, showLists = false)
 
             Spacer(Modifier.weight(0.6f).widthIn(min = 40.dp))
         }

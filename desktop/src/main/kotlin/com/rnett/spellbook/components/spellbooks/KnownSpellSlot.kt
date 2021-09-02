@@ -37,11 +37,9 @@ import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.DragSetState
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
-import com.rnett.spellbook.components.core.FlowRow
 import com.rnett.spellbook.components.draggableContainer
 import com.rnett.spellbook.components.draggableItem
-import com.rnett.spellbook.components.spell.ActionsTag
-import com.rnett.spellbook.components.spell.SpellListShortTag
+import com.rnett.spellbook.components.spell.ShortSpellDisplay
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spellbook.KnownSpell
@@ -160,28 +158,7 @@ fun KnownSpellSlot(
                     Divider(Modifier.fillMaxWidth(0.7f).height(1.dp).background(Color.White))
                 } else {
                     slot.spell?.let { spell ->
-                        Row(
-                            Modifier.widthIn(min = 200.dp)
-                                .weight(0.2f),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(spell.name)
-                        }
-
-                        Row(
-                            Modifier.height(20.dp).width(40.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            ActionsTag(spell.actions)
-                        }
-
-                        Spacer(Modifier.width(30.dp))
-
-                        FlowRow(Modifier.widthIn(min = 50.dp).weight(0.4f), horizontalGap = 10.dp) {
-                            spell.lists.forEach {
-                                SpellListShortTag(it)
-                            }
-                        }
+                        ShortSpellDisplay(spell)
 
                         Spacer(Modifier.weight(0.1f).widthIn(min = 40.dp))
 
