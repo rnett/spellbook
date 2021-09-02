@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import com.rnett.spellbook.LocalMainState
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.CenterPopup
@@ -96,9 +97,14 @@ fun SearchPopup(
     level: LevelKnownSpell,
     setSpell: (Spell) -> Unit
 ) {
+    val globalKeyEvents = LocalMainState.current.globalKeyEvents
     Popup(
         CenterPopup,
         onDismissRequest = { close() },
+        onKeyEvent = {
+            globalKeyEvents.tryEmit(it)
+            false
+        },
         onPreviewKeyEvent = onEscape(close),
         focusable = true
     ) {

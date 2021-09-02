@@ -85,7 +85,7 @@ fun SpellListPage(
 ) {
     Surface(
         color = MainColors.outsideColor.asCompose(),
-        contentColor = MainColors.textColor.asCompose()
+        contentColor = MainColors.textColor.asCompose(),
     ) {
         var loadingSavedFilter by remember { mutableStateOf(false) }
 

@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerIcon
 import androidx.compose.ui.platform.LocalFocusManager
@@ -76,6 +77,8 @@ import com.rnett.spellbook.spellbook.withLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.rememberSplitPaneState
@@ -115,6 +118,7 @@ class ShoppingCart(private val items: MutableList<Spell>) : List<Spell> by items
 class MainState(
     val savedSearchRepo: LocalNamedObjectRepo<SpellFilter>, //TODO just use mutable state + LaunchedEffect keyed on it to save?
     coroutineScope: CoroutineScope,
+    val globalKeyEvents: MutableSharedFlow<KeyEvent>,
     initialPage: Pages
 ) {
 
@@ -231,12 +235,13 @@ sealed class PageState {
 @Composable
 private fun WithMainState(
     savedSearchRepo: LocalNamedObjectRepo<SpellFilter>,
+    globalKeyEvents: MutableSharedFlow<KeyEvent>,
     initialPage: Pages,
     content: @Composable MainState.() -> Unit
 ) {
 
     val scope = rememberCoroutineScope { Dispatchers.Default }
-    val mainState = remember { MainState(savedSearchRepo, scope, initialPage) }
+    val mainState = remember { MainState(savedSearchRepo, scope, globalKeyEvents, initialPage) }
 
     CompositionLocalProvider(
         LocalMainState.provides(mainState)
@@ -258,13 +263,20 @@ fun main() {
         initCaches()
     }
 
-    singleWindowApplication(WindowState(placement = WindowPlacement.Maximized)) {
+    val globalKeyEvents =
+        MutableSharedFlow<KeyEvent>(extraBufferCapacity = 2, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    singleWindowApplication(WindowState(placement = WindowPlacement.Maximized), onKeyEvent = {
+        globalKeyEvents.tryEmit(it)
+        false
+    }) {
         val focusManager = LocalFocusManager.current
         Surface(
-            Modifier.fillMaxSize().clickable(remember { MutableInteractionSource() }, null) {
-                focusManager.clearFocus()
-                //TODO this is a bit of a hack.  I want to lose focus whenever I click outside of the focused element
-            },
+            Modifier.fillMaxSize()
+                .clickable(remember { MutableInteractionSource() }, null) {
+                    focusManager.clearFocus()
+                    //TODO this is a bit of a hack.  I want to lose focus whenever I click outside of the focused element
+                },
             color = MainColors.outsideColor.asCompose(),
             contentColor = MainColors.textColor.asCompose()
         ) {
@@ -274,8 +286,7 @@ fun main() {
 
                         val savedSearchRepo = remember { LocalSavedSearchRepo({}) }
 
-                        WithMainState(savedSearchRepo, Pages.Spellbooks) {
-
+                        WithMainState(savedSearchRepo, globalKeyEvents, Pages.Spellbooks) {
                             Row(Modifier.fillMaxWidth().background(MainColors.spellBodyColor.asCompose())) {
 
                                 TabRow(

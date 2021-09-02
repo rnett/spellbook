@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.text.isTypedEvent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -23,15 +24,28 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.FilterColors
+import com.rnett.spellbook.LocalMainState
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
@@ -67,6 +81,7 @@ import com.rnett.spellbook.spell.School
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spell.SpellType
 import com.rnett.spellbook.spellbook.LevelKnownSpell
+import kotlinx.coroutines.flow.collect
 import kotlin.math.max
 import kotlin.math.min
 
@@ -121,7 +136,7 @@ class ExpansionManager {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 fun SpellFilterEditor(
     filter: SpellFilter,
@@ -129,6 +144,7 @@ fun SpellFilterEditor(
     showReset: Boolean = true,
     update: (SpellFilter) -> Unit
 ) {
+    val nameSearchFocuser = remember { FocusRequester() }
     val scrollState = rememberScrollState()
     Box(Modifier.fillMaxHeight()) {
         Column(
@@ -145,11 +161,37 @@ fun SpellFilterEditor(
 
             val expandedStates = remember { ExpansionManager().apply { onExpanded { clearFocus() } } }
 
-            SmallTextField(filter.name,
-                { update(filter.copy(name = it)) },
+            val globalKeyEvents = LocalMainState.current.globalKeyEvents
+            var textValue by remember { mutableStateOf(TextFieldValue(filter.name)) }
+
+            LaunchedEffect(nameSearchFocuser, filter) {
+                globalKeyEvents.collect {
+                    var newName: String? = null
+                    if (it.isTypedEvent && it.nativeKeyEvent.keyChar.isLetter()) {
+                        newName = filter.name + it.nativeKeyEvent.keyChar
+                    }
+                    if (it.type == KeyEventType.KeyDown && it.key == Key.Backspace && filter.name.isNotEmpty()) {
+                        newName = filter.name.dropLast(1)
+                    }
+                    if (newName != null) {
+                        textValue = TextFieldValue(newName, TextRange(newName.length))
+                        update(filter.copy(name = newName))
+                        nameSearchFocuser.requestFocus()
+                    }
+                }
+            }
+
+            SmallTextField(
+                textValue,
+                {
+                    if (it.text != textValue.text)
+                        update(filter.copy(name = it.text))
+                    textValue = it
+                },
                 Modifier.height(38.dp).fillMaxWidth()
                     .onEscape { clearFocus() }
-                    .onEnter { clearFocus() },
+                    .onEnter { clearFocus() }
+                    .focusRequester(nameSearchFocuser),
                 placeholder = {
                     Text("Name", color = Color.White.copy(alpha = 0.6f))
                 },

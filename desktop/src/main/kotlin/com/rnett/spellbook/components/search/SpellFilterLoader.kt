@@ -40,6 +40,10 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import com.rnett.spellbook.FilterColors
@@ -134,6 +138,12 @@ private fun ManageSavedSearchesPopup(
 ) {
     Popup(
         CenterPopup,
+        onPreviewKeyEvent = {
+            if (it.type == KeyEventType.KeyDown && it.key == Key.Escape) {
+                close()
+                true
+            } else false
+        },
         onDismissRequest = { close() },
         focusable = true
     ) {
