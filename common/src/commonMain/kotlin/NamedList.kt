@@ -15,6 +15,20 @@ interface NamedList<T> : List<Pair<String, T>> {
     fun newName(baseName: String, suffix: (Int) -> String): String
 
     fun indexOf(name: String): Int
+
+    companion object {
+        internal var listFactory: (Int) -> MutableList<Pair<String, *>> = { ArrayList(it) }
+        internal var mapFactory: (Int) -> MutableMap<String, Int> = { LinkedHashMap(it) }
+
+        fun setListFactory(factory: (Int) -> MutableList<Pair<String, *>>) {
+            listFactory = factory
+        }
+
+        fun setMapFactory(factory: (Int) -> MutableMap<String, Int>) {
+            mapFactory = factory
+        }
+
+    }
 }
 
 interface MutableNamedList<T> : NamedList<T> {
@@ -30,12 +44,11 @@ interface MutableNamedList<T> : NamedList<T> {
 }
 
 class NamedListImpl<T>(
-    private val backingList: MutableList<Pair<String, T>> = mutableListOf(),
-    private val indices: MutableMap<String, Int> = LinkedHashMap(backingList.size)
+    @Suppress("UNCHECKED_CAST") private val backingList: MutableList<Pair<String, T>> = NamedList.listFactory(0) as MutableList<Pair<String, T>>,
+    private val indices: MutableMap<String, Int> = NamedList.mapFactory(backingList.size)
 ) : MutableNamedList<T>,
     List<Pair<String, T>> by backingList {
-compan
-    
+
 
     init {
         indices.apply {
@@ -93,9 +106,10 @@ compan
     override fun remove(name: String): T? {
         val idx = indices.remove(name) ?: return null
         val (_, item) = backingList.removeAt(idx)
-        indices.entries.forEach {
-            if (it.value > idx)
-                it.setValue(it.value - 1)
+        indices.keys.forEach {
+            val value = indices.getValue(it)
+            if (value > idx)
+                indices[it] = value - 1
         }
         return item
     }
@@ -103,9 +117,10 @@ compan
     override fun setIndex(name: String, newIndex: Int): Boolean {
         val item = remove(name) ?: return false
         backingList.add(newIndex, name to item)
-        indices.entries.forEach {
-            if (it.value >= newIndex)
-                it.setValue(it.value + 1)
+        indices.keys.forEach {
+            val value = indices.getValue(it)
+            if (value >= newIndex)
+                indices[it] = value + 1
         }
         indices[name] = newIndex
         return true
