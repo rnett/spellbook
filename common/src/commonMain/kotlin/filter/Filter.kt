@@ -8,15 +8,17 @@ enum class Operation {
     AND, OR;
 }
 
-inline fun <T> Collection<T>.reduce(op: Operation, onEmpty: Boolean = true, value: (T) -> Boolean) = if (this.isEmpty()) onEmpty else when (op) {
-    Operation.AND -> all(value)
-    Operation.OR -> any(value)
-}
+inline fun <T> Collection<T>.reduce(op: Operation, onEmpty: Boolean = true, value: (T) -> Boolean) =
+    if (this.isEmpty()) onEmpty else when (op) {
+        Operation.AND -> all(value)
+        Operation.OR -> any(value)
+    }
 
-inline fun Collection<Boolean>.reduce(op: Operation, onEmpty: Boolean = true) = if (this.isEmpty()) onEmpty else when (op) {
-    Operation.AND -> all { it }
-    Operation.OR -> any { it }
-}
+inline fun Collection<Boolean>.reduce(op: Operation, onEmpty: Boolean = true) =
+    if (this.isEmpty()) onEmpty else when (op) {
+        Operation.AND -> all { it }
+        Operation.OR -> any { it }
+    }
 
 inline fun Boolean.negateIf(negate: Boolean) = if (negate) !this else this
 
@@ -43,10 +45,12 @@ class Filter<T : SpellFilterPart> private constructor(
         clauseOperation: Operation,
         outerOperation: Operation,
         negate: Boolean,
-    ) : this(clauses.filter { !it.isEmpty },
+    ) : this(
+        clauses.filter { !it.isEmpty },
         clauseOperation,
         outerOperation,
-        negate)
+        negate
+    )
 
     fun copy(
         clauses: Iterable<FilterClause<T>> = this.clauses,
@@ -61,7 +65,9 @@ class Filter<T : SpellFilterPart> private constructor(
     override fun matches(spell: Spell): Boolean {
         if (clauses.isEmpty())
             return true
-        return clauses.reduce(outerOperation) { it.filters.reduce(clauseOperation) { it.matches(spell) }.negateIf(it.negate) }.negateIf(negate)
+        return clauses.reduce(outerOperation) {
+            it.filters.reduce(clauseOperation) { it.matches(spell) }.negateIf(it.negate)
+        }.negateIf(negate)
     }
 
     override fun equals(other: Any?): Boolean {
