@@ -61,7 +61,7 @@ fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?, expanded: B
 fun SpellDisplay(spell: Spell, setSelectedSpell: ((Spell) -> Unit)?, globalExpanded: Flow<Boolean>) {
     var expanded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(spell) {
+    LaunchedEffect(globalExpanded) {
         globalExpanded.collect {
             expanded = it
         }

@@ -51,6 +51,7 @@ import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.forSlot
 import com.rnett.spellbook.spellbook.withoutAnySlot
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.withContext
 
@@ -77,6 +78,9 @@ sealed class SpellListState {
 }
 
 //TODO option to show hightenable spells at their hightened levels like AoN
+
+//TODO I'd like to be able to tab from search box to first spell, then select it or add to cart.
+//  I want a way to do the filters w/ the keyboard, too
 
 @OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
@@ -106,7 +110,12 @@ fun SpellListPage(
             }
         }
 
-        val globalExpanded = remember { MutableSharedFlow<Boolean>(extraBufferCapacity = 3) }
+        val globalExpanded = remember {
+            MutableSharedFlow<Boolean>(
+                extraBufferCapacity = 3,
+                onBufferOverflow = BufferOverflow.DROP_OLDEST
+            )
+        }
 
         Row {
             Column(Modifier.fillMaxWidth(0.15f)) {

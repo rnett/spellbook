@@ -17,7 +17,6 @@ import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -48,6 +47,7 @@ import com.rnett.spellbook.components.draggableItem
 import com.rnett.spellbook.components.join
 import com.rnett.spellbook.components.spell.ShortSpellDisplay
 import com.rnett.spellbook.ifLet
+import com.rnett.spellbook.pages.LightSidebarDivider
 
 //TODO use inline content elsewhere: https://stackoverflow.com/questions/67605986/add-icon-at-last-word-of-text-in-jetpack-compose
 
@@ -117,7 +117,7 @@ fun ShoppingCartDisplay(cart: ShoppingCart, close: () -> Unit) {
                         .padding(start = 10.dp)
                 ) {
                     cart.join({
-                        Divider(Modifier.fillMaxWidth().background(Color.LightGray.copy(alpha = 0.3f)))
+                        LightSidebarDivider()
                     }) {
                         Row(
                             Modifier
@@ -126,7 +126,7 @@ fun ShoppingCartDisplay(cart: ShoppingCart, close: () -> Unit) {
                                 .draggableItem(dragFrom, it),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            ShortSpellDisplay(it, Modifier.fillMaxWidth(0.9f))
+                            ShortSpellDisplay(it, Modifier.fillMaxWidth(0.9f), showLevel = true)
                             Spacer(Modifier.weight(1f))
                             IconButtonHand(
                                 {

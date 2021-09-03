@@ -1,8 +1,10 @@
 package com.rnett.spellbook.pages
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Divider
 import androidx.compose.material.IconToggleButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -18,11 +20,16 @@ import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.InfoSidebarState
 import com.rnett.spellbook.components.SidebarInfoDisplay
 import com.rnett.spellbook.components.handPointer
+import com.rnett.spellbook.components.sidebar.GroupSidebar
 import com.rnett.spellbook.components.sidebar.ShoppingCartDisplay
+import com.rnett.spellbook.group.SpellGroup
 import com.rnett.spellbook.ifLet
 
 enum class SidebarPage(val humanName: String) {
-    Info("Info"), Cart("Card");
+    Info("Info"),
+    Cart("Cart"),
+    Groups("Groups")
+    ;
 }
 
 @Composable
@@ -72,10 +79,20 @@ fun MainState.CloseSidebarButton() {
     }
 }
 
-data class SidebarState(val info: InfoSidebarState, val cart: ShoppingCart, val close: () -> Unit) {
+@Composable
+fun LightSidebarDivider(width: Float = 1f) {
+    Divider(Modifier.fillMaxWidth(width).background(Color.LightGray.copy(alpha = 0.3f)))
 }
 
-//TODO use.  going to want to make spell search in page form spellbooks
+data class SidebarState(
+    val info: InfoSidebarState,
+    val cart: ShoppingCart,
+    val groups: MutableMap<String, SpellGroup>,
+    val close: () -> Unit
+) {
+}
+
+//TODO add groups
 @Composable
 fun Sidebar(state: SidebarState, page: SidebarPage) {
     when (page) {
@@ -84,6 +101,9 @@ fun Sidebar(state: SidebarState, page: SidebarPage) {
         }
         SidebarPage.Cart -> {
             ShoppingCartDisplay(state.cart, state.close)
+        }
+        SidebarPage.Groups -> {
+            GroupSidebar(state.groups, state.close)
         }
     }
 }

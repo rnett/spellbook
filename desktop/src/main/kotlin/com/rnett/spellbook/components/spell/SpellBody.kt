@@ -132,7 +132,7 @@ private fun SummonsDisplay(summons: Summons) {
         is Summons.Multiple -> {
             var expanded by remember { mutableStateOf(false) }
             Row(
-                Modifier.clickable { expanded = !expanded }.fillMaxWidth(),
+                Modifier.clickable { expanded = !expanded }.padding(vertical = 5.dp).fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Summons", Modifier.padding(bottom = 2.dp), fontWeight = FontWeight.Bold, fontSize = 1.2.em)

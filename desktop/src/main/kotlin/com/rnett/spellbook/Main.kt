@@ -24,8 +24,10 @@ import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeviceHub
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.DeviceHub
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.runtime.Composable
@@ -34,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -60,6 +63,7 @@ import com.rnett.spellbook.data.allSpells
 import com.rnett.spellbook.data.allTargeting
 import com.rnett.spellbook.data.allTraits
 import com.rnett.spellbook.filter.SpellFilter
+import com.rnett.spellbook.group.SpellGroup
 import com.rnett.spellbook.pages.CloseSidebarButton
 import com.rnett.spellbook.pages.Sidebar
 import com.rnett.spellbook.pages.SidebarPage
@@ -83,6 +87,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import java.awt.Cursor
+import kotlin.random.Random
 
 enum class Pages {
     Spellbooks, SpellSearch;
@@ -129,7 +134,30 @@ class MainState(
 
     val shoppingCart = ShoppingCart(mutableStateListOf())
     val infoState = InfoSidebarState({ sidebarPage = SidebarPage.Info }) { sidebarPage = null }
-    val sidebarState = SidebarState(infoState, shoppingCart) { sidebarPage = null }
+
+    private val spellRandom = Random(0)
+
+    private fun spells(n: Int) = List(n) { allSpells[spellRandom.nextInt(allSpells.size)] }
+
+    val groups = mutableStateMapOf<String, SpellGroup>(
+        "Magus Spells" to SpellGroup(
+            spells(10),
+            mapOf("Teleport" to SpellGroup(spells(20)), "Melee" to SpellGroup(spells(20)))
+        ),
+        "Debuf Spells" to SpellGroup(
+            spells(10),
+            mapOf("Fort" to SpellGroup(spells(20)), "Will" to SpellGroup(spells(20)))
+        ),
+        "Sorc Spells" to SpellGroup(
+            spells(10),
+            mapOf("Damage" to SpellGroup(spells(20)), "Util" to SpellGroup(spells(20)))
+        ),
+        "Illusion Spells" to SpellGroup(
+            spells(10),
+            mapOf("Main" to SpellGroup(spells(20)), "Off" to SpellGroup(spells(20)))
+        ),
+    )
+    val sidebarState = SidebarState(infoState, shoppingCart, groups) { sidebarPage = null }
 
     val dragSpellsToSide = DragSetState<Spell>(coroutineScope)
     val dragSpellsFromSide = DragSetState<Spell>(coroutineScope)
@@ -312,6 +340,10 @@ fun main() {
 
                                 Spacer(Modifier.width(10.dp))
 
+                                SidebarToggle(SidebarPage.Groups, Icons.Filled.DeviceHub, Icons.Outlined.DeviceHub)
+
+                                Spacer(Modifier.width(10.dp))
+
                                 SidebarToggle(
                                     SidebarPage.Info,
                                     Icons.Filled.Info,
@@ -335,7 +367,7 @@ fun main() {
                                 DraggingSpell(it)
                             }
 
-                            val splitState = rememberSplitPaneState(0.95f)
+                            val splitState = rememberSplitPaneState(0.92f)
 
                             HorizontalSplitPane(Modifier, splitState) {
                                 first(200.dp) {
