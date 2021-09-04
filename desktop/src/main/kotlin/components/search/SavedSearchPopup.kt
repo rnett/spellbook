@@ -5,7 +5,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,10 +40,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusTarget
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
@@ -111,7 +106,7 @@ fun SavedSearchPage(
                 filters.all.forEach { (name, _) ->
                     var editingName: String? by remember { mutableStateOf(null) }
 
-                    val focusRequester = FocusRequester()
+//                    val focusRequester = FocusRequester()
 
                     fun closeEditing() {
                         editingName?.let {
@@ -121,7 +116,7 @@ fun SavedSearchPage(
                             }
                             editingName = null
                         }
-                        focusRequester.freeFocus()
+//                        focusRequester.freeFocus()
                     }
 
                     Row(
@@ -131,23 +126,23 @@ fun SavedSearchPage(
                                     MainColors.outsideColor.withAlpha(0.85f).asCompose().compositeOver(Color.White)
                                 )
                             }
-                            .focusRequester(focusRequester)
-                            .onFocusChanged {
-                                if (!it.hasFocus) {
-                                    closeEditing()
-                                }
-                            }
-                            .focusTarget()
-                            .combinedClickable(
-                                onClick = {
-                                    focusRequester.requestFocus()
-                                    openFilter = name
-                                },
-                                onDoubleClick = {
-                                    focusRequester.requestFocus()
-                                    editingName = name
-                                }
-                            )
+//                            .focusRequester(focusRequester)
+//                            .onFocusChanged {
+//                                if (!it.hasFocus) {
+//                                    closeEditing()
+//                                }
+//                            }
+//                            .focusTarget()
+//                            .combinedClickable(
+//                                onClick = {
+//                                    focusRequester.requestFocus()
+//                                    openFilter = name
+//                                },
+//                                onDoubleClick = {
+//                                    focusRequester.requestFocus()
+//                                    editingName = name
+//                                }
+//                            )
                             .onEscape {
                                 closeEditing()
                             }.onEnter {

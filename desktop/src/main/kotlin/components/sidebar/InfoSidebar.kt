@@ -29,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -249,13 +248,6 @@ fun SidebarInfoDisplay(sidebarState: InfoSidebarState) {
         }
     }
 
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(data) {
-        if (data is InfoData.Data)
-            focusRequester.requestFocus()
-    }
-
 
     val modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp)
 
@@ -277,8 +269,7 @@ fun SidebarInfoDisplay(sidebarState: InfoSidebarState) {
             }
         } else null,
         sidebarState.closeSidebar,
-        sidebarState.hasCurrent,
-        focusRequester
+        sidebarState.hasCurrent
     ) {
         when (val d = data) {
             is InfoData.Data -> {

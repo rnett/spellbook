@@ -8,8 +8,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.desktop.DesktopMaterialTheme
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,6 +48,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerIcon
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
@@ -84,8 +87,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.splitpane.HorizontalSplitPane
-import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import java.awt.Cursor
 import kotlin.random.Random
 
@@ -301,10 +302,11 @@ fun main() {
         val focusManager = LocalFocusManager.current
         Surface(
             Modifier.fillMaxSize()
-                .clickable(remember { MutableInteractionSource() }, null) {
-                    focusManager.clearFocus()
-                    //TODO this is a bit of a hack.  I want to lose focus whenever I click outside of the focused element
-                },
+//                .clickable(remember { MutableInteractionSource() }, null) {
+//                    focusManager.clearFocus()
+//                    //TODO this is a bit of a hack.  I want to lose focus whenever I click outside of the focused element
+//                }
+            ,
             color = MainColors.outsideColor.asCompose(),
             contentColor = MainColors.textColor.asCompose()
         ) {
@@ -367,46 +369,39 @@ fun main() {
                                 DraggingSpell(it)
                             }
 
-                            val splitState = rememberSplitPaneState(0.92f)
+                            var splitPercent by remember { mutableStateOf(0.92f) }
+                            var width by remember { mutableStateOf(0f) }
+                            val dragState = rememberDraggableState {
+                                splitPercent += it / width
+                            }
 
-                            HorizontalSplitPane(Modifier, splitState) {
-                                first(200.dp) {
+                            Row(Modifier.fillMaxSize().onGloballyPositioned {
+                                width = it.boundsInParent().width
+                            }) {
+                                Row(Modifier.weight(splitPercent)) {
                                     infoState.withNew {
                                         page.show(this@WithMainState)
                                     }
                                 }
                                 if (sidebarPage != null) {
-                                    second(50.dp) {
-                                        AnimatedVisibility(
-                                            sidebarPage != null,
-                                            Modifier.fillMaxWidth().weight(0.2f),
-                                            enter = fadeIn() + expandHorizontally(),
-                                            exit = shrinkHorizontally() + fadeOut()
-                                        ) {
+                                    Box(
+                                        Modifier
+                                            .width(4.dp)
+                                            .fillMaxHeight()
+                                            .background(Color.LightGray)
+                                            .pointerIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+                                            .draggable(dragState, Orientation.Horizontal)
+                                    )
+                                    AnimatedVisibility(
+                                        sidebarPage != null,
+                                        Modifier.fillMaxWidth().weight(1f - splitPercent),
+                                        enter = fadeIn() + expandHorizontally(),
+                                        exit = shrinkHorizontally() + fadeOut()
+                                    ) {
 
-                                            sidebarPage?.let {
-                                                Sidebar(sidebarState, it)
-                                            }
+                                        sidebarPage?.let {
+                                            Sidebar(sidebarState, it)
                                         }
-                                    }
-                                }
-                                splitter {
-                                    visiblePart {
-                                        Box(
-                                            Modifier
-                                                .width(4.dp)
-                                                .fillMaxHeight()
-                                                .background(Color.LightGray)
-                                        )
-                                    }
-                                    handle {
-                                        Box(
-                                            Modifier
-                                                .markAsHandle()
-                                                .pointerIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
-                                                .width(12.dp)
-                                                .fillMaxHeight()
-                                        )
                                     }
                                 }
                             }

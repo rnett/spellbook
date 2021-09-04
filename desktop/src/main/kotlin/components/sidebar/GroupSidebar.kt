@@ -43,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
@@ -194,11 +193,11 @@ private fun GroupDisplay(
 
 @Composable
 fun GroupSidebar(groups: MutableMap<String, SpellGroup>, close: () -> Unit) {
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(groups) {
-        focusRequester.requestFocus()
-    }
+//    val focusRequester = remember { FocusRequester() }
+//
+//    LaunchedEffect(groups) {
+//        focusRequester.requestFocus()
+//    }
 
     val dragTo = LocalMainState.current.dragSpellsToSide
     val dragFrom = LocalMainState.current.dragSpellsFromSide
@@ -231,7 +230,7 @@ fun GroupSidebar(groups: MutableMap<String, SpellGroup>, close: () -> Unit) {
             }
         },
         close,
-        focusRequester = focusRequester
+//        focusRequester = focusRequester
     ) {
         Column(
             Modifier.fillMaxSize()

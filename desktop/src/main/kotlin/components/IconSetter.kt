@@ -42,7 +42,7 @@ fun IconMaxSetter(
     var editing by remember { mutableStateOf(false) }
 
     Row(
-        Modifier.focusableEditable(editing) { editing = it }
+        Modifier
             .onKeyEvent {
                 if (it.type == KeyEventType.KeyDown) {
                     when (it.key) {

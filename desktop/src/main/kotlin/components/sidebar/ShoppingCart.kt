@@ -23,14 +23,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddShoppingCart
 import androidx.compose.material.icons.outlined.RemoveShoppingCart
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
@@ -51,16 +49,8 @@ import com.rnett.spellbook.pages.LightSidebarDivider
 
 //TODO use inline content elsewhere: https://stackoverflow.com/questions/67605986/add-icon-at-last-word-of-text-in-jetpack-compose
 
-//TODO finish
-
-//TODO drag in and drag out
 @Composable
 fun ShoppingCartDisplay(cart: ShoppingCart, close: () -> Unit) {
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(cart) {
-        focusRequester.requestFocus()
-    }
 
     var isDraggingOver by remember { mutableStateOf(false) }
 
@@ -88,8 +78,7 @@ fun ShoppingCartDisplay(cart: ShoppingCart, close: () -> Unit) {
                 cart.add(it)
                 true
             }
-        ),
-        focusRequester = focusRequester
+        )
     ) {
         Row(Modifier.fillMaxSize()
             .ifLet(isDraggingOver) {

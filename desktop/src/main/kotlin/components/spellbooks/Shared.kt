@@ -38,7 +38,6 @@ import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.CenterPopup
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
-import com.rnett.spellbook.components.focusableEditable
 import com.rnett.spellbook.components.handPointer
 import com.rnett.spellbook.components.onEscape
 import com.rnett.spellbook.components.spell.SpellListShortTag
@@ -143,7 +142,7 @@ fun ListsIcon(lists: Set<SpellList>, set: (Set<SpellList>) -> Unit) {
 
     Row(
         Modifier
-            .focusableEditable(editing) { editing = it }
+//            .focusableEditable(editing) { editing = it }
             .combinedClickable(onDoubleClick = {
                 editing = !editing
             }) {}

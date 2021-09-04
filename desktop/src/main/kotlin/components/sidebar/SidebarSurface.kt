@@ -1,6 +1,5 @@
 package com.rnett.spellbook.components.sidebar
 
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -13,14 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
-import com.rnett.spellbook.components.clickableNoIndication
 import com.rnett.spellbook.components.onEscape
 
 //TODO do focus handling, closing at top level
@@ -30,16 +25,12 @@ fun SidebarSurface(
     header: (@Composable BoxScope.() -> Unit)?,
     close: () -> Unit,
     canFocus: Boolean = true,
-    focusRequester: FocusRequester = remember { FocusRequester() },
     modifier: Modifier = Modifier,
     body: @Composable ColumnScope.() -> Unit
 ) {
     Surface(
         modifier
-            .focusRequester(focusRequester)
-            .focusable(canFocus)
-            .onEscape { close() }
-            .clickableNoIndication { focusRequester.requestFocus() },
+            .onEscape { close() },
         contentColor = MainColors.textColor.asCompose(),
         color = MainColors.infoBoxColor.asCompose()
     ) {
