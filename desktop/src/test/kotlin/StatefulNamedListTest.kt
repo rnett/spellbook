@@ -1,19 +1,11 @@
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.snapshots.SnapshotStateMap
-import com.rnett.spellbook.NamedList
 import com.rnett.spellbook.NamedListImpl
-import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class StatefulNamedListTest {
 
-    @Before
-    fun before() {
-        NamedList.setMapFactory { SnapshotStateMap() }
-        NamedList.setListFactory { SnapshotStateList() }
-    }
+    //TODO test serialization
 
     @Test
     fun testBasics() {

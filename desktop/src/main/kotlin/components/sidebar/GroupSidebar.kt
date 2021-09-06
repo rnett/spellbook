@@ -60,6 +60,7 @@ import com.rnett.spellbook.group.SpellGroup
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.pages.LightSidebarDivider
 import com.rnett.spellbook.spell.Spell
+import com.rnett.spellbook.toMutableNamedList
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
@@ -170,7 +171,7 @@ private fun GroupDisplay(
                                 name,
                                 subgroup,
                                 {
-                                    set(group.copy(subgroups = group.subgroups.toMutableMap().apply {
+                                    set(group.copy(subgroups = group.subgroups.toMutableNamedList().apply {
                                         this[name] = it
                                     }))
                                 },

@@ -1,19 +1,21 @@
 package com.rnett.spellbook.spellbook
 
+import com.rnett.spellbook.NamedList
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spell.SpellType
+import com.rnett.spellbook.toMutableNamedList
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Spellbook(
-    val spellcastings: Map<String, Spellcasting<*>>,
-    val focus: FocusSpellcasting? = null,
-    val wands: ItemSpellcasting? = null,
-    val scrolls: ItemSpellcasting? = null,
+    val spellcastings: NamedList<Spellcasting<*>>,
+    val focus: FocusSpellcasting = FocusSpellcasting(),
+    val wands: ItemSpellcasting = ItemSpellcasting(),
+    val scrolls: ItemSpellcasting = ItemSpellcasting(),
 ) {
     fun withSpellcasting(name: String, spellcasting: Spellcasting<*>): Spellbook = copy(
-        spellcastings = spellcastings.toMutableMap().apply {
+        spellcastings = spellcastings.toMutableNamedList().apply {
             this[name] = spellcasting
         }
     )

@@ -67,6 +67,7 @@ import com.rnett.spellbook.data.allTargeting
 import com.rnett.spellbook.data.allTraits
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.group.SpellGroup
+import com.rnett.spellbook.model.mutableStateNamedListOf
 import com.rnett.spellbook.pages.CloseSidebarButton
 import com.rnett.spellbook.pages.Sidebar
 import com.rnett.spellbook.pages.SidebarPage
@@ -143,22 +144,56 @@ class MainState(
     val groups = mutableStateMapOf<String, SpellGroup>(
         "Magus Spells" to SpellGroup(
             spells(10),
-            mapOf("Teleport" to SpellGroup(spells(20)), "Melee" to SpellGroup(spells(20)))
+            namedListOf("Teleport" to SpellGroup(spells(20)), "Melee" to SpellGroup(spells(20)))
         ),
         "Debuf Spells" to SpellGroup(
             spells(10),
-            mapOf("Fort" to SpellGroup(spells(20)), "Will" to SpellGroup(spells(20)))
+            namedListOf("Fort" to SpellGroup(spells(20)), "Will" to SpellGroup(spells(20)))
         ),
         "Sorc Spells" to SpellGroup(
             spells(10),
-            mapOf("Damage" to SpellGroup(spells(20)), "Util" to SpellGroup(spells(20)))
+            namedListOf("Damage" to SpellGroup(spells(20)), "Util" to SpellGroup(spells(20)))
         ),
         "Illusion Spells" to SpellGroup(
             spells(10),
-            mapOf("Main" to SpellGroup(spells(20)), "Off" to SpellGroup(spells(20)))
+            namedListOf("Main" to SpellGroup(spells(20)), "Off" to SpellGroup(spells(20)))
         ),
     )
     val sidebarState = SidebarState(infoState, shoppingCart, groups) { sidebarPage = null }
+
+    val spellbooks = mutableStateNamedListOf(
+        "Main" to Spellbook(
+            namedListOf(
+                "Sorcerer" to Spellcasting.fullCaster(
+                    SpellcastingType.Spontaneous,
+                    setOf(SpellList.Arcane),
+                    4
+                ).let {
+                    it.withLevel(3, it[3].let {
+                        it.withKnown(0, allSpells.first { it.name == "Fireball" })
+                            .withKnown(1, allSpells.first { it.name == "Animate Dead" })
+                    })
+                },
+                "Wizard Archetype" to Spellcasting.archetypeCaster(
+                    SpellcastingType.Prepared,
+                    setOf(SpellList.Arcane)
+                ).let {
+                    it.withLevel(3, it[3].let {
+                        it.withKnown(0, allSpells.first { it.name == "Fireball" })
+                            .withKnown(1, allSpells.first { it.name == "Animate Dead" })
+                    })
+                },
+                "Bard Archetype" to Spellcasting.archetypeCaster(
+                    SpellcastingType.Prepared,
+                    setOf(SpellList.Occult)
+                ),
+                "Oracle Archetype" to Spellcasting.archetypeCaster(
+                    SpellcastingType.Prepared,
+                    setOf(SpellList.Divine)
+                )
+            )
+        )
+    )
 
     val dragSpellsToSide = DragSetState<Spell>(coroutineScope)
     val dragSpellsFromSide = DragSetState<Spell>(coroutineScope)
@@ -219,44 +254,9 @@ sealed class PageState {
 
         @Composable
         override fun show(main: MainState) = with(main) {
-            val spells = mutableStateListOf(
-                "Main" to Spellbook(
-                    mapOf(
-                        "Sorcerer" to Spellcasting.fullCaster(
-                            SpellcastingType.Spontaneous,
-                            setOf(SpellList.Arcane),
-                            4
-                        ).let {
-                            it.withLevel(3, it[3].let {
-                                it.withKnown(0, allSpells.first { it.name == "Fireball" })
-                                    .withKnown(1, allSpells.first { it.name == "Animate Dead" })
-                            })
-                        },
-                        "Wizard Archetype" to Spellcasting.archetypeCaster(
-                            SpellcastingType.Prepared,
-                            setOf(SpellList.Arcane)
-                        ).let {
-                            it.withLevel(3, it[3].let {
-                                it.withKnown(0, allSpells.first { it.name == "Fireball" })
-                                    .withKnown(1, allSpells.first { it.name == "Animate Dead" })
-                            })
-                        },
-                        "Bard Archetype" to Spellcasting.archetypeCaster(
-                            SpellcastingType.Prepared,
-                            setOf(SpellList.Occult)
-                        ),
-                        "Oracle Archetype" to Spellcasting.archetypeCaster(
-                            SpellcastingType.Prepared,
-                            setOf(SpellList.Divine)
-                        )
-                    )
-                )
-            )
             SpellbooksPage(
-                spells
-            ) { idx, new ->
-                spells[idx] = spells[idx].first to new
-            }
+                spellbooks,
+            )
         }
     }
 }

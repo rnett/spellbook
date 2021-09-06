@@ -1,6 +1,7 @@
 package com.rnett.spellbook
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -9,27 +10,42 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = NamedListSerializer::class)
-interface NamedList<T> : List<Pair<String, T>> {
+@Polymorphic
+interface NamedList<out T> : List<Pair<String, T>> {
     operator fun get(name: String): T?
     operator fun contains(name: String): Boolean
     fun newName(baseName: String, suffix: (Int) -> String): String
 
     fun indexOf(name: String): Int
 
-    companion object {
-        internal var listFactory: (Int) -> MutableList<Pair<String, *>> = { ArrayList(it) }
-        internal var mapFactory: (Int) -> MutableMap<String, Int> = { LinkedHashMap(it) }
-
-        fun setListFactory(factory: (Int) -> MutableList<Pair<String, *>>) {
-            listFactory = factory
-        }
-
-        fun setMapFactory(factory: (Int) -> MutableMap<String, Int>) {
-            mapFactory = factory
-        }
-
-    }
+    val keys: List<String>
+    val values: List<T>
 }
+
+inline fun <T, R, D : MutableNamedList<R>> NamedList<T>.mapValuesTo(dest: D, transform: (String, T) -> R): D {
+    forEach { (k, v) ->
+        dest[k] = transform(k, v)
+    }
+    return dest
+}
+
+inline fun <T, R> NamedList<T>.mapValues(transform: (String, T) -> R): NamedList<R> =
+    mapValuesTo(mutableNamedListOf(), transform)
+
+private object EmptyNamedList : NamedList<Nothing>, List<Pair<String, Nothing>> by emptyList() {
+    override fun get(name: String): Nothing? = null
+
+    override fun contains(name: String): Boolean = false
+
+    override fun newName(baseName: String, suffix: (Int) -> String): String = baseName
+
+    override fun indexOf(name: String): Int = -1
+
+    override val keys: List<String> = emptyList()
+    override val values: List<Nothing> = emptyList()
+}
+
+fun <T> emptyNamedList(): NamedList<T> = EmptyNamedList
 
 interface MutableNamedList<T> : NamedList<T> {
     operator fun set(name: String, value: T): T?
@@ -43,9 +59,15 @@ interface MutableNamedList<T> : NamedList<T> {
     fun swap(name1: String, name2: String): Boolean
 }
 
-class NamedListImpl<T>(
-    @Suppress("UNCHECKED_CAST") private val backingList: MutableList<Pair<String, T>> = NamedList.listFactory(0) as MutableList<Pair<String, T>>,
-    private val indices: MutableMap<String, Int> = NamedList.mapFactory(backingList.size)
+fun <T> namedListOf(vararg items: Pair<String, T>): NamedList<T> = NamedListImpl(items.toMutableList())
+
+fun <T> mutableNamedListOf(vararg items: Pair<String, T>): MutableNamedList<T> = NamedListImpl(items.toMutableList())
+
+fun <T> NamedList<T>.toMutableNamedList(): MutableNamedList<T> = mutableNamedListOf<T>(*toTypedArray())
+
+open class NamedListImpl<T>(
+    @Suppress("UNCHECKED_CAST") private val backingList: MutableList<Pair<String, T>> = mutableListOf(),
+    private val indices: MutableMap<String, Int> = LinkedHashMap(backingList.size)
 ) : MutableNamedList<T>,
     List<Pair<String, T>> by backingList {
 
@@ -57,6 +79,12 @@ class NamedListImpl<T>(
             }
         }
     }
+
+    override val keys: List<String>
+        get() = backingList.map { it.first }
+
+    override val values: List<T>
+        get() = backingList.map { it.second }
 
     override fun get(name: String): T? {
         return indices[name]?.let { backingList[it].second }
@@ -137,6 +165,21 @@ class NamedListImpl<T>(
         setIndex(name2, index1)
         setIndex(name1, index2)
         return true
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is NamedList<*>) return false
+        if (size != other.size) return false
+
+        for (i in 0 until size) {
+            if (this[i] != other[i]) return false
+        }
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return backingList.hashCode()
     }
 }
 

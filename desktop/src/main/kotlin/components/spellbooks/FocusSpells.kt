@@ -30,6 +30,7 @@ import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.draggableContainer
 import com.rnett.spellbook.components.spell.ShortSpellDisplay
 import com.rnett.spellbook.ifLet
+import com.rnett.spellbook.pages.SpellSearch
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spell.SpellType
@@ -41,7 +42,7 @@ import com.rnett.spellbook.spellbook.SpellSlotSpec
 fun FocusSpells(
     focusSpellcasting: FocusSpellcasting,
     set: (FocusSpellcasting) -> Unit,
-    searchSlot: (SpellSlotSpec, (Spell) -> Unit) -> Unit
+    searchSlot: SpellSearch
 ) {
     fun spellSlotFor(isCantrip: Boolean) =
         SpellSlotSpec(10, KnownSpell(setOf(SpellList.Focus), SpellType.Focus, isCantrip), false)
