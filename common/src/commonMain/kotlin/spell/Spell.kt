@@ -40,14 +40,11 @@ sealed class TargetingType(open val name: String) : SpellFilterPart {
         object Other : Area("Area")
 
         companion object {
-            val knownTypes by lazy { setOf(Cone, Line, Emanation, Burst, Wall) }
+            val knownTypes: Set<TargetingType.Area> by lazy { setOf(Cone, Line, Emanation, Burst, Wall) }
             operator fun invoke(area: String): List<Area> {
                 val found = knownTypes.filter { it.name.lowercase() in area.lowercase() }
 
-                return if (found.isNotEmpty())
-                    found
-                else
-                    listOf(Other)
+                return found.ifEmpty { listOf(Other) }
             }
         }
     }

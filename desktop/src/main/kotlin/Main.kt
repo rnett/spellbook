@@ -281,6 +281,8 @@ private fun WithMainState(
     }
 }
 
+//TODO rework focus
+
 @OptIn(
     ExperimentalAnimationApi::class, org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi::class,
     androidx.compose.ui.ExperimentalComposeUiApi::class
@@ -372,7 +374,8 @@ fun main() {
                             var splitPercent by remember { mutableStateOf(0.92f) }
                             var width by remember { mutableStateOf(0f) }
                             val dragState = rememberDraggableState {
-                                splitPercent += it / width
+                                val newPercent = splitPercent + (it / width)
+                                splitPercent = newPercent.coerceIn(0.1f, 0.97f)
                             }
 
                             Row(Modifier.fillMaxSize().onGloballyPositioned {
