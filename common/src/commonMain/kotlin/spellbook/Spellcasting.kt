@@ -6,7 +6,12 @@ import com.rnett.spellbook.spell.SpellType
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Spellbook(val spellcastings: Map<String, Spellcasting<*>>) {
+data class Spellbook(
+    val spellcastings: Map<String, Spellcasting<*>>,
+    val focus: FocusSpellcasting? = null,
+    val wands: ItemSpellcasting? = null,
+    val scrolls: ItemSpellcasting? = null,
+) {
     fun withSpellcasting(name: String, spellcasting: Spellcasting<*>): Spellbook = copy(
         spellcastings = spellcastings.toMutableMap().apply {
             this[name] = spellcasting
@@ -26,8 +31,8 @@ sealed class SpellLevel {
     @Serializable
     data class Prepared(val known: List<KnownSpell>, val maxPrepared: Int, val prepared: List<Spell>) : SpellLevel() {
         companion object {
-            fun empty(slots: Int, lists: Set<SpellList>, type: SpellType) = Prepared(
-                List(slots) { KnownSpell(lists, type) },
+            fun empty(slots: Int, lists: Set<SpellList>, isCantrip: Boolean) = Prepared(
+                List(slots) { KnownSpell(lists, SpellType.Spell, isCantrip) },
                 slots,
                 emptyList()
             )
@@ -52,10 +57,10 @@ sealed class SpellLevel {
             copy(known = known.withReplace(i) { it.copy(spell = spell) })
 
         companion object {
-            fun empty(slots: Int, signatures: Int, lists: Set<SpellList>, type: SpellType) = Spontaneous(
+            fun empty(slots: Int, signatures: Int, lists: Set<SpellList>, isCantrip: Boolean) = Spontaneous(
                 signatures,
                 emptySet(),
-                List(slots) { KnownSpell(lists, type) },
+                List(slots) { KnownSpell(lists, SpellType.Spell, isCantrip) },
                 slots
             )
         }
@@ -122,17 +127,17 @@ sealed class Spellcasting<out L : SpellLevel>(val type: SpellcastingType) {
         ): Spellcasting<SpellLevel> {
             return when (type) {
                 SpellcastingType.Prepared -> Prepared(
-                    SpellLevel.Prepared.empty(numCantrips, lists, SpellType.Cantrip),
+                    SpellLevel.Prepared.empty(numCantrips, lists, true),
                     List(9) {
-                        SpellLevel.Prepared.empty(numSlots, lists, SpellType.Spell)
-                    } + SpellLevel.Prepared.empty(numLevel10s, lists, SpellType.Spell),
+                        SpellLevel.Prepared.empty(numSlots, lists, false)
+                    } + SpellLevel.Prepared.empty(numLevel10s, lists, false),
                     lists
                 )
                 SpellcastingType.Spontaneous -> Spontaneous(
-                    SpellLevel.Spontaneous.empty(numCantrips, 0, lists, SpellType.Cantrip),
+                    SpellLevel.Spontaneous.empty(numCantrips, 0, lists, true),
                     List(9) {
-                        SpellLevel.Spontaneous.empty(numSlots, 1, lists, SpellType.Spell)
-                    } + SpellLevel.Spontaneous.empty(numLevel10s, 1, lists, SpellType.Spell),
+                        SpellLevel.Spontaneous.empty(numSlots, 1, lists, false)
+                    } + SpellLevel.Spontaneous.empty(numLevel10s, 1, lists, false),
                     lists
                 )
             }
@@ -146,13 +151,13 @@ sealed class Spellcasting<out L : SpellLevel>(val type: SpellcastingType) {
             val slots = List(6) { if (bredth) 2 else 1 } + listOf(1, 1)
             return when (type) {
                 SpellcastingType.Prepared -> Prepared(
-                    SpellLevel.Prepared.empty(2, lists, SpellType.Cantrip),
-                    slots.map { SpellLevel.Prepared.empty(it, lists, SpellType.Spell) },
+                    SpellLevel.Prepared.empty(2, lists, true),
+                    slots.map { SpellLevel.Prepared.empty(it, lists, false) },
                     lists
                 )
                 SpellcastingType.Spontaneous -> Spontaneous(
-                    SpellLevel.Spontaneous.empty(2, 0, lists, SpellType.Cantrip),
-                    slots.map { SpellLevel.Spontaneous.empty(it, 0, lists, SpellType.Spell) },
+                    SpellLevel.Spontaneous.empty(2, 0, lists, true),
+                    slots.map { SpellLevel.Spontaneous.empty(it, 0, lists, false) },
                     lists
                 )
             }

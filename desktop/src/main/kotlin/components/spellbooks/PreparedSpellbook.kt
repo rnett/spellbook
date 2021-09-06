@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -32,8 +31,8 @@ import com.rnett.spellbook.components.spell.ShortSpellDisplay
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spellbook.KnownSpell
-import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.SpellLevel
+import com.rnett.spellbook.spellbook.SpellSlotSpec
 import com.rnett.spellbook.spellbook.withReplace
 import com.rnett.spellbook.spellbook.without
 
@@ -45,7 +44,7 @@ fun PreparedLevel(
     level: Int,
     setLevel: (SpellLevel.Prepared) -> Unit,
     openInfoDrawer: (Spell) -> Unit,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
+    searchSlot: (SpellSlotSpec, (Spell) -> Unit) -> Unit
 ) {
 
     @Suppress("NAME_SHADOWING") val setLevel = rememberUpdatedState(setLevel)
@@ -154,8 +153,6 @@ fun PreparedSlot(
             Spacer(Modifier.width(20.dp))
 
             ShortSpellDisplay(spell, showLists = false)
-
-            Spacer(Modifier.weight(0.6f).widthIn(min = 40.dp))
         }
     }
 }
@@ -171,7 +168,7 @@ fun PreparedKnownSpell(
     canPrepare: Boolean,
     dragSet: DragSetState<Spell>,
     openInfoDrawer: (Spell) -> Unit,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
+    searchSlot: (SpellSlotSpec, (Spell) -> Unit) -> Unit
 ) {
     KnownSpellSlot(
         slot,

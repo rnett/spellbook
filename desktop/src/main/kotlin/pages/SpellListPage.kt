@@ -47,7 +47,7 @@ import com.rnett.spellbook.db.getSpellsForFilter
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.spell.Spell
-import com.rnett.spellbook.spellbook.LevelKnownSpell
+import com.rnett.spellbook.spellbook.SpellSlotSpec
 import com.rnett.spellbook.spellbook.forSlot
 import com.rnett.spellbook.spellbook.withoutAnySlot
 import kotlinx.coroutines.Dispatchers
@@ -59,17 +59,17 @@ import kotlinx.coroutines.withContext
 sealed class SpellListState {
     abstract var filter: SpellFilter
 
-    abstract val level: LevelKnownSpell?
+    abstract val level: SpellSlotSpec?
 
     class Search(filter: SpellFilter) :
         SpellListState() {
         override var filter: SpellFilter by mutableStateOf(filter)
-        override val level: LevelKnownSpell? = null
+        override val level: SpellSlotSpec? = null
     }
 
     class FindForSpellbook(
         filter: SpellFilter,
-        override val level: LevelKnownSpell,
+        override val level: SpellSlotSpec,
         val setSpell: (Spell) -> Unit
     ) : SpellListState() {
         override var filter: SpellFilter by mutableStateOf(filter.forSlot(level))
@@ -98,7 +98,12 @@ fun SpellListPage(
 
         LaunchedEffect(state.filter) {
             withContext(Dispatchers.IO) {
-                spells = getSpellsForFilter(state.filter)
+                spells = getSpellsForFilter(state.filter).let {
+                    if (state is SpellListState.Search && state.level != null)
+                        it.filter { state.level!!.accepts(it) }
+                    else
+                        it
+                }
             }
         }
 

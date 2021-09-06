@@ -41,7 +41,6 @@ import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.handPointer
 import com.rnett.spellbook.components.onEscape
 import com.rnett.spellbook.components.spell.SpellListShortTag
-import com.rnett.spellbook.filter.LevelFilter
 import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.pages.SpellListPage
@@ -50,7 +49,8 @@ import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spell.SpellType
 import com.rnett.spellbook.spellbook.KnownSpell
-import com.rnett.spellbook.spellbook.LevelKnownSpell
+import com.rnett.spellbook.spellbook.SpellSlotSpec
+import com.rnett.spellbook.spellbook.forSlot
 
 
 @Composable
@@ -79,7 +79,8 @@ fun KnownSpellAdder(
                 set(
                     known + KnownSpell(
                         defaultLists,
-                        if (level == 0) SpellType.Cantrip else SpellType.Spell
+                        SpellType.Spell,
+                        level == 0,
                     )
                 )
             },
@@ -93,7 +94,7 @@ fun KnownSpellAdder(
 @Composable
 fun SearchPopup(
     close: () -> Unit,
-    level: LevelKnownSpell,
+    level: SpellSlotSpec,
     setSpell: (Spell) -> Unit
 ) {
     val globalKeyEvents = LocalMainState.current.globalKeyEvents
@@ -121,7 +122,7 @@ fun SearchPopup(
                 }
                 val state = remember {
                     SpellListState.FindForSpellbook(
-                        SpellFilter(level = LevelFilter(level.level)),
+                        SpellFilter().forSlot(level),
                         level
                     ) {
                         setSpell(it)

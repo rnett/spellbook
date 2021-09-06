@@ -6,7 +6,6 @@ import com.rnett.spellbook.spell.Condition
 import com.rnett.spellbook.spell.Save
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.SpellType
 import com.rnett.spellbook.spell.TargetingType
 import com.rnett.spellbook.spell.TraitKey
 import kotlinx.serialization.Serializable
@@ -117,7 +116,8 @@ class Ander {
         }
     }
 
-    operator fun (() -> Boolean).unaryPlus() = and(this)
+    @Suppress("NOTHING_TO_INLINE")
+    inline operator fun (() -> Boolean).unaryPlus() = and(this)
 
     fun result() = result
 }
@@ -131,10 +131,10 @@ inline fun and(block: Ander.() -> Unit): Boolean =
 data class SpellFilter(
     val name: String = "",
     val lists: Filter<SpellList> = defaultOrFilter(),
+    val isCantrip: Boolean? = null,
     val isFocus: Boolean? = false,
     val attackTypes: Filter<AttackTypeFilter> = defaultOrFilter(),
     val level: LevelFilter = LevelFilter(),
-    val types: Filter<SpellType> = defaultAndFilter(),
     val traits: Filter<TraitKey> = defaultOrFilter(),
     val actions: Filter<ActionFilter> = defaultOrFilter(),
     val hasActionTypes: Set<CastActionType>? = null,
@@ -156,7 +156,7 @@ data class SpellFilter(
             +{ spell.name.contains(name, true) }
             +{ lists.matches(spell) }
             +{ level.matches(spell) }
-            +{ types.matches(spell) }
+            +{ isCantrip.matchesIfNonNull(spell.isCantrip) }
 
             +{ isFocus matchesIfNonNull (spell.isFocus) }
             +{ sustained matchesIfNonNull spell.sustained }

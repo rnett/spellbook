@@ -101,6 +101,7 @@ object Spells : StringIdTable("spells", "name", 200) {
     val level = integer("level").index()
     val aonId = integer("aon_id")
     val type = enumerationByName("type", 20, SpellType::class).index()
+    val isCantrip = bool("is_cantrip")
     val save = enumerationByName("save", 20, Save::class).nullable().index()
     val basicSave = bool("basic_save")
     val requiresAttackRoll = bool("required_attack_roll").index()
@@ -182,6 +183,7 @@ class DbSpell(id: EntityID<String>) : StringEntity(id) {
     var level by Spells.level
     var aonId by Spells.aonId
     var type by Spells.type
+    var isCantrip by Spells.isCantrip
     var save by Spells.save
     var basicSave by Spells.basicSave
     var requiresAttackRoll by Spells.requiresAttackRoll
@@ -335,6 +337,7 @@ class DbSpell(id: EntityID<String>) : StringEntity(id) {
         level,
         aonId,
         type,
+        isCantrip,
         spellLists.toSet(),
         traits.toSet(),
         save,

@@ -44,19 +44,9 @@ import androidx.compose.ui.window.PopupPositionProvider
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.ifLet
-import com.rnett.spellbook.spell.Spell
-import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.SpellType
 import java.awt.Desktop
 import java.net.URI
 
-fun acceptsSpell(level: Int, lists: Set<SpellList>, spell: Spell): Boolean {
-    if (level == 0 && spell.type != SpellType.Cantrip) return false
-    if (level > 0 && spell.level > level) return false
-    if (level > 0 && spell.type == SpellType.Cantrip) return false
-
-    return spell.lists.any { it in lists }
-}
 
 fun openInBrowser(url: String) {
     if (Desktop.isDesktopSupported()) {

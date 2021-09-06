@@ -150,7 +150,7 @@ object TagColors {
     }
 
     fun SpellType(type: SpellType): Color = when (type) {
-        SpellType.Cantrip -> Color("#7C9BA9")
+//        SpellType.Cantrip -> Color("#7C9BA9")
         SpellType.Spell -> Color("#A9709C")
         SpellType.Focus -> SpellList(SpellList.Focus)
     }

@@ -20,8 +20,8 @@ import com.rnett.spellbook.components.DragSetState
 import com.rnett.spellbook.components.spell.DraggingSpell
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.spell.Spell
-import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.SpellLevel
+import com.rnett.spellbook.spellbook.SpellSlotSpec
 import com.rnett.spellbook.spellbook.Spellcasting
 import com.rnett.spellbook.spellbook.SpellcastingType
 import com.rnett.spellbook.spellbook.withLevel
@@ -33,7 +33,7 @@ fun SpellcastingLevel(
     level: Int,
     set: (Spellcasting<*>) -> Unit,
     openInfoDrawer: (Spell) -> Unit,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
+    searchSlot: (SpellSlotSpec, (Spell) -> Unit) -> Unit
 ) {
     @Suppress("NAME_SHADOWING") val set by rememberUpdatedState(set)
     if (level > spellcasting.maxLevel) return

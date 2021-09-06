@@ -18,9 +18,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Divider
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.IconToggleButton
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,13 +40,21 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.zIndex
 import com.rnett.spellbook.MainColors
 import com.rnett.spellbook.asCompose
+import com.rnett.spellbook.components.IconWithTooltip
+import com.rnett.spellbook.components.spellbooks.FocusSpells
 import com.rnett.spellbook.components.spellbooks.SearchPopup
 import com.rnett.spellbook.components.spellbooks.SpellInfoDrawer
+import com.rnett.spellbook.components.spellbooks.SpellbookStyleDivider
 import com.rnett.spellbook.components.spellbooks.SpellcastingHeader
 import com.rnett.spellbook.components.spellbooks.SpellcastingLevel
 import com.rnett.spellbook.spell.Spell
-import com.rnett.spellbook.spellbook.LevelKnownSpell
+import com.rnett.spellbook.spellbook.FocusSpellcasting
+import com.rnett.spellbook.spellbook.ItemSpellcasting
+import com.rnett.spellbook.spellbook.SpellSlotSpec
 import com.rnett.spellbook.spellbook.Spellbook
+import java.lang.Integer.max
+
+const val MAX_CASTINGS_PER_PAGE = 4
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -50,10 +62,9 @@ fun SpellbooksPage(
     spellbooks: List<Pair<String, Spellbook>>,
     set: (Int, Spellbook) -> Unit,
 ) {
-    val castingsPerPage = 3
     var currentSpellbook: Int? by remember { mutableStateOf(if (spellbooks.isNotEmpty()) 0 else null) }
 
-    var currentSearch by remember { mutableStateOf<Pair<LevelKnownSpell, (Spell) -> Unit>?>(null) }
+    var currentSearch by remember { mutableStateOf<Pair<SpellSlotSpec, (Spell) -> Unit>?>(null) }
 
     val scrollStyle = LocalScrollbarStyle.current.let { it.copy(unhoverColor = it.hoverColor, thickness = 12.dp) }
 
@@ -79,9 +90,54 @@ fun SpellbooksPage(
                 if (currentSpellbook != null) {
                     Column(Modifier.padding(top = 10.dp).weight(1f)) {
                         val (name, spellbook) = spellbooks[currentSpellbook!!]
-                        Text(name, fontSize = 2.em, fontWeight = FontWeight.Bold)
+                        val castingsPerPage = max(spellbook.spellcastings.size, MAX_CASTINGS_PER_PAGE)
+                        Row(Modifier.fillMaxWidth()) {
+                            Text(name, fontSize = 2.em, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.weight(0.9f))
 
-                        Divider(Modifier.fillMaxWidth().padding(vertical = 4.dp))
+                            var addDropdownOpen by remember { mutableStateOf(false) }
+
+                            if (spellbook.focus == null || spellbook.scrolls == null || spellbook.wands == null) {
+                                IconToggleButton(addDropdownOpen, { addDropdownOpen = !addDropdownOpen }) {
+                                    IconWithTooltip(Icons.Default.Add, "Add spellcasting")
+                                }
+                                DropdownMenu(addDropdownOpen, { addDropdownOpen = false }) {
+                                    if (spellbook.focus == null) {
+                                        DropdownMenuItem({
+                                            set(currentSpellbook!!, spellbook.copy(focus = FocusSpellcasting()))
+                                        }) {
+                                            Text("Focus")
+                                        }
+                                    }
+                                    if (spellbook.wands == null) {
+                                        DropdownMenuItem({
+                                            set(currentSpellbook!!, spellbook.copy(wands = ItemSpellcasting()))
+                                        }) {
+                                            Text("Wands")
+                                        }
+                                    }
+                                    if (spellbook.scrolls == null) {
+                                        DropdownMenuItem({
+                                            set(currentSpellbook!!, spellbook.copy(scrolls = ItemSpellcasting()))
+                                        }) {
+                                            Text("Scrolls")
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(Modifier.weight(0.1f))
+                        }
+
+                        SpellbookStyleDivider(Modifier.fillMaxWidth().padding(vertical = 4.dp))
+
+                        spellbook.focus?.let {
+                            FocusSpells(
+                                it,
+                                { set(currentSpellbook!!, spellbook.copy(focus = it)) }) { slot, setter ->
+                                currentSearch = slot to setter
+                            }
+                        }
 
                         Row(Modifier.fillMaxWidth().horizontalScroll(horizontalScrollState)) {
                             spellbook.spellcastings.forEach {

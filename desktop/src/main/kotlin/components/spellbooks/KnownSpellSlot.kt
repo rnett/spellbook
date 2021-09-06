@@ -38,14 +38,13 @@ import com.rnett.spellbook.asCompose
 import com.rnett.spellbook.components.DragSetState
 import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconWithTooltip
-import com.rnett.spellbook.components.acceptsSpell
 import com.rnett.spellbook.components.draggableContainer
 import com.rnett.spellbook.components.draggableItem
 import com.rnett.spellbook.components.spell.ShortSpellDisplay
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spellbook.KnownSpell
-import com.rnett.spellbook.spellbook.LevelKnownSpell
+import com.rnett.spellbook.spellbook.SpellSlotSpec
 
 sealed class KnownSpellSlotContext {
     data class Spontaneous(val isSignature: Boolean, val setSignature: (Boolean) -> Unit, val canBeSignature: Boolean) :
@@ -64,7 +63,7 @@ fun KnownSpellSlot(
     context: KnownSpellSlotContext,
     dragSet: DragSetState<Spell>,
     openInfoDrawer: (Spell) -> Unit,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
+    searchSlot: (SpellSlotSpec, (Spell) -> Unit) -> Unit
 ) {
     @Suppress("NAME_SHADOWING") val set by rememberUpdatedState(set)
     key(slot.spell) {
@@ -79,7 +78,7 @@ fun KnownSpellSlot(
             val modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
                 .combinedClickable(onDoubleClick = {
                     if (slot.spell == null)
-                        searchSlot(LevelKnownSpell(level, slot)) {
+                        searchSlot(SpellSlotSpec(level, slot)) {
                             set(slot.copy(spell = it))
                         }
                     else
@@ -103,7 +102,7 @@ fun KnownSpellSlot(
                 }.ifLet(slot.spell == null) {
                     it.draggableContainer(dragSet + LocalMainState.current.dragSpellsFromSide,
                         accepts = {
-                            acceptsSpell(level, slot.lists, it)
+                            slot.accepts(level, it)
                         },
                         onEnter = {
                             draggingOver = true
@@ -160,9 +159,9 @@ fun KnownSpellSlot(
                     Divider(Modifier.fillMaxWidth(0.7f).height(1.dp).background(Color.White))
                 } else {
                     slot.spell?.let { spell ->
-                        ShortSpellDisplay(spell)
+                        ShortSpellDisplay(spell, Modifier.fillMaxWidth(0.8f))
 
-                        Spacer(Modifier.weight(0.1f).widthIn(min = 40.dp))
+                        Spacer(Modifier.weight(1f))
 
                         IconButtonHand({ set(slot.copy(spell = null)) }, Modifier.size(24.dp)) {
                             IconWithTooltip(
@@ -172,25 +171,30 @@ fun KnownSpellSlot(
                             )
                         }
 
-                        Spacer(Modifier.weight(0.2f).widthIn(min = 20.dp))
+                        Spacer(Modifier.weight(2f))
                     }
 
                     if (slot.spell == null) {
-                        Text("Empty")
-                        Spacer(Modifier.width(20.dp))
-                        IconButtonHand(
-                            {
-                                searchSlot(LevelKnownSpell(level, slot)) {
-                                    set(slot.copy(spell = it))
-                                }
-                            },
-                            Modifier.size(24.dp)
-                                .background(SavedSearchColors.searchButtonColor.asCompose(), RoundedCornerShape(5.dp))
-                        ) {
-                            IconWithTooltip(Icons.Default.Search, "Find spell")
+                        Row(Modifier.fillMaxWidth(0.8f)) {
+                            Text("Empty")
+                            Spacer(Modifier.width(20.dp))
+                            IconButtonHand(
+                                {
+                                    searchSlot(SpellSlotSpec(level, slot)) {
+                                        set(slot.copy(spell = it))
+                                    }
+                                },
+                                Modifier.size(24.dp)
+                                    .background(
+                                        SavedSearchColors.searchButtonColor.asCompose(),
+                                        RoundedCornerShape(5.dp)
+                                    )
+                            ) {
+                                IconWithTooltip(Icons.Default.Search, "Find spell")
+                            }
                         }
                         if (context is KnownSpellSlotContext.Prepared) {
-                            Spacer(Modifier.weight(0.67f).widthIn(30.dp))
+                            Spacer(Modifier.weight(1f))
 
                             IconButtonHand(context.remove, Modifier.size(24.dp)) {
                                 IconWithTooltip(
@@ -200,7 +204,7 @@ fun KnownSpellSlot(
                                 )
                             }
 
-                            Spacer(Modifier.weight(0.2f).widthIn(30.dp))
+                            Spacer(Modifier.weight(2f))
                         }
                     }
                 }

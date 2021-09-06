@@ -49,7 +49,6 @@ import com.rnett.spellbook.components.spell.SaveTag
 import com.rnett.spellbook.components.spell.SpellListTag
 import com.rnett.spellbook.components.spell.TargetingTag
 import com.rnett.spellbook.components.spell.TraitTag
-import com.rnett.spellbook.components.spell.TypeTag
 import com.rnett.spellbook.data.allDurations
 import com.rnett.spellbook.data.allTargeting
 import com.rnett.spellbook.data.interestingSpellConditions
@@ -67,8 +66,7 @@ import com.rnett.spellbook.spell.Rarity
 import com.rnett.spellbook.spell.Save
 import com.rnett.spellbook.spell.School
 import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.SpellType
-import com.rnett.spellbook.spellbook.LevelKnownSpell
+import com.rnett.spellbook.spellbook.SpellSlotSpec
 import kotlin.math.max
 import kotlin.math.min
 
@@ -127,7 +125,7 @@ class ExpansionManager {
 @Composable
 fun SpellFilterEditor(
     filter: SpellFilter,
-    presetSlot: LevelKnownSpell? = null,
+    presetSlot: SpellSlotSpec? = null,
     showReset: Boolean = true,
     update: (SpellFilter) -> Unit
 ) {
@@ -195,20 +193,16 @@ fun SpellFilterEditor(
                     SpellListTag(it)
                 }
 
+                OptionalBoolean(filter.isCantrip, { update(filter.copy(isCantrip = it)) }) {
+                    Text("Cantrip")
+                }
+
                 OptionalBoolean(filter.isFocus, { update(filter.copy(isFocus = it)) }) {
                     Text("Focus")
                 }
-
-                FilterEditor(filter.types,
-                    SpellType.values().toSet(),
-                    { update(filter.copy(types = it)) },
-                    expandedStates.component(),
-                    { Text("Spell Type") }) {
-                    TypeTag(it)
-                }
             }
 
-            val levelLimit = presetSlot?.level ?: 10
+            val levelLimit = presetSlot?.maxLevel ?: 10
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Min Level")

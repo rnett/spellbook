@@ -24,8 +24,8 @@ import com.rnett.spellbook.components.rememberDragSetState
 import com.rnett.spellbook.spell.Spell
 import com.rnett.spellbook.spell.SpellList
 import com.rnett.spellbook.spellbook.KnownSpell
-import com.rnett.spellbook.spellbook.LevelKnownSpell
 import com.rnett.spellbook.spellbook.SpellLevel
+import com.rnett.spellbook.spellbook.SpellSlotSpec
 import com.rnett.spellbook.spellbook.withReplace
 
 
@@ -36,7 +36,7 @@ fun SpontaneousLevel(
     level: Int,
     set: (SpellLevel.Spontaneous) -> Unit,
     openInfoDrawer: (Spell) -> Unit,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit,
+    searchSlot: (SpellSlotSpec, (Spell) -> Unit) -> Unit,
 ) {
     @Suppress("NAME_SHADOWING") val set by rememberUpdatedState(set)
     val dragSet = rememberDragSetState<Spell>()
@@ -110,7 +110,7 @@ fun SpontaneousSlot(
     canBeSignature: Boolean,
     dragSet: DragSetState<Spell>,
     openInfoDrawer: (Spell) -> Unit,
-    searchSlot: (LevelKnownSpell, (Spell) -> Unit) -> Unit
+    searchSlot: (SpellSlotSpec, (Spell) -> Unit) -> Unit
 ) {
     KnownSpellSlot(
         slot,

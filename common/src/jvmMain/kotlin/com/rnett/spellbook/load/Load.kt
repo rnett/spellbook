@@ -84,7 +84,7 @@ val spoilerRegexes = listOf(
     Regex("This Spell may contain spoilers from the ([\\w ]+)", RegexOption.DOT_MATCHES_ALL)
 )
 
-fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): SpellData? {
+fun parse(doc: Document, conditions: Set<String>, focusSpellUrls: Set<String>, seenSpells: Set<String>): SpellData? {
     val name = doc.select("h1.title").textNodes().single().text()
 
     if (name in seenSpells)
@@ -118,11 +118,7 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         val fullText = doc.select("#$mainContentId").text()
         val fullTextLower = fullText.lowercase(Locale.getDefault())
 
-        val type = when {
-            "Cantrip" in levelStr -> SpellType.Cantrip
-            "Focus" in levelStr -> SpellType.Focus
-            else -> SpellType.Spell
-        }
+        val type = if (doc.baseUri() in focusSpellUrls) SpellType.Focus else SpellType.Spell
 
         val level = levelStr.substringAfter(" ").toInt()
 
@@ -142,6 +138,8 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
         if (traits.none { it in Rarity }) {
             traits += Rarity.Common
         }
+
+        val isCantrip = traits.any { it.name == "Cantrip" }
 
         var basicSave: Boolean = false
         var save: Save? = null
@@ -355,6 +353,7 @@ fun parse(doc: Document, conditions: Set<String>, seenSpells: Set<String>): Spel
                 level,
                 aonId,
                 type,
+                isCantrip,
                 lists.toSet(),
                 emptySet(),
                 save,
@@ -394,6 +393,7 @@ suspend fun doInserts(spells: List<SpellData>) {
                 this.level = it.level
                 this.aonId = it.aonId
                 this.type = it.type
+                this.isCantrip = it.isCantrip
                 this.save = it.save
                 this.basicSave = it.basicSave
                 this.requiresAttackRoll = it.requiresAttackRoll
@@ -536,6 +536,7 @@ suspend fun spellsFromPage(url: String) = loadPage(url).select("a")
 suspend fun loadSpells(
     spells: Collection<String>,
     conditions: Set<String>,
+    focusSpellUrls: Set<String>,
     bufferPages: Int = 500,
     batchUpdates: Int = 50
 ) {
@@ -566,7 +567,7 @@ suspend fun loadSpells(
 
         spellPages.collect { doc ->
 
-            val spell = parse(doc, conditions, seenSpells)
+            val spell = parse(doc, conditions, focusSpellUrls, seenSpells)
             if (spell != null) {
                 seenSpells += spell.spell.name
                 foundSpells.withLock { foundSpells ->
@@ -633,8 +634,11 @@ fun main(args: Array<String>): Unit = runBlocking {
     val traits = loadTraits()
     insertTraits(traits)
 
-    parse(loadPage("https://2e.aonprd.com/Spells.aspx?ID=968"), conditions.map { it.name }.toSet(), emptySet())
+//    parse(loadPage("https://2e.aonprd.com/Spells.aspx?ID=968"), conditions.map { it.name }.toSet(), emptySet())
     //TODO some spells have multiple versions, only use the latest
+
+    val focusSpellUrls = spellsFromPage("https://2e.aonprd.com/Spells.aspx?Focus=true&Tradition=0").toSet()
+
     val pages = listOf(
         "https://2e.aonprd.com/Spells.aspx?Tradition=1",
         "https://2e.aonprd.com/Spells.aspx?Tradition=2",
@@ -643,6 +647,6 @@ fun main(args: Array<String>): Unit = runBlocking {
         "https://2e.aonprd.com/SpellLists.aspx?Tradition=5",
         "https://2e.aonprd.com/Spells.aspx?Focus=true&Tradition=0"
     )
-    loadSpells(pages.flatMap { spellsFromPage(it) }.toSet(), conditions.map { it.name }.toSet())
+    loadSpells(pages.flatMap { spellsFromPage(it) }.toSet(), conditions.map { it.name }.toSet(), focusSpellUrls)
     addToSpellList("https://2e.aonprd.com/SpellLists.aspx?Tradition=5", SpellList.Elemental)
 }

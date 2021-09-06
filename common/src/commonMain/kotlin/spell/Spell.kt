@@ -104,7 +104,7 @@ enum class CastActionType {
 
 @Serializable
 enum class SpellType(val longName: String) : SpellFilterPart {
-    Cantrip("cantrip"), Spell("spell"), Focus("focus spell");
+    Spell("spell"), Focus("focus spell");
 
     override fun matches(spell: com.rnett.spellbook.spell.Spell): Boolean = this == spell.type
 }
@@ -121,6 +121,7 @@ data class Spell(
     val level: Int,
     override val aonId: Int,
     val type: SpellType,
+    val isCantrip: Boolean,
     val lists: Set<SpellList>,
     val traits: Set<Trait>,
     val save: Save?,
@@ -156,6 +157,8 @@ data class Spell(
     val targeting by lazy {
         TargetingType.targetingTypes(area, targets)
     }
+
+    fun isInLists(lists: Iterable<SpellList>) = lists.any { it in this.lists }
 
     override fun compareTo(other: Spell): Int = spellComparator.compare(this, other)
     override val aonPage: String = "Spells"
