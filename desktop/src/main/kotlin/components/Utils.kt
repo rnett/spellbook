@@ -16,6 +16,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -127,7 +128,9 @@ fun <T> Iterable<T>.join(separator: @Composable () -> Unit, render: @Composable 
     forEach {
         if (!first)
             separator()
-        render(it)
+        key(it) {
+            render(it)
+        }
         first = false
     }
 }
@@ -138,7 +141,9 @@ fun repeatJoin(n: Int, separator: @Composable () -> Unit, render: @Composable (I
     repeat(n) {
         if (!first)
             separator()
-        render(it)
+        key(it) {
+            render(it)
+        }
         first = false
     }
 }

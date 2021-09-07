@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,24 +39,46 @@ fun SpellcastingLevel(
     @Suppress("NAME_SHADOWING") val set by rememberUpdatedState(set)
     if (level > spellcasting.maxLevel) return
 
-    if (spellcasting.type == SpellcastingType.Spontaneous) {
-        SpontaneousLevel(
-            spellcasting[level] as SpellLevel.Spontaneous,
-            spellcasting.defaultLists,
-            level,
-            { set(spellcasting.withLevel(level, it)) },
-            openInfoDrawer,
-            searchSlot
-        )
-    } else {
-        PreparedLevel(
-            spellcasting[level] as SpellLevel.Prepared,
-            spellcasting.defaultLists,
-            level,
-            { set(spellcasting.withLevel(level, it)) },
-            openInfoDrawer,
-            searchSlot
-        )
+    when (spellcasting.type) {
+        SpellcastingType.Spontaneous -> {
+            val spellLevel = spellcasting[level] as SpellLevel.Spontaneous
+            key(spellcasting, spellcasting.defaultLists, level) {
+                SpontaneousLevel(
+                    spellLevel,
+                    spellcasting.defaultLists,
+                    level,
+                    { set(spellcasting.withLevel(level, it)) },
+                    openInfoDrawer,
+                    searchSlot
+                )
+            }
+        }
+        SpellcastingType.Prepared -> {
+            val spellLevel = spellcasting[level] as SpellLevel.Prepared
+            key(spellcasting, spellcasting.defaultLists, level) {
+                PreparedLevel(
+                    spellLevel,
+                    spellcasting.defaultLists,
+                    level,
+                    { set(spellcasting.withLevel(level, it)) },
+                    openInfoDrawer,
+                    searchSlot
+                )
+            }
+        }
+        SpellcastingType.Item -> {
+            val spellLevel = spellcasting[level] as SpellLevel.Item
+            key(spellcasting, spellcasting.defaultLists, level) {
+                ItemLevel(
+                    spellLevel,
+                    spellcasting.defaultLists,
+                    level,
+                    { set(spellcasting.withLevel(level, it)) },
+                    openInfoDrawer,
+                    searchSlot
+                )
+            }
+        }
     }
 }
 
@@ -68,18 +91,18 @@ abstract class SpellcastingLevelScope(private val columnScope: ColumnScope) : Co
 }
 
 @Composable
-fun SpellbookStyleDivider(modifier: Modifier = Modifier.fillMaxWidth()) {
-    Divider(modifier, color = FilterColors.dividerColor.asCompose().copy(alpha = 0.4f))
+fun SpellbookStyleDivider(modifier: Modifier = Modifier.fillMaxWidth(), alpha: Float = 0.4f) {
+    Divider(modifier, color = FilterColors.dividerColor.asCompose().copy(alpha = alpha))
 }
 
 @Composable
 inline fun SpellcastingLevelDisplay(
-    dragSet: DragSetState<Spell>,
+    dragSet: DragSetState<Spell>?,
     headerContent: @Composable RowScope.() -> Unit,
     bodyContent: @Composable SpellcastingLevelScope.() -> Unit
 ) {
     Column(Modifier.fillMaxWidth()) {
-        dragSet.display {
+        dragSet?.display {
             DraggingSpell(it)
         }
 

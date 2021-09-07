@@ -1,6 +1,7 @@
 package com.rnett.spellbook.components.spellbooks
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +29,7 @@ import com.rnett.spellbook.components.IconButtonHand
 import com.rnett.spellbook.components.IconSetter
 import com.rnett.spellbook.components.IconWithTooltip
 import com.rnett.spellbook.components.draggableContainer
+import com.rnett.spellbook.components.join
 import com.rnett.spellbook.components.spell.ShortSpellDisplay
 import com.rnett.spellbook.ifLet
 import com.rnett.spellbook.pages.SpellSearch
@@ -42,7 +44,8 @@ import com.rnett.spellbook.spellbook.SpellSlotSpec
 fun FocusSpells(
     focusSpellcasting: FocusSpellcasting,
     set: (FocusSpellcasting) -> Unit,
-    searchSlot: SpellSearch
+    searchSlot: SpellSearch,
+    showInfo: (Spell) -> Unit,
 ) {
     fun spellSlotFor(isCantrip: Boolean) =
         SpellSlotSpec(10, KnownSpell(setOf(SpellList.Focus), SpellType.Focus, isCantrip), false)
@@ -61,19 +64,21 @@ fun FocusSpells(
             "Cantrips",
             focusSpellcasting.cantrips,
             spellSlotFor(true),
-            { set(focusSpellcasting.copy(cantrips = it)) }) { set ->
-            searchSlot(spellSlotFor(true), set)
-        }
+            { set(focusSpellcasting.copy(cantrips = it)) },
+            { searchSlot(spellSlotFor(true), it) },
+            showInfo
+        )
 
-        SpellbookStyleDivider(Modifier.fillMaxWidth())
+
 
         FocusSpellList(
             "Spells",
             focusSpellcasting.spells,
             spellSlotFor(false),
-            { set(focusSpellcasting.copy(spells = it)) }) { set ->
-            searchSlot(spellSlotFor(false), set)
-        }
+            { set(focusSpellcasting.copy(spells = it)) },
+            { searchSlot(spellSlotFor(false), it) },
+            showInfo
+        )
 
 
     }
@@ -85,12 +90,16 @@ private fun FocusSpellList(
     list: Set<Spell>,
     slotSpec: SpellSlotSpec,
     set: (Set<Spell>) -> Unit,
-    search: ((Spell) -> Unit) -> Unit
+    search: ((Spell) -> Unit) -> Unit,
+    showInfo: (Spell) -> Unit,
 ) {
     val dragSet = LocalMainState.current.dragSpellsFromSide
     var isDraggingOver by remember { mutableStateOf(false) }
 
-    Row(Modifier.fillMaxWidth()
+    //TODO lines between spells, open bottom info bar on click
+    //TODO line under name
+
+    Column(Modifier.fillMaxWidth()
         .draggableContainer(dragSet,
             onEnter = { isDraggingOver = true },
             onLeave = { isDraggingOver = false },
@@ -102,35 +111,50 @@ private fun FocusSpellList(
         )
         .ifLet(isDraggingOver) {
             it.background(Color.White.copy(alpha = 0.3f))
-        },
-        verticalAlignment = Alignment.CenterVertically
+        }, horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(name, Modifier.weight(0.7f), fontWeight = FontWeight.Bold, fontSize = 1.2.em)
-        IconButtonHand(
-            {
-                search {
-                    set(list + it)
-                }
-            },
-            Modifier.size(28.dp)
-        ) {
-            IconWithTooltip(Icons.Default.Add, "Add")
-        }
-        Spacer(Modifier.weight(0.2f))
-    }
 
-    list.forEach {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            ShortSpellDisplay(it, Modifier.fillMaxWidth(0.9f))
-            IconButtonHand({
-                set(list - it)
-            }, Modifier.size(24.dp)) {
-                IconWithTooltip(
-                    Icons.Outlined.DeleteForever,
-                    "Remove",
-                    tint = Color.Red.copy(alpha = 0.7f)
-                )
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(name, Modifier.weight(0.7f), fontWeight = FontWeight.Bold, fontSize = 1.2.em)
+            IconButtonHand(
+                {
+                    search {
+                        set(list + it)
+                    }
+                },
+                Modifier.size(28.dp)
+            ) {
+                IconWithTooltip(Icons.Default.Add, "Add")
+            }
+            Spacer(Modifier.weight(0.2f))
+        }
+
+        SpellbookStyleDivider(Modifier.fillMaxWidth())
+        Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp)) {
+            list.join({ }) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { showInfo(it) }.padding(vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ShortSpellDisplay(it, Modifier.fillMaxWidth(0.9f), showLists = false, showLevel = true)
+                    IconButtonHand(
+                        { set(list - it) },
+                        Modifier.size(24.dp)
+                    ) {
+                        IconWithTooltip(
+                            Icons.Outlined.DeleteForever,
+                            "Remove",
+                            tint = Color.Red.copy(alpha = 0.7f)
+                        )
+                    }
+                }
             }
         }
+
+        if (list.isNotEmpty())
+            SpellbookStyleDivider(Modifier.fillMaxWidth())
     }
 }

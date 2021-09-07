@@ -75,7 +75,7 @@ fun KnownSpellSlot(
             it.background(Color.White.copy(alpha = 0.2f))
         }) {
 
-            val modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
+            val modifier = Modifier.fillMaxWidth()
                 .combinedClickable(onDoubleClick = {
                     if (slot.spell == null)
                         searchSlot(SpellSlotSpec(level, slot)) {
@@ -114,7 +114,7 @@ fun KnownSpellSlot(
                         set(slot.copy(spell = it))
                         true
                     }
-                }
+                }.padding(vertical = 3.dp)
 
             Row(modifier, verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.width(15.dp), verticalAlignment = Alignment.CenterVertically) {

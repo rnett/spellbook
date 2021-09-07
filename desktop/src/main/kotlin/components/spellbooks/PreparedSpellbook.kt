@@ -37,6 +37,8 @@ import com.rnett.spellbook.spellbook.withReplace
 import com.rnett.spellbook.spellbook.without
 
 
+//TODO allow having multiple loadouts for prepared spells
+
 @Composable
 fun PreparedLevel(
     spells: SpellLevel.Prepared,

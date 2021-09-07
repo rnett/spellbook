@@ -10,9 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Spellbook(
     val spellcastings: NamedList<Spellcasting<*>>,
-    val focus: FocusSpellcasting = FocusSpellcasting(),
-    val wands: ItemSpellcasting = ItemSpellcasting(),
-    val scrolls: ItemSpellcasting = ItemSpellcasting(),
+    val focus: FocusSpellcasting = FocusSpellcasting()
 ) {
     fun withSpellcasting(name: String, spellcasting: Spellcasting<*>): Spellbook = copy(
         spellcastings = spellcastings.toMutableNamedList().apply {
@@ -22,7 +20,7 @@ data class Spellbook(
 }
 
 enum class SpellcastingType {
-    Prepared, Spontaneous;
+    Prepared, Spontaneous, Item;
 }
 
 @Serializable
@@ -65,6 +63,18 @@ sealed class SpellLevel {
                 List(slots) { KnownSpell(lists, SpellType.Spell, isCantrip) },
                 slots
             )
+        }
+    }
+
+    @Serializable
+    data class Item(val spells: Map<Spell, ItemCounts>) : SpellLevel() {
+        override fun withKnown(i: Int, spell: Spell): SpellLevel {
+            if (spell in spells)
+                return this
+            else
+                return Item(spells.toMutableMap().apply {
+                    this[spell] = ItemCounts(0, 1)
+                })
         }
     }
 }
@@ -119,6 +129,14 @@ sealed class Spellcasting<out L : SpellLevel>(val type: SpellcastingType) {
         override val defaultLists: Set<SpellList>
     ) : Spellcasting<SpellLevel.Spontaneous>(SpellcastingType.Spontaneous)
 
+    @Serializable
+    data class Item(
+        override val levels: List<SpellLevel.Item>,
+    ) : Spellcasting<SpellLevel.Item>(SpellcastingType.Item) {
+        override val cantrips: SpellLevel.Item = SpellLevel.Item(emptyMap())
+        override val defaultLists: Set<SpellList> = emptySet()
+    }
+
     companion object {
         fun fullCaster(
             type: SpellcastingType,
@@ -142,6 +160,7 @@ sealed class Spellcasting<out L : SpellLevel>(val type: SpellcastingType) {
                     } + SpellLevel.Spontaneous.empty(numLevel10s, 1, lists, false),
                     lists
                 )
+                else -> error("Can't create full caster of type $type")
             }
         }
 
@@ -162,6 +181,7 @@ sealed class Spellcasting<out L : SpellLevel>(val type: SpellcastingType) {
                     slots.map { SpellLevel.Spontaneous.empty(it, 0, lists, false) },
                     lists
                 )
+                else -> error("Can't create full caster of type $type")
             }
         }
     }
