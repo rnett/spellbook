@@ -12,9 +12,24 @@ pluginManagement {
     }
 }
 
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
 rootProject.name = "spellbook"
 
-include("common", "desktop", "extractor")
+include(
+    "common",
+    "desktop",
+    "extractor",
+    "shared",
+    "app",
+    "app:desktop",
+    "app:web"
+)
 
 
 

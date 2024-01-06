@@ -7,3 +7,7 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     implementation(libs.bundles.kotlinx.serialization)
 }
+
+kotlin {
+    jvmToolchain(21)
+}
