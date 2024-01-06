@@ -1,8 +1,32 @@
-package com.rnett.spellbook.extractor
+package com.rnett.spellbook.extractor.advanced.damage
 
+import com.rnett.spellbook.extractor.advanced.CheckDegreesOfSuccess
+import com.rnett.spellbook.extractor.advanced.Heightening
+import com.rnett.spellbook.extractor.basic.Check
 import kotlinx.serialization.Serializable
 
-// Types used for defining the damage done by a spell
+/*
+Types used for defining the damage done by a spell
+
+Note that damage dice shouldn't be changed when multiplying by a number for the degree of success - use the `multiple` field instead.
+This is important because those multiples affect the final damage done after rolling the damage dice, not the number of dice rolled.
+ */
+
+/**
+ * The damage done by a spell, including how heightening affects it
+ *
+ * @property checks The checks made when doing damage
+ * @property damageSources The damage sources of the spell. This should include all possible damage sources, including those that only apply when heightened
+ * @property baseDamage The damage done at the base level of the spell
+ * @property heightenedDamage The effects of heightening on the damage done
+ */
+@Serializable
+data class SpellDamage(
+    val checks: List<Check>,
+    val damageSources: Map<DamageSourceId, DamageSource>,
+    val baseDamage: CheckDegreesOfSuccess<AppliedDamages>,
+    val heightenedDamage: Heightening<AppliedDamages>
+)
 
 /**
  * The ID of a damage source.
@@ -12,7 +36,8 @@ import kotlinx.serialization.Serializable
  * Should generally start at 0 and increase for each new source of damage.
  */
 @Serializable
-data class DamageSourceId(val id: Int)
+@JvmInline
+value class DamageSourceId(val id: Int)
 
 /**
  * Some damage applied by a spell.

@@ -2,18 +2,16 @@ package com.rnett.spellbook.extractor
 
 import kotlinx.serialization.Serializable
 
-// The overall spell class
-
 /**
- * A Pathfinder 2E spell.
+ * Metadata about how the spell was extracted or converted by you.
  *
- * @property metadata The metadata describing the spell
- * @property effects The effects the spell has when cast
- * @property heightening The way the spell is heightened.
+ * @property fullyCaptured Whether the spell has been fully captured in the JSON.  False if there are parts of the spell or its effects that are unable to be represented here.
+ * @property caveats A description about any caveats you have about the spell's representation in JSON.
+ * @property confidence Your confidence that the spell's JSON is fully correct.  Should be a number from 1 (low confidence) to 10 (high confidence).
  */
 @Serializable
-data class Spell(
-    val metadata: SpellMetadata,
-    val effects: SpellEffects,
-    val heightening: Heightening
+data class ExtractionMetadata(
+    val fullyCaptured: Boolean,
+    val caveats: String,
+    val confidence: Int
 )
