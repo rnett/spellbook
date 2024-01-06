@@ -1,5 +1,3 @@
-enableFeaturePreview("VERSION_CATALOGS")
-
 pluginManagement {
     resolutionStrategy {
         eachPlugin {
@@ -10,14 +8,13 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
-        jcenter()
         maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
     }
 }
 
 rootProject.name = "spellbook"
 
-include("common", "desktop")
+include("common", "desktop", "extractor")
 
 
 

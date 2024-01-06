@@ -17,10 +17,10 @@ fun ItemLevel(
     searchSlot: (SpellSlotSpec, (Spell) -> Unit) -> Unit,
 ) {
     SpellcastingLevelDisplay(null, {
-
+        Text("Level $level")
     }) {
         spells.spells.toList().sortedBy { it.first.name }.forEach {
-            Text("Level $level")
+            //TODO finish
         }
     }
 }

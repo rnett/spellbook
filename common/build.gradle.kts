@@ -15,8 +15,7 @@ kotlin {
     jvm {
         compilations.all {
             kotlinOptions {
-                jvmTarget = "11"
-                useIR = true
+                jvmTarget = "21"
             }
         }
     }
@@ -73,9 +72,9 @@ kotlin {
         }
         all {
             languageSettings.apply {
-                useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
-                useExperimentalAnnotation("kotlin.time.ExperimentalTime")
-                useExperimentalAnnotation("kotlin.RequiresOptIn")
+//                useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
+//                useExperimentalAnnotation("kotlin.time.ExperimentalTime")
+//                useExperimentalAnnotation("kotlin.RequiresOptIn")
             }
         }
     }

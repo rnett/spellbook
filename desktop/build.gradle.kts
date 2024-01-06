@@ -1,4 +1,3 @@
-import org.jetbrains.compose.compose
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -11,9 +10,14 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.preview)
     implementation(compose.materialIconsExtended)
-    implementation(compose.desktop.components.splitPane)
+//    implementation(compose.desktop.components.splitPane)
 
     implementation(project(":common"))
+}
+
+compose {
+    kotlinCompilerPlugin.set(dependencies.compiler.forKotlin("1.9.21"))
+    kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=1.9.22")
 }
 
 tasks.processResources {
