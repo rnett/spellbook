@@ -1,9 +1,9 @@
 package com.rnett.spellbook.extractor.advanced.conditions
 
+import com.rnett.spellbook.extractor.advanced.Check
 import com.rnett.spellbook.extractor.advanced.CheckDegreesOfSuccess
 import com.rnett.spellbook.extractor.advanced.Heightening
 import com.rnett.spellbook.extractor.advanced.damage.AppliedDamages
-import com.rnett.spellbook.extractor.basic.Check
 import kotlinx.serialization.Serializable
 
 /*
