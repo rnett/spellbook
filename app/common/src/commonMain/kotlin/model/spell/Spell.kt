@@ -1,6 +1,6 @@
-package com.rnett.spellbook.spell
+package com.rnett.spellbook.model.spell
 
-import com.rnett.spellbook.filter.SpellFilterPart
+import com.rnett.spellbook.model.filter.SpellFilterPart
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -40,7 +40,7 @@ sealed class TargetingType(open val name: String) : SpellFilterPart {
         object Other : Area("Area")
 
         companion object {
-            val knownTypes: Set<TargetingType.Area> by lazy { setOf(Cone, Line, Emanation, Burst, Wall) }
+            val knownTypes: Set<Area> by lazy { setOf(Cone, Line, Emanation, Burst, Wall) }
             operator fun invoke(area: String): List<Area> {
                 val found = knownTypes.filter { it.name.lowercase() in area.lowercase() }
 
@@ -104,9 +104,9 @@ enum class CastActionType {
 
 @Serializable
 enum class SpellType(val longName: String) : SpellFilterPart {
-    Spell("spell"), Focus("focus spell");
+    Spell("model/spell"), Focus("focus spell");
 
-    override fun matches(spell: com.rnett.spellbook.spell.Spell): Boolean = this == spell.type
+    override fun matches(spell: com.rnett.spellbook.model.spell.Spell): Boolean = this == spell.type
 }
 
 

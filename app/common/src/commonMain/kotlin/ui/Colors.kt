@@ -1,49 +1,24 @@
-package com.rnett.spellbook
+package com.rnett.spellbook.ui
 
+import androidx.compose.ui.graphics.Color
+import com.rnett.spellbook.model.spell.*
 import com.rnett.spellbook.spell.*
+import com.rnett.spellbook.ui.TagColors.Area.AreaType
 
 private const val TRANSPARENT = "transparent"
 
-class Color(private val _hexString: String, val alpha: Float = 1f) {
-    val isTransparent by lazy { _hexString.isBlank() || _hexString.lowercase() == TRANSPARENT }
-
-    val hexString by lazy {
-        if (!_hexString.startsWith("#") && !isTransparent)
-            "#" + _hexString.lowercase()
-        else
-            _hexString
-    }
-
-    companion object {
-        val Transparent = Color(TRANSPARENT, 0f)
-    }
-
-    fun withAlpha(alpha: Float): Color = if (hexString != "transparent")
-        Color(hexString, alpha)
-    else
-        Color.Transparent
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as Color
-
-        if (hexString != other.hexString) return false
-        if (alpha != other.alpha) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = hexString.hashCode()
-        result = 31 * result + alpha.hashCode()
-        return result
-    }
+fun Color(hexString: String, alpha: Float = 1f): Color {
+    if (hexString.isBlank() || hexString.lowercase() == TRANSPARENT)
+        return Color.Transparent
+    return Color(
+        ("FF" + hexString.trim('#')).lowercase().toLong(16)
+    )
+        .copy(alpha = alpha)
 }
 
 object MainColors {
     val outsideColor = Color("#424242")
+    val borderColor = Color("#563B3B")
     val spellBorderColor = Color("#563B3B")
     val spellBodyColor = Color("#634a45")
     val textColor = Color("#ffffff")
@@ -90,10 +65,10 @@ object TagColors {
         val Common = Color("transparent")
 
         operator fun invoke(rarity: Trait) = when (rarity.key) {
-            com.rnett.spellbook.spell.Rarity.Common -> Common
-            com.rnett.spellbook.spell.Rarity.Uncommon -> Uncommon
-            com.rnett.spellbook.spell.Rarity.Rare -> Rare
-            com.rnett.spellbook.spell.Rarity.Unique -> Unique
+            com.rnett.spellbook.model.spell.Rarity.Common -> Common
+            com.rnett.spellbook.model.spell.Rarity.Uncommon -> Uncommon
+            com.rnett.spellbook.model.spell.Rarity.Rare -> Rare
+            com.rnett.spellbook.model.spell.Rarity.Unique -> Unique
             else -> error("Unknown rarity $rarity")
         }
     }

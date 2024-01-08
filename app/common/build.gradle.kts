@@ -1,5 +1,8 @@
+import org.jetbrains.compose.ExperimentalComposeLibrary
+
 plugins {
     id(libs.plugins.kotlin.multiplatform.get().pluginId)
+    id(libs.plugins.kotlinx.serialization.get().pluginId)
     alias(libs.plugins.compose)
 }
 
@@ -26,10 +29,11 @@ kotlin {
                 api(compose.foundation)
                 api(compose.ui)
                 api(compose.material)
-                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-                api(compose.material3)
-                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+//                api(compose.material3)
+                @OptIn(ExperimentalComposeLibrary::class)
                 api(compose.components.resources)
+//                @OptIn(ExperimentalComposeLibrary::class)
+//                api(compose.desktop.components.splitPane)
 
                 api(libs.kotlinx.datetime)
 

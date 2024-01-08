@@ -1,10 +1,10 @@
-package com.rnett.spellbook.spellbook
+package com.rnett.spellbook.model.spellbook
 
-import com.rnett.spellbook.NamedList
-import com.rnett.spellbook.spell.Spell
-import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.SpellType
-import com.rnett.spellbook.toMutableNamedList
+import com.rnett.spellbook.utils.NamedList
+import com.rnett.spellbook.model.spell.Spell
+import com.rnett.spellbook.model.spell.SpellList
+import com.rnett.spellbook.model.spell.SpellType
+import com.rnett.spellbook.utils.toMutableNamedList
 import kotlinx.serialization.Serializable
 
 @Serializable

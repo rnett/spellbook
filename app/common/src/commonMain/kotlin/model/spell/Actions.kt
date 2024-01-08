@@ -1,6 +1,6 @@
-package com.rnett.spellbook.spell
+package com.rnett.spellbook.model.spell
 
-import com.rnett.spellbook.resourcePrefix
+import com.rnett.spellbook.utils.resourcePrefix
 import kotlinx.serialization.Serializable
 
 @Serializable

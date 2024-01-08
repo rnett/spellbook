@@ -1,6 +1,6 @@
-package com.rnett.spellbook.filter
+package com.rnett.spellbook.model.filter
 
-import com.rnett.spellbook.spell.Spell
+import com.rnett.spellbook.model.spell.Spell
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 

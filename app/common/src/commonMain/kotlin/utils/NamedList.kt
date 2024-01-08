@@ -1,4 +1,4 @@
-package com.rnett.spellbook
+package com.rnett.spellbook.utils
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Polymorphic

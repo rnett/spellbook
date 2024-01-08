@@ -1,4 +1,4 @@
-package com.rnett.spellbook.spell
+package com.rnett.spellbook.model.spell
 
 import kotlinx.serialization.Serializable
 

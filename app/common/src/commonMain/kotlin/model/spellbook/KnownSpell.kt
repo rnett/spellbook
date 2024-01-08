@@ -1,12 +1,12 @@
-package com.rnett.spellbook.spellbook
+package com.rnett.spellbook.model.spellbook
 
-import com.rnett.spellbook.filter.LevelFilter
-import com.rnett.spellbook.filter.SpellFilter
-import com.rnett.spellbook.filter.defaultOrFilter
-import com.rnett.spellbook.filter.singleOrClauseFilter
-import com.rnett.spellbook.spell.Spell
-import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.SpellType
+import com.rnett.spellbook.model.filter.LevelFilter
+import com.rnett.spellbook.model.filter.SpellFilter
+import com.rnett.spellbook.model.filter.defaultOrFilter
+import com.rnett.spellbook.model.filter.singleOrClauseFilter
+import com.rnett.spellbook.model.spell.Spell
+import com.rnett.spellbook.model.spell.SpellList
+import com.rnett.spellbook.model.spell.SpellType
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmName
 import kotlin.math.min

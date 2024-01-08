@@ -1,4 +1,4 @@
-package com.rnett.spellbook.spell
+package com.rnett.spellbook.model.spell
 
 interface AonLinkable {
     val aonUrl: String

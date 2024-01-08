@@ -1,5 +1,6 @@
-package com.rnett.spellbook.filter
+package com.rnett.spellbook.model.filter
 
+import com.rnett.spellbook.model.spell.*
 import com.rnett.spellbook.spell.*
 import kotlinx.serialization.Serializable
 import kotlin.js.JsName

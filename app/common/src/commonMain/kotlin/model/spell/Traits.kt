@@ -1,6 +1,6 @@
-package com.rnett.spellbook.spell
+package com.rnett.spellbook.model.spell
 
-import com.rnett.spellbook.filter.SpellFilterPart
+import com.rnett.spellbook.model.filter.SpellFilterPart
 import kotlinx.serialization.Serializable
 import kotlin.properties.PropertyDelegateProvider
 
