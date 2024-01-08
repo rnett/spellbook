@@ -1,13 +1,6 @@
 package com.rnett.spellbook.filter
 
-import com.rnett.spellbook.spell.Actions
-import com.rnett.spellbook.spell.CastActionType
-import com.rnett.spellbook.spell.Condition
-import com.rnett.spellbook.spell.Save
-import com.rnett.spellbook.spell.Spell
-import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.TargetingType
-import com.rnett.spellbook.spell.TraitKey
+import com.rnett.spellbook.spell.*
 import kotlinx.serialization.Serializable
 import kotlin.js.JsName
 

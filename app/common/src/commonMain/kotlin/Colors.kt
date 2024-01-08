@@ -1,12 +1,6 @@
 package com.rnett.spellbook
 
-import com.rnett.spellbook.spell.AreaType
-import com.rnett.spellbook.spell.CastActionType
-import com.rnett.spellbook.spell.Save
-import com.rnett.spellbook.spell.SpellList
-import com.rnett.spellbook.spell.SpellType
-import com.rnett.spellbook.spell.TargetingType
-import com.rnett.spellbook.spell.Trait
+import com.rnett.spellbook.spell.*
 
 private const val TRANSPARENT = "transparent"
 

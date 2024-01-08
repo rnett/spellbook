@@ -6,6 +6,7 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.math.pow
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalContracts::class)
 inline fun <T> T.ifLet(condition: Boolean, block: (T) -> T): T {
@@ -22,9 +23,9 @@ inline fun <T> T.ifLet(condition: Boolean, block: (T) -> T): T {
 
 suspend fun <R> withBackoff(
     multiplier: Double = 2.0,
-    factor: Duration = Duration.milliseconds(100),
+    factor: Duration = 100.milliseconds,
     retries: Int = 10,
-    offset: Duration = Duration.milliseconds(10),
+    offset: Duration = 10.milliseconds,
     body: suspend () -> R
 ): R {
     var caught: Throwable? = null
@@ -39,4 +40,5 @@ suspend fun <R> withBackoff(
     throw caught!!
 }
 
-expect val resourcePrefix: String
+//TODO resource loading
+val resourcePrefix: String = "/"

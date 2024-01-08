@@ -26,7 +26,7 @@ include(
     "desktop",
     "extractor",
     "shared",
-    "app",
+    "app:common",
     "app:desktop",
     "app:web"
 )

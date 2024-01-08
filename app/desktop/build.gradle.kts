@@ -19,7 +19,7 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(compose.preview)
-                implementation(project(":app"))
+                implementation(project(":app:common"))
             }
         }
         jvmTest {

@@ -24,9 +24,27 @@ afterEvaluate {
     tasks.named("jsProcessResources").configure {
         finalizedBy(copyJsResourcesWorkaround)
     }
+    tasks.named("jsProductionExecutableCompileSync") {
+        dependsOn(copyJsResourcesWorkaround)
+    }
+    tasks.named("jsDevelopmentExecutableCompileSync") {
+        dependsOn(copyJsResourcesWorkaround)
+    }
+    tasks.named("jsBrowserProductionExecutableDistributeResources") {
+        dependsOn(copyJsResourcesWorkaround)
+    }
+    tasks.named("jsBrowserDevelopmentExecutableDistributeResources") {
+        dependsOn(copyJsResourcesWorkaround)
+    }
+    tasks.named("jsJar") {
+        dependsOn(copyJsResourcesWorkaround)
+    }
 
     tasks.named("wasmJsProcessResources").configure {
         finalizedBy(copyWasmResourcesWorkaround)
+    }
+    tasks.named("wasmJsProductionExecutableCompileSync") {
+        dependsOn(copyWasmResourcesWorkaround)
     }
     tasks.named("wasmJsDevelopmentExecutableCompileSync") {
         dependsOn(copyWasmResourcesWorkaround)
@@ -73,7 +91,7 @@ kotlin {
     sourceSets {
         val jsWasmMain by creating {
             dependencies {
-                api(project(":app"))
+                api(project(":app:common"))
             }
         }
         val jsMain by getting {

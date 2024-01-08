@@ -5,11 +5,7 @@ import com.rnett.spellbook.filter.SpellFilter
 import com.rnett.spellbook.load.loggedTransaction
 import com.rnett.spellbook.spell.Spell
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object SpellbookDB {
@@ -43,7 +39,12 @@ object SpellbookDB {
         postgresDB = database
     }
 
-    fun initH2(file: String = "./spellbook", user: String = "rnett", password: String = "thepassword", filePassword: String = "encrypt") {
+    fun initH2(
+        file: String = "spellbook",
+        user: String = "rnett",
+        password: String = "thepassword",
+        filePassword: String = "encrypt"
+    ) {
         val database =
             Database.connect("jdbc:h2:$file;AUTO_SERVER=TRUE;CIPHER=AES", driver = "org.h2.Driver", user = user, password = "$filePassword $password")
         init(database)

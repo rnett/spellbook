@@ -31,6 +31,8 @@ kotlin {
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 api(compose.components.resources)
 
+                api(libs.kotlinx.datetime)
+
                 implementation(project(":shared"))
 //                implementation(project(":common"))
             }
