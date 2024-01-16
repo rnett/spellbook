@@ -1,0 +1,76 @@
+{
+  "specific": {
+  },
+  "general": {
+    "two actions": {
+      "type": "single",
+      "actions": 2
+    },
+    "single action": {
+      "type": "single",
+      "actions": 1
+    },
+    "reaction": {
+      "type": "single",
+      "actions": -1
+    },
+    "10 minutes": {
+      "type": "minutes",
+      "amount": 10
+    },
+    "three actions": {
+      "type": "single",
+      "actions": 3
+    },
+    "1 minute": {
+      "type": "minutes",
+      "amount": 1
+    },
+    "free action": {
+      "type": "single",
+      "actions": 0
+    },
+    "single action to three actions": {
+      "type": "variable",
+      "min": 1,
+      "max": 3
+    },
+    "single action or more actions": {
+      "type": "variable",
+      "min": 1,
+      "max": 3
+    },
+    "single action to two actions": {
+      "type": "variable",
+      "min": 1,
+      "max": 2
+    },
+    "single action or two actions": {
+      "type": "variable",
+      "min": 1,
+      "max": 1
+    },
+    "two actions to 2 rounds": {
+      "type": "variable",
+      "min": 2,
+      "max": 6
+    },
+    "5 minutes": {
+      "type": "minutes",
+      "amount": 5
+    },
+    "two actions or three actions": {
+      "type": "variable",
+      "min": 2,
+      "max": 3
+    },
+    "1 hour": {
+      "type": "minutes",
+      "amount": 60
+    },
+    "30 minutes": {
+      "type": "minutes",
+      "amount": 30
+    }
+  }
+}

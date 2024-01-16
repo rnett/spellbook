@@ -1,6 +1,6 @@
 package com.rnett.spellbook.extractor.advanced.conditions
 
-import com.rnett.spellbook.extractor.basic.Check
+import com.rnett.spellbook.extractor.advanced.Check
 import kotlinx.serialization.Serializable
 
 

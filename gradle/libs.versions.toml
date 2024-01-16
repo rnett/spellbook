@@ -6,7 +6,7 @@ kotlinx-serialization = "1.6.2"
 kotlinx-collections-immutable = "0.3.7"
 kotlinx-datetime = "0.5.0"
 ktor = "2.3.7"
-jsoup = "1.13.1"
+jsoup = "1.17.2"
 exposed = "0.45.0"
 pgjdbc_ng = "0.8.4"
 h2 = "1.4.200"
@@ -31,12 +31,18 @@ pgjdbc = { module = "com.impossibl.pgjdbc-ng:pgjdbc-ng", version.ref = "pgjdbc_n
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 
 ktor-client = { module = "io.ktor:ktor-client-apache", version.ref = "ktor" }
+ktor-client-content-encoding = { module = "io.ktor:ktor-client-encoding", version.ref = "ktor" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 progressbar = { module = "me.tongfei:progressbar", version = "0.9.0" }
 
 [bundles]
 kotlinx-serialization = ["kotlinx-serialization-core", "kotlinx-serialization-json"]
 exposed = ["exposed-core", "exposed-dao", "exposed-jdbc"]
+ktor-client = ["ktor-client", "ktor-client-content-encoding", "ktor-client-logging", "logback", "ktor-client-content-negotiation", "ktor-serialization-kotlinx-json"]
 
 [plugins]
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }

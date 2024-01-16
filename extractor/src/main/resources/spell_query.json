@@ -1,0 +1,73 @@
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "bool": {
+          "filter": [
+            {
+              "query_string": {
+                "query": "category:spell ",
+                "default_operator": "AND",
+                "fields": [
+                  "name",
+                  "text^0.1",
+                  "trait_raw",
+                  "type"
+                ]
+              }
+            }
+          ],
+          "must_not": [
+            {
+              "term": {
+                "exclude_from_search": true
+              }
+            }
+          ]
+        }
+      },
+      "boost_mode": "multiply",
+      "functions": [
+        {
+          "filter": {
+            "terms": {
+              "type": [
+                "Ancestry",
+                "Class"
+              ]
+            }
+          },
+          "weight": 1.1
+        },
+        {
+          "filter": {
+            "terms": {
+              "type": [
+                "Trait"
+              ]
+            }
+          },
+          "weight": 1.05
+        }
+      ]
+    }
+  },
+  "sort": [
+    {
+      "level": {
+        "order": "asc"
+      }
+    },
+    {
+      "name.keyword": {
+        "order": "asc"
+      }
+    },
+    "_doc"
+  ],
+  "_source": {
+    "excludes": [
+      "text"
+    ]
+  }
+}
