@@ -5,11 +5,10 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.rnett.spellbook.ui.MainColors
 import com.rnett.spellbook.ui.pages.Page
 import com.rnett.spellbook.ui.sidebar.Sidebar
 
@@ -19,9 +18,10 @@ fun PageScaffold(topBar: @Composable () -> Unit, page: Page, sidebar: Sidebar?) 
         Row(Modifier.fillMaxWidth()) {
             topBar()
         }
-        Spacer(Modifier.fillMaxWidth().height(2.dp).background(MainColors.borderColor))
+        Spacer(Modifier.fillMaxWidth().height(2.dp).background(MaterialTheme.colorScheme.outline))
         Row(Modifier.fillMaxSize()) {
-            Column(Modifier.fillMaxHeight().fillMaxWidth(sidebar?.let { 1f - sidebar.width } ?: 1f).weight(1f).padding(10.dp)) {
+            Column(Modifier.fillMaxHeight().fillMaxWidth(sidebar?.let { 1f - sidebar.width } ?: 1f).weight(1f)
+                .padding(10.dp)) {
                 page.body()
             }
 
@@ -30,16 +30,14 @@ fun PageScaffold(topBar: @Composable () -> Unit, page: Page, sidebar: Sidebar?) 
                 enter = slideInHorizontally { it },
                 exit = slideOutHorizontally { it }
             ) {
-                Spacer(Modifier.fillMaxHeight().width(2.dp).background(MainColors.borderColor))
-                Surface(color = MainColors.infoBoxColor) {
-                    Column(
-                        Modifier.fillMaxHeight()
-                            .fillMaxWidth(sidebar?.width ?: Sidebar.defaultWidth)
-                            .widthIn(max = 100.dp)
-                            .padding(10.dp)
-                    ) {
-                        sidebar?.render()
-                    }
+                Spacer(Modifier.fillMaxHeight().width(2.dp).background(MaterialTheme.colorScheme.outline))
+                Column(
+                    Modifier.fillMaxHeight()
+                        .fillMaxWidth(sidebar?.width ?: Sidebar.defaultWidth)
+                        .widthIn(max = 100.dp)
+                        .padding(start = 2.dp)
+                ) {
+                    sidebar?.render()
                 }
             }
         }

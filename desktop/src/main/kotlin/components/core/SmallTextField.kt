@@ -10,9 +10,9 @@ import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
-import androidx.compose.material.TextFieldDefaults.MinHeight
-import androidx.compose.material.TextFieldDefaults.MinWidth
+import androidx.compose.material3.*
+import androidx.compose.material3.TextFieldDefaults.MinHeight
+import androidx.compose.material3.TextFieldDefaults.MinWidth
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier

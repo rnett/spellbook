@@ -4,10 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
-import androidx.compose.material.IconToggleButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Divider
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.icons.Icons
+import androidx.compose.material3.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,11 +15,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.MainState
 import com.rnett.spellbook.ShoppingCart
-import com.rnett.spellbook.components.IconButtonHand
-import com.rnett.spellbook.components.IconWithTooltip
-import com.rnett.spellbook.components.InfoSidebarState
-import com.rnett.spellbook.components.SidebarInfoDisplay
-import com.rnett.spellbook.components.handPointer
+import com.rnett.spellbook.components.*
 import com.rnett.spellbook.components.sidebar.GroupSidebar
 import com.rnett.spellbook.components.sidebar.ShoppingCartDisplay
 import com.rnett.spellbook.group.SpellGroup

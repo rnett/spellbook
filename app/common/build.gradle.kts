@@ -4,6 +4,14 @@ plugins {
     id(libs.plugins.kotlin.multiplatform.get().pluginId)
     id(libs.plugins.kotlinx.serialization.get().pluginId)
     alias(libs.plugins.compose)
+    idea
+}
+
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
 }
 
 compose {
@@ -28,10 +36,12 @@ kotlin {
                 api(compose.runtime)
                 api(compose.foundation)
                 api(compose.ui)
-                api(compose.material)
-//                api(compose.material3)
+//                api(compose.material)
+                api(compose.material3)
                 @OptIn(ExperimentalComposeLibrary::class)
                 api(compose.components.resources)
+
+                implementation(compose.materialIconsExtended)
 //                @OptIn(ExperimentalComposeLibrary::class)
 //                api(compose.desktop.components.splitPane)
 

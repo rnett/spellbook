@@ -1,18 +1,14 @@
 package com.rnett.spellbook.components.search
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BookmarkAdd
-import androidx.compose.material.icons.filled.Bookmarks
-import androidx.compose.material.icons.filled.TurnedIn
-import androidx.compose.material.icons.filled.TurnedInNot
-import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.icons.Icons
+import androidx.compose.material3.icons.filled.BookmarkAdd
+import androidx.compose.material3.icons.filled.Bookmarks
+import androidx.compose.material3.icons.filled.TurnedIn
+import androidx.compose.material3.icons.filled.TurnedInNot
+import androidx.compose.material3.icons.outlined.Cancel
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
