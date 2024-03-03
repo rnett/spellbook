@@ -10,6 +10,7 @@ jsoup = "1.17.2"
 exposed = "0.45.0"
 pgjdbc_ng = "0.8.4"
 h2 = "1.4.200"
+voyager = "1.1.0-alpha03"
 
 compose = "1.6.0"
 
@@ -39,10 +40,21 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 progressbar = { module = "me.tongfei:progressbar", version = "0.9.0" }
 
+voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+voyager-screenModel = { module = "cafe.adriel.voyager:voyager-screenmodel", version.ref = "voyager" }
+voyager-bottomSheetNavigator = { module = "cafe.adriel.voyager:voyager-bottom-sheet-navigator", version.ref = "voyager" }
+voyager-tabNavigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
+voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
+voyager-koin = { module = "cafe.adriel.voyager:voyager-koin", version.ref = "voyager" }
+voyager-hilt = { module = "cafe.adriel.voyager:voyager-hilt", version.ref = "voyager" }
+voyager-kodein = { module = "cafe.adriel.voyager:voyager-kodein", version.ref = "voyager" }
+voyager-rxjava = { module = "cafe.adriel.voyager:voyager-rxjava", version.ref = "voyager" }
+
 [bundles]
 kotlinx-serialization = ["kotlinx-serialization-core", "kotlinx-serialization-json"]
 exposed = ["exposed-core", "exposed-dao", "exposed-jdbc"]
 ktor-client = ["ktor-client", "ktor-client-content-encoding", "ktor-client-logging", "logback", "ktor-client-content-negotiation", "ktor-serialization-kotlinx-json"]
+voyager = ["voyager-navigator", "voyager-screenModel", "voyager-tabNavigator", "voyager-transitions"]
 
 [plugins]
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }

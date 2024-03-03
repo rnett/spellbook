@@ -9,11 +9,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.rnett.spellbook.ui.pages.Page
 import com.rnett.spellbook.ui.sidebar.Sidebar
 
 @Composable
-fun PageScaffold(topBar: @Composable () -> Unit, page: Page, sidebar: Sidebar?) {
+fun PageScaffold(topBar: @Composable () -> Unit, content: @Composable () -> Unit, sidebar: Sidebar?) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth()) {
             topBar()
@@ -22,7 +21,7 @@ fun PageScaffold(topBar: @Composable () -> Unit, page: Page, sidebar: Sidebar?) 
         Row(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxHeight().fillMaxWidth(sidebar?.let { 1f - sidebar.width } ?: 1f).weight(1f)
                 .padding(10.dp)) {
-                page.body()
+                content()
             }
 
             AnimatedVisibility(

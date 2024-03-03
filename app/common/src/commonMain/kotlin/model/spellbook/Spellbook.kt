@@ -11,20 +11,29 @@ data class Spellbook(
 )
 
 sealed interface Spellcasting {
-    data class Focus(val slots: ImmutableList<SpellSlot>, val maxFocusPoints: Int) : Spellcasting
+    val name: String
+
+    data class Focus(
+        val slots: ImmutableList<SpellSlot>,
+        val maxFocusPoints: Int,
+        override val name: String = "Focus"
+    ) : Spellcasting
+
     data class Spontaneous(
+        override val name: String,
         val defaultLists: ImmutableSet<SpellList>,
-        val levels: ImmutableList<ImmutableList<SpellSlot>>
+        val levels: ImmutableList<ImmutableList<SpellSlot>>,
     ) : Spellcasting
 
     data class Prepared(
+        override val name: String,
         val defaultLists: ImmutableSet<SpellList>,
         val levels: ImmutableList<ImmutableList<SpellSlot>>,
-        val known: ImmutableSet<SpellReference>
+        val known: ImmutableSet<SpellReference>,
     ) : Spellcasting
 
-    data class Items(val items: ImmutableList<SpellcastingItem>) : Spellcasting
-    data class Stave(val levels: ImmutableList<ImmutableList<SpellSlot>>) : Spellcasting
+    data class Items(val items: ImmutableList<SpellcastingItem>, override val name: String = "Items") : Spellcasting
+    data class Stave(override val name: String, val levels: ImmutableList<ImmutableList<SpellSlot>>) : Spellcasting
 }
 
 enum class SpellcastingRecharge {

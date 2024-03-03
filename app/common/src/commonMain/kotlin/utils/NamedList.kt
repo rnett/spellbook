@@ -1,5 +1,7 @@
 package com.rnett.spellbook.utils
 
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
@@ -14,7 +16,15 @@ import kotlinx.serialization.encoding.Encoder
 interface NamedList<out T> : List<Pair<String, T>> {
     operator fun get(name: String): T?
     operator fun contains(name: String): Boolean
-    fun newName(baseName: String, suffix: (Int) -> String): String
+    fun newName(baseName: String, suffix: (Int) -> String): String {
+        var name = baseName
+        var i = 0
+        while (name in this) {
+            i++
+            name = baseName + suffix(i)
+        }
+        return name
+    }
 
     fun indexOf(name: String): Int
 
@@ -59,6 +69,70 @@ interface MutableNamedList<T> : NamedList<T> {
     fun swap(name1: String, name2: String): Boolean
 }
 
+open class ImmutableNamedList<T>(
+    protected open val backingList: ImmutableList<Pair<String, T>>,
+    protected open val indices: ImmutableMap<String, Int>
+) : NamedList<T>, List<Pair<String, T>> by backingList {
+    init {
+        if (backingList.size != indices.size) {
+            error("Backing list and indices differ in size")
+        }
+        val backingNames = backingList.mapTo(mutableSetOf()) { it.first }.toSet()
+
+        if (backingNames != indices.keys) {
+            error("Backing names do not match index keys")
+        }
+
+        if (indices.values.toSet() != backingList.indices.toSet()) {
+            error("Index indices do not match backing list indices")
+        }
+
+    }
+
+    override fun get(name: String): T? = indices[name]?.let { backingList[it] }?.second
+
+    override fun contains(name: String): Boolean = name in indices
+
+    override fun indexOf(name: String): Int = indices[name] ?: -1
+
+    override val keys: List<String>
+        get() = backingList.map { it.first }
+
+    override val values: List<T>
+        get() = backingList.map { it.second }
+}
+
+//class PersistentNamedList<T>(
+//    override val backingList: PersistentList<Pair<String, T>>,
+//    override val indices: PersistentMap<String, Int>
+//) : ImmutableNamedList<T>(backingList, indices) {
+//
+//    operator fun set(name: String, value: T): PersistentNamedList<T> {
+//        if(name in indices) {
+//            val index = indices[name]!!
+//            return PersistentNamedList(
+//                backingList.set(index, name to value),
+//                indices
+//            )
+//        } else {
+//            return PersistentNamedList(
+//                backingList.add(name to value),
+//                indices.put(name, backingList.size)
+//            )
+//        }
+//    }
+//    fun setAll(items: Map<String, T>): PersistentNamedList<T> {
+//
+//    }
+//    fun setIndex(name: String, newIndex: Int): Boolean
+//
+//    fun remove(name: String): T?
+//
+//    fun rename(oldName: String, newName: String): Boolean
+//
+//    fun swap(name1: String, name2: String): Boolean
+//}
+
 fun <T> namedListOf(vararg items: Pair<String, T>): NamedList<T> = NamedListImpl(items.toMutableList())
 
 fun <T> mutableNamedListOf(vararg items: Pair<String, T>): MutableNamedList<T> = NamedListImpl(items.toMutableList())
@@ -88,16 +162,6 @@ open class NamedListImpl<T>(
 
     override fun get(name: String): T? {
         return indices[name]?.let { backingList[it].second }
-    }
-
-    override fun newName(baseName: String, suffix: (Int) -> String): String {
-        var name = baseName
-        var i = 0
-        while (name in this) {
-            i++
-            name = baseName + suffix(i)
-        }
-        return name
     }
 
     override fun set(name: String, value: T): T? {

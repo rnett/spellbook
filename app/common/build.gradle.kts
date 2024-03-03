@@ -42,6 +42,8 @@ kotlin {
                 api(compose.components.resources)
 
                 implementation(compose.materialIconsExtended)
+
+                implementation(libs.bundles.voyager)
 //                @OptIn(ExperimentalComposeLibrary::class)
 //                api(compose.desktop.components.splitPane)
 
