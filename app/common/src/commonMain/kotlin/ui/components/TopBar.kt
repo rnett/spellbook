@@ -1,7 +1,7 @@
 package com.rnett.spellbook.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.runtime.Composable
@@ -43,21 +43,23 @@ fun TopBar(pages: List<Page>, sidebars: List<Sidebar>) {
 
 @Composable
 private fun RowScope.PageTab(page: Page, isActive: Boolean, onClick: () -> Unit) {
-    Tab(
-        isActive,
-        onClick,
-        Modifier.width(IntrinsicSize.Min),
-        text = {
-            Row(Modifier.padding(10.dp)) {
-                page.topBarTab()
+    Surface(tonalElevation = if (isActive) 10.dp else 0.dp) {
+        Tab(
+            isActive,
+            onClick,
+            Modifier.width(IntrinsicSize.Min),
+            text = {
+                Row(Modifier.padding(10.dp)) {
+                    page.topBarTab()
+                }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable
 private fun SidebarIcon(sidebar: Sidebar, isActive: Boolean, onClick: (Boolean) -> Unit) {
-    IconToggleButton(isActive, onClick) {
-        sidebar.topBarIcon()
+    IconButton({ onClick(!isActive) }) {
+        sidebar.topBarIcon(isActive)
     }
 }

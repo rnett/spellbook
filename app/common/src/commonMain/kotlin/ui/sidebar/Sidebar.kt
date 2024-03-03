@@ -8,7 +8,7 @@ interface Sidebar {
 
     val showInTopBar: Boolean get() = false
     @Composable
-    fun topBarIcon() {
+    fun topBarIcon(isActive: Boolean) {
 
     }
 

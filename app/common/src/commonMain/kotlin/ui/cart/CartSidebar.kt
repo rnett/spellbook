@@ -4,8 +4,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -19,12 +22,18 @@ object CartSidebar : Sidebar {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     override fun render() {
-        val spells = LocalCart.current.spells
+        val cart = LocalCart.current
         Surface(Modifier.fillMaxSize(), tonalElevation = 3.dp) {
-            LazyColumn(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(spells, { it.name }) {
-                    Row(Modifier.animateItemPlacement()) {
-                        SpellInfo(it, Modifier.fillMaxWidth())
+            LazyColumn(Modifier.padding(20.dp).selectableGroup(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(cart.spells, { it.name }) { spell ->
+                    Box(Modifier.animateItemPlacement()) {
+                        val selected = cart.selected(spell)
+                        SpellInfo(
+                            spell,
+                            Modifier.selectable(selected) { cart.toggleSelection(spell) }
+                                .fillMaxWidth(),
+                            selected = selected
+                        )
                     }
                 }
             }
@@ -35,7 +44,7 @@ object CartSidebar : Sidebar {
     override val showInTopBar: Boolean = true
 
     @Composable
-    override fun topBarIcon() {
-        Icon(Icons.Default.ShoppingCart, "Cart")
+    override fun topBarIcon(isActive: Boolean) {
+        Icon(if (isActive) Icons.Default.ShoppingCart else Icons.Outlined.ShoppingCart, "Cart")
     }
 }

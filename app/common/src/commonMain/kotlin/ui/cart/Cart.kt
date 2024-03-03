@@ -1,27 +1,54 @@
 package com.rnett.spellbook.ui.cart
 
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.staticCompositionLocalOf
 import com.rnett.spellbook.model.spellbook.SpellReference
 
-data class Cart(val spells: SnapshotStateList<SpellReference> = mutableStateListOf()) {
-    operator fun contains(spellReference: SpellReference) = spellReference in spells
+@Stable
+class Cart(
+) {
+    private val _spells: SnapshotStateList<SpellReference> = mutableStateListOf()
+    private var _selectedSpell by mutableStateOf<SpellReference?>(null)
+
+    val selectedSpell: SpellReference? get() = _selectedSpell
+
+    operator fun contains(spellReference: SpellReference) = spellReference in _spells
     operator fun plusAssign(spellReference: SpellReference) {
         if (spellReference !in this)
-            spells.add(spellReference)
+            _spells.add(spellReference)
     }
 
     operator fun minusAssign(spellReference: SpellReference) {
-        spells.remove(spellReference)
+        _spells.remove(spellReference)
     }
 
-    fun toggle(spellReference: SpellReference) {
+    fun select(spellReference: SpellReference) {
+        if (spellReference in this)
+            _selectedSpell = spellReference
+    }
+
+    fun deselect(spellReference: SpellReference) {
+        if (spellReference in this)
+            _selectedSpell = null
+    }
+
+    fun toggleSelection(spellReference: SpellReference) {
+        if (spellReference in this) {
+            _selectedSpell = if (selectedSpell == spellReference) null else spellReference
+
+        }
+    }
+
+    fun addOrRemove(spellReference: SpellReference) {
         if (spellReference in this)
             this -= spellReference
         else
             this += spellReference
     }
+
+    fun selected(spellReference: SpellReference): Boolean = selectedSpell == spellReference
+
+    val spells: List<SpellReference> = _spells
 }
 
 val LocalCart = staticCompositionLocalOf { Cart() }

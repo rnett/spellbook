@@ -28,6 +28,6 @@ fun CartButton(inCart: Boolean, onClick: () -> Unit) {
 fun CartControl(spellReference: SpellReference) {
     val cart = LocalCart.current
     CartButton(spellReference in cart) {
-        cart.toggle(spellReference)
+        cart.addOrRemove(spellReference)
     }
 }
