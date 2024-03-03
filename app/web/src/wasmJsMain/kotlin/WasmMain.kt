@@ -5,7 +5,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalResourceApi::class)
 fun main() {
-    CanvasBasedWindow("ImageViewer") {
+    CanvasBasedWindow("Spellbook") {
         MainPage()
     }
 }
