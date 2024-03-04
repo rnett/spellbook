@@ -28,5 +28,6 @@ interface SpellbooksDao {
      * Returns null if a new name is used, but spellbook with the new key already exists
      */
     suspend fun saveSpellbook(oldName: String?, spellbook: Spellbook): LoadedSpellbook?
+    suspend fun delete(name: String)
 
 }

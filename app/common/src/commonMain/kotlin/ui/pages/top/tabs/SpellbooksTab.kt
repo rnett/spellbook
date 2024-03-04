@@ -11,7 +11,7 @@ import com.rnett.spellbook.ui.spellbook.LocalSpellbook
 object SpellbooksTab : Tab {
     @Composable
     override fun Content() {
-        Navigator(LocalSpellbook.current.loadedSpellbook?.let { EditScreen(it) } ?: NewScreen())
+        Navigator(LocalSpellbook.current.loadedSpellbook?.let { EditScreen() } ?: NewScreen())
     }
 
     override val options: TabOptions

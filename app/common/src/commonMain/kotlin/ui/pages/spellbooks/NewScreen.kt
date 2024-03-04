@@ -9,11 +9,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -55,7 +57,7 @@ class NewScreen : Screen {
 
                         Creator(it) {
                             spellbook.loadedSpellbook = it
-                            navigator.plusAssign(EditScreen(it))
+                            navigator.plusAssign(EditScreen())
                         }
 
                         Spacer(Modifier.height(20.dp))
@@ -64,7 +66,7 @@ class NewScreen : Screen {
 
                         SpellbookLoader(it) {
                             spellbook.loadedSpellbook = it
-                            navigator.plusAssign(EditScreen(it))
+                            navigator.plusAssign(EditScreen())
                         }
                     }
                 }
@@ -89,6 +91,8 @@ private fun SpellbookLoader(dao: SpellbooksDao, load: (LoadedSpellbook) -> Unit)
                 }
             }
 
+            val scope = rememberCoroutineScope()
+
             AnimatedContent(listing) {
                 if (it == null) {
                     CircularProgressIndicator()
@@ -96,9 +100,55 @@ private fun SpellbookLoader(dao: SpellbooksDao, load: (LoadedSpellbook) -> Unit)
                     if (it.isEmpty()) {
                         Text("No stored spellbooks")
                     } else {
+
+                        var deleting by remember { mutableStateOf<Spellbook?>(null) }
+
+                        deleting?.let { deletingSpellbook ->
+                            AlertDialog(
+                                { deleting = null },
+                                confirmButton = {
+                                    TextButton(
+                                        {
+                                            GlobalScope.launch {
+                                                dao.delete(deletingSpellbook.name)
+                                                scope.launch { listing = dao.listSpellbooks() }
+                                            }
+                                        }
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Outlined.Delete, "Delete spellbook", tint = Color.Red)
+                                            Spacer(Modifier.width(5.dp))
+                                            Text(
+                                                "Delete",
+                                                color = Color.Red
+                                            )
+                                        }
+                                    }
+                                },
+                                dismissButton = { TextButton({ deleting = null }) { Text("Cancel") } },
+                                title = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Outlined.Delete, "Delete spellbook", tint = Color.Red)
+                                        Spacer(Modifier.width(5.dp))
+                                        Text("Really delete spellbook \"${deletingSpellbook.name}\"?")
+                                    }
+                                },
+                                text = { Text("Are you sure you want to delete the spellbook \"${deletingSpellbook.name}\"? This will permanently delete all of its data.") }
+                            )
+                        }
+
                         LazyColumn(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             items(it, { it.dao.name + "/" + it.name }) {
-                                SpellbookPreview(it.spellbook, Modifier.clickable { load(it) }, dao = it.dao)
+                                SpellbookPreview(
+                                    it.spellbook,
+                                    Modifier.clickable { load(it) },
+                                    buttons = {
+                                        IconButton({ deleting = it.spellbook }) {
+                                            Icon(Icons.Outlined.Delete, "Delete spellbook", tint = Color.Red)
+                                        }
+                                    },
+                                    dao = it.dao
+                                )
                             }
                         }
                     }

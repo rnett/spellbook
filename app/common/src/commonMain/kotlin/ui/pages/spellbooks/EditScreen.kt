@@ -3,12 +3,19 @@ package com.rnett.spellbook.ui.pages.spellbooks
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.core.screen.Screen
-import com.rnett.spellbook.data.LoadedSpellbook
+import cafe.adriel.voyager.navigator.LocalNavigator
+import com.rnett.spellbook.ui.spellbook.LocalSpellbook
 
 
-class EditScreen(val loadedSpellbook: LoadedSpellbook) : Screen {
+class EditScreen() : Screen {
     @Composable
     override fun Content() {
+        val loadedSpellbook = LocalSpellbook.current.loadedSpellbook
+        if (loadedSpellbook == null) {
+            LocalNavigator.current?.push(NewScreen())
+            return
+        }
+
         Text("Edit ${loadedSpellbook.spellbook.name} [${loadedSpellbook.dao.name}]")
     }
 }

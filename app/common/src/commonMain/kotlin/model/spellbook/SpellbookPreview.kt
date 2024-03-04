@@ -13,7 +13,12 @@ import com.rnett.spellbook.model.spellbook.dao.SpellbooksDao
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SpellbookPreview(spellbook: Spellbook, modifier: Modifier = Modifier, dao: SpellbooksDao? = null) {
+fun SpellbookPreview(
+    spellbook: Spellbook,
+    modifier: Modifier = Modifier,
+    buttons: @Composable() (() -> Unit)? = null,
+    dao: SpellbooksDao? = null
+) {
     ElevatedCard(modifier, elevation = CardDefaults.elevatedCardElevation(5.dp)) {
         Column(Modifier.padding(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -21,6 +26,11 @@ fun SpellbookPreview(spellbook: Spellbook, modifier: Modifier = Modifier, dao: S
                 Spacer(Modifier.weight(1f))
                 if (dao != null) {
                     SpellbooksDao(dao)
+
+                    if (buttons != null) {
+                        Spacer(Modifier.width(10.dp))
+                        buttons.invoke()
+                    }
                 }
             }
 

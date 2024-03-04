@@ -66,4 +66,8 @@ class FileSpellbooksDao(override val name: String, val baseDir: Path) : Spellboo
         }
         return null
     }
+
+    override suspend fun delete(name: String) {
+        file(name).deleteIfExists()
+    }
 }
