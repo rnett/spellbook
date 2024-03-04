@@ -11,6 +11,8 @@ data class Spellbook(
     val spellcastings: SerializableImmutableList<Spellcasting>
 )
 
+//TODO split up creating slots & assigning spells to them (i.e. use an ID for slots to assign)
+
 @Serializable
 sealed interface Spellcasting {
     val name: String
@@ -24,13 +26,13 @@ sealed interface Spellcasting {
     data class Spontaneous(
         override val name: String,
         val defaultLists: SerializableImmutableSet<SpellList>,
-        val levels: SerializableImmutableList<SerializableImmutableList<SpellSlot>>,
+        val ranks: SerializableImmutableList<SerializableImmutableList<SpellSlot>>,
     ) : Spellcasting
 
     data class Prepared(
         override val name: String,
         val defaultLists: SerializableImmutableSet<SpellList>,
-        val levels: SerializableImmutableList<SerializableImmutableList<SpellSlot>>,
+        val ranks: SerializableImmutableList<SerializableImmutableList<SpellSlot>>,
         val known: SerializableImmutableList<SpellReference>,
     ) : Spellcasting
 
@@ -39,7 +41,7 @@ sealed interface Spellcasting {
 
     data class Stave(
         override val name: String,
-        val levels: SerializableImmutableList<SerializableImmutableList<SpellSlot>>
+        val ranks: SerializableImmutableList<SerializableImmutableList<SpellSlot>>
     ) : Spellcasting
 }
 

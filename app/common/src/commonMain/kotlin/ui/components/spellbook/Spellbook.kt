@@ -7,23 +7,33 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.rnett.spellbook.model.spellbook.Spellbook
 import kotlinx.collections.immutable.toPersistentList
 
 @Composable
-fun Spellbook(spellbook: Spellbook, update: (Spellbook) -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(5.dp)) {
-        Text(spellbook.name, fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic, fontSize = 2.sp)
+fun Spellbook(
+    spellbook: Spellbook,
+    onAddSpellcasting: () -> Unit,
+    update: (Spellbook) -> Unit,
+    buttons: (@Composable () -> Unit)? = null
+) {
+    Column(Modifier.padding(20.dp)) {
+
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(spellbook.name, style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.weight(1f))
+            buttons?.invoke()
+        }
+
         Spacer(Modifier.height(5.dp))
+        HorizontalDivider()
+        Spacer(Modifier.height(20.dp))
+
         LazyRow(Modifier.fillMaxSize().horizontalScroll(rememberScrollState())) {
             itemsIndexed(spellbook.spellcastings, { _, it -> it.name }) { idx, it ->
                 Spellcasting(it) {
@@ -33,7 +43,7 @@ fun Spellbook(spellbook: Spellbook, update: (Spellbook) -> Unit) {
                 }
             }
             item {
-                IconButton({}) {
+                IconButton(onAddSpellcasting) {
                     Icon(Icons.Default.Add, "Add spellcasting")
                 }
             }
