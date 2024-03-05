@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -66,6 +67,9 @@ class EditScreen() : Screen {
     @Composable
     override fun Content() {
         val loadedSpellbook = LocalSpellbook.current.loadedSpellbook
+        SideEffect {
+            println("S: $loadedSpellbook")
+        }
         if (loadedSpellbook == null) {
             LocalNavigator.current?.push(NewScreen())
             return

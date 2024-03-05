@@ -3,6 +3,7 @@ package com.rnett.spellbook.model.spellbook
 import com.rnett.spellbook.model.spell.SpellList
 import com.rnett.spellbook.utils.SerializableImmutableSet
 import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.serialization.Serializable
 
 
@@ -15,19 +16,32 @@ data class SpellReference(val name: String)
 @Serializable
 data class SpellAtRank(val spell: SpellReference, val rank: Int?)
 
+/**
+ * [overloading] is how many spells can be put in this slot
+ */
 @Serializable
 data class SpellSlot(
     val maxRank: Int,
     val minRank: Int,
     val lists: SerializableImmutableSet<SpellList>,
-    val spell: SpellAtRank? = null
+    val overloading: Int = 1,
+    val spells: SerializableImmutableSet<SpellAtRank> = persistentSetOf()
 ) {
-    constructor(rank: Int, lists: ImmutableSet<SpellList>, spell: SpellAtRank? = null) : this(
+    init {
+        require(spells.size <= overloading) { "Slot can only contain $overloading spells" }
+    }
+
+    val remainingSpells get() = overloading - spells.size
+
+    constructor(rank: Int, lists: ImmutableSet<SpellList>) : this(
         rank,
         rank,
         lists,
-        spell
+    )
+
+    constructor(lists: ImmutableSet<SpellList>) : this(
+        0,
+        10,
+        lists,
     )
 }
-
-data class SettableSpellSlot(val slot: SpellSlot, val set: (SpellReference) -> Unit)

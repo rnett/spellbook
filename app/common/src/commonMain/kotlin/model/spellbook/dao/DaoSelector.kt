@@ -24,7 +24,7 @@ fun DaoSelector(text: String, dao: SpellbooksDao?, select: (SpellbooksDao) -> Un
         Spacer(Modifier.width(3.dp))
         var dropdownExpanded by remember { mutableStateOf(false) }
 
-        ExposedDropdownMenuBox(dropdownExpanded, { dropdownExpanded = false }) {
+        ExposedDropdownMenuBox(dropdownExpanded, { dropdownExpanded = it }) {
             TextField(
                 value = dao?.name.orEmpty(),
                 placeholder = { Text("Choose a data source") },
@@ -38,7 +38,10 @@ fun DaoSelector(text: String, dao: SpellbooksDao?, select: (SpellbooksDao) -> Un
                 daos.forEach {
                     DropdownMenuItem(
                         { Text(it.name) },
-                        { select(it) },
+                        {
+                            dropdownExpanded = false
+                            select(it)
+                        },
                         leadingIcon = it.display.leadingIcon,
                         trailingIcon = it.display.trainingIcon,
                         contentPadding = PaddingValues(3.dp)
