@@ -14,6 +14,7 @@ object SpellbooksTab : Tab {
         Navigator(LocalSpellbook.current.loadedSpellbook?.let { EditScreen() } ?: NewScreen())
     }
 
+
     override val options: TabOptions
         @Composable
         get() = TabOptions(0u, "Spellbooks")

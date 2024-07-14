@@ -4,8 +4,8 @@ plugins {
 }
 
 kotlin {
+    jvmToolchain(21)
     jvm {
-        jvmToolchain(21)
     }
     js {
         browser()

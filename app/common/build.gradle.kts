@@ -3,7 +3,8 @@ import org.jetbrains.compose.ExperimentalComposeLibrary
 plugins {
     id(libs.plugins.kotlin.multiplatform.get().pluginId)
     id(libs.plugins.kotlinx.serialization.get().pluginId)
-    alias(libs.plugins.compose)
+    alias(libs.plugins.compose.runtime)
+    alias(libs.plugins.compose.compiler)
     idea
 }
 
@@ -20,8 +21,8 @@ compose {
 }
 
 kotlin {
+    jvmToolchain(21)
     jvm {
-        jvmToolchain(21)
     }
     js {
         browser()

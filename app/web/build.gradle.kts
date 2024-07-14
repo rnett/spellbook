@@ -2,7 +2,8 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     id(libs.plugins.kotlin.multiplatform.get().pluginId)
-    alias(libs.plugins.compose)
+    alias(libs.plugins.compose.runtime)
+    alias(libs.plugins.compose.compiler)
 }
 
 compose {
@@ -10,46 +11,46 @@ compose {
     kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=1.9.22")
 }
 
-val copyJsResourcesWorkaround by tasks.creating(Copy::class) {
-    from(project(":app").file("src/commonMain/resources"))
-    into("build/processedResources/js/main")
-}
-
-val copyWasmResourcesWorkaround by tasks.creating(Copy::class) {
-    from(project(":app").file("src/commonMain/resources"))
-    into("build/processedResources/wasmJs/main")
-}
-
-afterEvaluate {
-    tasks.named("jsProcessResources").configure {
-        finalizedBy(copyJsResourcesWorkaround)
-    }
-    tasks.named("jsProductionExecutableCompileSync") {
-        dependsOn(copyJsResourcesWorkaround)
-    }
-    tasks.named("jsDevelopmentExecutableCompileSync") {
-        dependsOn(copyJsResourcesWorkaround)
-    }
-    tasks.named("jsBrowserProductionExecutableDistributeResources") {
-        dependsOn(copyJsResourcesWorkaround)
-    }
-    tasks.named("jsBrowserDevelopmentExecutableDistributeResources") {
-        dependsOn(copyJsResourcesWorkaround)
-    }
-    tasks.named("jsJar") {
-        dependsOn(copyJsResourcesWorkaround)
-    }
-
-    tasks.named("wasmJsProcessResources").configure {
-        finalizedBy(copyWasmResourcesWorkaround)
-    }
-    tasks.named("wasmJsProductionExecutableCompileSync") {
-        dependsOn(copyWasmResourcesWorkaround)
-    }
-    tasks.named("wasmJsDevelopmentExecutableCompileSync") {
-        dependsOn(copyWasmResourcesWorkaround)
-    }
-}
+//val copyJsResourcesWorkaround by tasks.creating(Copy::class) {
+//    from(project(":app").file("src/commonMain/resources"))
+//    into("build/processedResources/js/main")
+//}
+//
+//val copyWasmResourcesWorkaround by tasks.creating(Copy::class) {
+//    from(project(":app").file("src/commonMain/resources"))
+//    into("build/processedResources/wasmJs/main")
+//}
+//
+//afterEvaluate {
+//    tasks.named("jsProcessResources").configure {
+//        finalizedBy(copyJsResourcesWorkaround)
+//    }
+//    tasks.named("jsProductionExecutableCompileSync") {
+//        dependsOn(copyJsResourcesWorkaround)
+//    }
+//    tasks.named("jsDevelopmentExecutableCompileSync") {
+//        dependsOn(copyJsResourcesWorkaround)
+//    }
+//    tasks.named("jsBrowserProductionExecutableDistributeResources") {
+//        dependsOn(copyJsResourcesWorkaround)
+//    }
+//    tasks.named("jsBrowserDevelopmentExecutableDistributeResources") {
+//        dependsOn(copyJsResourcesWorkaround)
+//    }
+//    tasks.named("jsJar") {
+//        dependsOn(copyJsResourcesWorkaround)
+//    }
+//
+//    tasks.named("wasmJsProcessResources").configure {
+//        finalizedBy(copyWasmResourcesWorkaround)
+//    }
+//    tasks.named("wasmJsProductionExecutableCompileSync") {
+//        dependsOn(copyWasmResourcesWorkaround)
+//    }
+//    tasks.named("wasmJsDevelopmentExecutableCompileSync") {
+//        dependsOn(copyWasmResourcesWorkaround)
+//    }
+//}
 
 kotlin {
     js {

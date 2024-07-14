@@ -2,7 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id(libs.plugins.kotlin.jvm.get().pluginId)
-    alias(libs.plugins.compose)
+    alias(libs.plugins.compose.runtime)
+    alias(libs.plugins.compose.compiler)
 }
 
 dependencies {

@@ -1,6 +1,7 @@
 plugins {
     id(libs.plugins.kotlin.multiplatform.get().pluginId)
-    alias(libs.plugins.compose)
+    alias(libs.plugins.compose.runtime)
+    alias(libs.plugins.compose.compiler)
 }
 
 compose {
@@ -9,9 +10,9 @@ compose {
 }
 
 kotlin {
+    jvmToolchain(21)
     jvm {
         withJava()
-        jvmToolchain(21)
     }
 
     sourceSets {
