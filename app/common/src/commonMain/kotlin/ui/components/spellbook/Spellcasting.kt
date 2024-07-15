@@ -26,6 +26,9 @@ fun Spellcasting(spellcasting: Spellcasting, update: (Spellcasting) -> Unit) {
             is Spellcasting.Prepared -> Text("TODO Prepared")
             is Spellcasting.Spontaneous -> Text("TODO Spontaneous")
             is Spellcasting.Stave -> Text("TODO Stave")
+            is Spellcasting.Captivator -> Text("TODO Captivator")
+            is Spellcasting.Flexible -> Text("TODO Flexible")
+            is Spellcasting.InnateSlots -> Text("TODO InnateSlots")
         }
 
     }

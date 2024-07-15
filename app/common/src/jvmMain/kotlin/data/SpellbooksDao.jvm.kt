@@ -3,16 +3,22 @@ package com.rnett.spellbook.data
 import com.rnett.spellbook.model.spellbook.Spellbook
 import java.nio.file.Path
 import javax.swing.filechooser.FileSystemView
-import kotlin.io.path.*
+import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.exists
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 actual object SpellbookDaoLoader {
-    actual val daos: List<SpellbooksDao>
-        get() = listOf(
+    actual val daos: List<SpellbooksDao> by lazy {
+        listOf(
             FileSpellbooksDao(
                 "Local",
                 FileSystemView.getFileSystemView().defaultDirectory.toPath().resolve("PF2E-Spellbook")
             )
         )
+    }
 }
 
 class FileSpellbooksDao(override val name: String, val baseDir: Path) : SpellbooksDao {
@@ -28,7 +34,7 @@ class FileSpellbooksDao(override val name: String, val baseDir: Path) : Spellboo
         return baseDir.listDirectoryEntries("*$suffix").mapNotNull { file ->
             SpellbookSerialization.tryRead(file.readText())?.let { it to file }
         }.map {
-            LoadedSpellbook(this, it.second.fileName.toString().removeSuffix(suffix), it.first)
+            LoadedSpellbook(SpellbookReference(this, it.first.name), it.first)
         }
     }
 
@@ -38,7 +44,8 @@ class FileSpellbooksDao(override val name: String, val baseDir: Path) : Spellboo
         val file = file(key)
         if (!file.exists())
             return null
-        return SpellbookSerialization.tryRead(file.readText())?.let { LoadedSpellbook(this, key, it) }
+        return SpellbookSerialization.tryRead(file.readText())
+            ?.let { LoadedSpellbook(SpellbookReference(this, key), it) }
     }
 
     override suspend fun isNewNameValid(name: String): Boolean {
@@ -57,12 +64,12 @@ class FileSpellbooksDao(override val name: String, val baseDir: Path) : Spellboo
         if (newName == oldName || !file.exists()) {
             file.writeText(SpellbookSerialization.write(spellbook))
 
-            if (oldName != null) {
-                val oldFile = baseDir.resolve(oldName + suffix)
+            if (oldName != null && oldName != newName) {
+                val oldFile = file(oldName)
                 oldFile.deleteIfExists()
             }
 
-            return LoadedSpellbook(this, newName, spellbook)
+            return LoadedSpellbook(SpellbookReference(this, newName), spellbook)
         }
         return null
     }

@@ -3,7 +3,17 @@ package com.rnett.spellbook.data
 import androidx.compose.runtime.Composable
 import com.rnett.spellbook.model.spellbook.Spellbook
 
-data class LoadedSpellbook(val dao: SpellbooksDao, val name: String, val spellbook: Spellbook)
+data class LoadedSpellbook(val reference: SpellbookReference, val spellbook: Spellbook)
+
+data class SpellbookReference(val dao: SpellbooksDao, val name: String) {
+    suspend fun load(): Spellbook? = dao.loadSpellbook(name)?.spellbook
+    suspend fun save(spellbook: Spellbook): LoadedSpellbook? {
+        require(spellbook.name == name) { "Can't save a different spellbook" }
+        return dao.saveSpellbook(name, spellbook)
+    }
+}
+
+data class SpellbookMetadata(val reference: SpellbookReference)
 
 data class SpellbookDaoDisplay(
     val leadingIcon: (@Composable () -> Unit)? = null,

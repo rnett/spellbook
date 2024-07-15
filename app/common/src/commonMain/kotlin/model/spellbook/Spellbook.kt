@@ -2,7 +2,6 @@ package com.rnett.spellbook.model.spellbook
 
 import com.rnett.spellbook.model.spell.SpellList
 import com.rnett.spellbook.utils.SerializableImmutableList
-import com.rnett.spellbook.utils.SerializableImmutableSet
 import com.rnett.spellbook.utils.SerializablePersistentMap
 import com.rnett.spellbook.utils.SerializablePersistentSet
 import kotlinx.serialization.Serializable
@@ -43,34 +42,6 @@ sealed class SlotModifier(val exclusive: Boolean = false) {
     data class LimitToGroup(val group: String) : SlotModifier(true)
 }
 
-@Serializable
-sealed interface Spellcasting {
-    val name: String
-
-    data class Focus(
-        val spells: SerializableImmutableList<SpellReference>,
-        override val name: String = "Focus"
-    ) : Spellcasting
-
-    data class Spontaneous(
-        override val name: String,
-        val ranks: SerializableImmutableList<SpellSlotList>,
-    ) : Spellcasting
-
-    data class Prepared(
-        override val name: String,
-        val defaultLists: SerializableImmutableSet<SpellList>,
-        val ranks: SerializableImmutableList<SpellSlotList>
-    ) : Spellcasting
-
-    data class Items(val items: SerializableImmutableList<SpellcastingItem>, override val name: String = "Items") :
-        Spellcasting
-
-    data class Stave(
-        override val name: String,
-        val ranks: SerializableImmutableList<SerializableImmutableList<SpellSlot>>
-    ) : Spellcasting
-}
 
 @Serializable
 enum class SpellcastingRecharge {
