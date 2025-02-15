@@ -1,47 +1,65 @@
 package com.rnett.spellbook.model.spellbook
 
-import com.rnett.spellbook.model.spell.SpellList
+import com.rnett.spellbook.model.spell.SpellDef
+import com.rnett.spellbook.model.spell.SpellRef
 import com.rnett.spellbook.utils.SerializableImmutableSet
-import kotlinx.collections.immutable.ImmutableSet
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.serialization.Serializable
 
+@Serializable
+data class SpellSlot(val def: SpellSlotDef, val modifiers: SpellSlotModifiers) {
+    fun requireKnown(ref: SpellRef): Boolean {
+        return def.requireKnown && ref !in modifiers.alsoCanCast
+    }
+}
 
 @Serializable
-data class SpellReference(val name: String)
+sealed interface SpellSlotDef {
+    val selectSpells: Int
+    val requireKnown: Boolean
+    fun canUseKnown(known: KnownSpellSlot): Boolean
 
-/**
- * A null [rank] means to use the character's max rank (level / 2)
- */
-@Serializable
-data class SpellAtRank(val spell: SpellReference, val rank: Int?)
-
-/**
- * [overloading] is how many spells can be put in this slot
- */
-@Serializable
-data class SpellSlot(
-    val maxRank: Int,
-    val minRank: Int,
-    val lists: SerializableImmutableSet<SpellList>,
-    val overloading: Int = 1,
-    val spells: SerializableImmutableSet<SpellAtRank> = persistentSetOf()
-) {
-    init {
-        require(spells.size <= overloading) { "Slot can only contain $overloading spells" }
+    fun canSelectSpell(spell: SpellDef): Boolean {
+        return selectSpells > 0
     }
 
-    val remainingSpells get() = overloading - spells.size
+    @Serializable
+    data class Prepared(val limitedTo: SerializableImmutableSet<SpellRef>?, val prepareAdditional: Int) : SpellSlotDef {
+        override val selectSpells: Int = prepareAdditional + 1
+        override val requireKnown: Boolean = true
+        override fun canUseKnown(known: KnownSpellSlot): Boolean =
+            known is KnownSpellSlot.Learned || known is KnownSpellSlot.GrantedLearned
 
-    constructor(rank: Int, lists: ImmutableSet<SpellList>) : this(
-        rank,
-        rank,
-        lists,
-    )
+        override fun canSelectSpell(spell: SpellDef): Boolean {
+            if (limitedTo != null) {
+                return spell.ref in limitedTo
+            }
+            return true
+        }
+    }
 
-    constructor(lists: ImmutableSet<SpellList>) : this(
-        0,
-        10,
-        lists,
-    )
+    @Serializable
+    object Spontaneous : SpellSlotDef {
+        override val selectSpells: Int = 0
+        override val requireKnown: Boolean = true
+        override fun canUseKnown(known: KnownSpellSlot): Boolean =
+            known is KnownSpellSlot.Spontaneous || known is KnownSpellSlot.GrantedSpontaneous
+    }
+
+    @Serializable
+    object Flexible : SpellSlotDef {
+        override val selectSpells: Int = 0
+        override val requireKnown: Boolean = true
+        override fun canUseKnown(known: KnownSpellSlot): Boolean =
+            known is KnownSpellSlot.Learned || known is KnownSpellSlot.GrantedLearned
+    }
+
+    @Serializable
+    data class Specified(val spells: SerializableImmutableSet<SpellRef>) : SpellSlotDef {
+        override val selectSpells: Int = 0
+        override val requireKnown: Boolean = false
+        override fun canUseKnown(known: KnownSpellSlot): Boolean = false
+    }
 }
+
+@Serializable
+data class SpellSlotModifiers(val rankDelta: Int, val alsoCanCast: SerializableImmutableSet<SpellRef>)

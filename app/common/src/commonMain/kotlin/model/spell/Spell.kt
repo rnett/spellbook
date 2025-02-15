@@ -1,6 +1,7 @@
 package com.rnett.spellbook.model.spell
 
 import com.rnett.spellbook.model.filter.SpellFilterPart
+import com.rnett.spellbook.utils.SerializableImmutableSet
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -67,6 +68,7 @@ sealed class TargetingType(open val name: String) : SpellFilterPart {
                             Other
                     )
                 }
+
                 else -> null
             }
         }
@@ -106,9 +108,15 @@ enum class CastActionType {
 enum class SpellType(val longName: String) : SpellFilterPart {
     Spell("model/spell"), Focus("focus spell");
 
-    override fun matches(spell: com.rnett.spellbook.model.spell.Spell): Boolean = this == spell.type
+    override fun matches(spell: Spell): Boolean = this == spell.type
 }
 
+data class SpellDef(
+    val name: String,
+    val ref: SpellRef,
+    val rank: Int,
+    val lists: SerializableImmutableSet<SpellList>
+)
 
 private val spellComparator = compareBy<Spell> { it.level }.thenBy { it.type }.thenBy { it.name }
 
