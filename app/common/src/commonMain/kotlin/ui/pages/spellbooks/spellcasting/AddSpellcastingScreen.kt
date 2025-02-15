@@ -29,6 +29,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.rnett.spellbook.model.spellbook.Spellcasting
 import com.rnett.spellbook.ui.components.DropdownSelector
+import com.rnett.spellbook.ui.components.PlaceholderTransformation
 import com.rnett.spellbook.ui.pages.spellbooks.SpellbookEditScreenModel
 import kotlinx.collections.immutable.toPersistentList
 
@@ -73,7 +74,11 @@ class AddSpellcastingScreen : Screen {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("Add a way to cast spells")
                 Spacer(Modifier.width(20.dp))
-                DropdownSelector<SpellcastingType>(spellcastingType, { Text("Spellcasting type") }) {
+                DropdownSelector<SpellcastingType>(
+                    spellcastingType,
+                    { Text("Spellcasting type") },
+                    visualTransformation = PlaceholderTransformation
+                ) {
                     spellcastingType = it
                 }
             }

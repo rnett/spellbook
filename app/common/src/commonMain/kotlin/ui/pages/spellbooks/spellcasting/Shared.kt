@@ -16,12 +16,21 @@ import com.rnett.spellbook.model.spellbook.LeveledExtraSpells
 import com.rnett.spellbook.model.spellbook.RankMap
 import com.rnett.spellbook.ui.components.DenseRankMap
 import com.rnett.spellbook.ui.components.DropdownSelector
+import com.rnett.spellbook.ui.components.PlaceholderTransformation
+import com.rnett.spellbook.ui.components.RequiredText
 import com.rnett.spellbook.ui.components.SmallIntField
 import com.rnett.spellbook.ui.components.SparseLevelMapForm
 
 @Composable
 fun SpellcastingName(name: String, setName: (String) -> Unit) {
-    TextField(name, setName, label = { Text("Name") }, singleLine = true)
+    TextField(
+        name, setName,
+        label = {
+            RequiredText("Name")
+        },
+        visualTransformation = PlaceholderTransformation,
+        singleLine = true,
+    )
 }
 
 @Composable
@@ -43,7 +52,8 @@ fun SpellcastingSpellList(spellList: SpellList?, set: (SpellList) -> Unit) {
         SpellList.nonFocusLists,
         spellList,
         { it.name },
-        label = { Text("Spell list") },
+        label = { RequiredText("Spell list") },
+        visualTransformation = PlaceholderTransformation,
         onSelected = set
     )
 }

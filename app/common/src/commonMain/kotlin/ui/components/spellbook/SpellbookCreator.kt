@@ -46,6 +46,7 @@ import com.rnett.spellbook.data.SpellbookReference
 import com.rnett.spellbook.data.SpellbooksDao
 import com.rnett.spellbook.model.spellbook.Spellbook
 import com.rnett.spellbook.model.spellbook.dao.DaoSelector
+import com.rnett.spellbook.ui.components.PlaceholderTransformation
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -228,6 +229,7 @@ private fun Creator(dao: SpellbooksDao, create: (SpellbookReference) -> Unit) {
                     supportingText = if (isError) {
                         { Text("Duplicate or invalid name") }
                     } else null,
+                    visualTransformation = PlaceholderTransformation,
                     keyboardActions = KeyboardActions(
                         onDone = {
                             submit()

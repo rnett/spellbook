@@ -22,10 +22,10 @@ dependencyResolutionManagement {
 rootProject.name = "spellbook"
 
 include(
-    "common",
-    "desktop",
-    "extractor",
-    "shared",
+//    "common",
+//    "desktop",
+//    "extractor",
+//    "shared",
     "app:common",
     "app:desktop",
     "app:web"

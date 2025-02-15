@@ -12,7 +12,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import com.rnett.spellbook.model.spell.SpellList
-import com.rnett.spellbook.model.spellbook.LevelMap
 import com.rnett.spellbook.model.spellbook.LeveledExtraSpells
 import com.rnett.spellbook.model.spellbook.Spellcasting
 import com.rnett.spellbook.model.spellbook.SpellcastingAmount
@@ -30,8 +29,6 @@ data class PreparedSpellcastingBuilder(val isFlexible: Boolean) : SpellcastingBu
             var amount by remember { mutableStateOf<SpellcastingAmount?>(null) }
             var spellList by remember { mutableStateOf<SpellList?>(null) }
 
-            var extraSpells by remember { mutableStateOf<LeveledExtraSpells>(LevelMap()) }
-
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                 SpellcastingName(name) { name = it }
                 SpellcastingSpellList(spellList) { spellList = it }
@@ -44,8 +41,6 @@ data class PreparedSpellcastingBuilder(val isFlexible: Boolean) : SpellcastingBu
             SpellcastingAmountForm(archetype, bounded) {
                 amount = it
             }
-
-            SpellcastingExtraSlotsForm(extraSpells, { extraSpells = it })
 
             if (name.isNotBlank() && amount != null && spellList != null) {
                 val spec = if (isFlexible) {

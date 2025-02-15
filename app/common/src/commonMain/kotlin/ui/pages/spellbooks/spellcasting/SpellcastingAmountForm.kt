@@ -7,161 +7,174 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.rnett.spellbook.model.spellbook.LevelMap
 import com.rnett.spellbook.model.spellbook.SpellcastingAmount
-import com.rnett.spellbook.model.spellbook.SpellcastingArchetypeFeat
 import com.rnett.spellbook.ui.components.IntField
 import com.rnett.spellbook.ui.components.LabeledCheckbox
-import kotlinx.collections.immutable.toImmutableMap
+import com.rnett.spellbook.ui.components.PlaceholderTransformation
+import com.rnett.spellbook.ui.components.RequiredText
+import com.rnett.spellbook.ui.components.form.FormModel
+import com.rnett.spellbook.ui.components.form.Validation
+import com.rnett.spellbook.ui.components.form.ifPresent
+import com.rnett.spellbook.ui.components.form.plus
 
-@Composable
-fun SpellcastingAmountForm(archetype: Boolean, isBounded: Boolean, setAmount: (SpellcastingAmount) -> Unit) {
-    if (archetype) {
-        ArchetypeAmountForm(isBounded, setAmount)
-    } else {
-        FullAmountForm(isBounded, setAmount)
+class SpellcastingAmountForm() : FormModel<SpellcastingAmount>() {
+    val archetype by field(false)
+    val bounded by field(false)
+
+    val boundedArchetypeForm by maybeRequiredSubform(BoundedArchetypeForm()) { bounded.validated.valueOrNull == true && archetype.validated.valueOrNull == true }
+    val boundedForm by maybeRequiredSubform(BoundedForm()) { bounded.validated.valueOrNull == true && archetype.validated.valueOrNull == false }
+
+    val fullArchetypeForm by maybeRequiredSubform(FullArchetypeForm()) { bounded.validated.valueOrNull == false && archetype.validated.valueOrNull == true }
+    val fullForm by maybeRequiredSubform(FullForm()) { bounded.validated.valueOrNull == false && archetype.validated.valueOrNull == false }
+
+    override fun Values.build(): SpellcastingAmount {
+        return if (bounded.value) {
+            if (archetype.value)
+                boundedArchetypeForm.value!!
+            else
+                boundedForm.value!!
+        } else {
+            if (archetype.value)
+                fullArchetypeForm.value!!
+            else
+                fullForm.value!!
+        }
+    }
+
+    open class BoundedArchetypeForm : FormModel<SpellcastingAmount>() {
+        val dedicationAt by field("", Validation.NotBlank + Validation.ToInt + Validation.Max({ 20 }))
+        val basicAt by field(
+            "",
+            Validation.ToIntIfPresent +
+                    Validation.Max({ 20 }).ifPresent() +
+                    Validation.Min({ dedicationAt.validated.valueOrNull }).ifPresent()
+        )
+        val expertAt by field(
+            "",
+            Validation.ToIntIfPresent +
+                    Validation.Max({ 20 }).ifPresent() +
+                    Validation.Min({ basicAt.validated.valueOrNull }).ifPresent()
+        )
+        val masterAt by field(
+            "",
+            Validation.ToIntIfPresent +
+                    Validation.Max({ 20 }).ifPresent() +
+                    Validation.Min({ expertAt.validated.valueOrNull }).ifPresent()
+        )
+
+        override fun Values.build(): SpellcastingAmount {
+            return SpellcastingAmount.BoundedArchetype(
+                dedicationAt.value,
+                basicAt.value,
+                expertAt.value,
+                masterAt.value
+            )
+        }
+    }
+
+    class FullArchetypeForm : BoundedArchetypeForm() {
+        val breadthAt by field(
+            "",
+            Validation.ToIntIfPresent +
+                    Validation.Max({ 20 }).ifPresent() +
+                    Validation.Min({ dedicationAt.validated.valueOrNull }).ifPresent()
+        )
+
+        override fun Values.build(): SpellcastingAmount {
+            return SpellcastingAmount.FullArchetype(
+                dedicationAt.value,
+                basicAt.value,
+                expertAt.value,
+                masterAt.value,
+                breadthAt.value
+            )
+        }
+    }
+
+    class FullForm() : BoundedForm() {
+        val tenthSlotFeature by field(false)
+        val tenthSlotFeat by field(false)
+
+        override fun Values.build(): SpellcastingAmount =
+            SpellcastingAmount.Full(slotsPerRank.value, tenthSlotFeature.value, tenthSlotFeat.value)
+    }
+
+    open class BoundedForm() : FormModel<SpellcastingAmount>() {
+        val slotsPerRank by field("", Validation.NotBlank + Validation.ToInt + Validation.Min({ 0 }))
+
+        override fun Values.build(): SpellcastingAmount =
+            SpellcastingAmount.Bounded(slotsPerRank.value)
     }
 }
 
 @Composable
-private fun FullAmountForm(isBounded: Boolean, setAmount: (SpellcastingAmount) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        var slotsPerRank by remember { mutableStateOf<Int?>(if (isBounded) 2 else 3) }
-        var tenthSlot by remember { mutableStateOf(!isBounded) }
-        var secondTenthSlot by remember { mutableStateOf(false) }
+fun SpellcastingAmountForm(form: SpellcastingAmountForm) {
+    if (form.archetype.underlying) {
+        ArchetypeAmountForm(if (form.bounded.underlying) form.boundedArchetypeForm.form else form.fullArchetypeForm.form)
+    } else {
+        FullAmountForm(if (form.bounded.underlying) form.boundedForm.form else form.fullForm.form)
+    }
+}
 
+@Composable
+private fun FullAmountForm(form: SpellcastingAmountForm.BoundedForm) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         IntField(
-            slotsPerRank,
-            { slotsPerRank = it },
-            minimum = 0,
+            form.slotsPerRank,
             label = { Text("Slots per rank") },
+            visualTransformation = PlaceholderTransformation,
         )
 
-        if (!isBounded) {
+        if (form is SpellcastingAmountForm.FullForm) {
             Spacer(Modifier.width(20.dp))
 
-            LabeledCheckbox(tenthSlot, { tenthSlot = it }) {
+            LabeledCheckbox(form.tenthSlotFeature.underlying, { form.tenthSlotFeature.underlying = it }) {
                 Text("Rank 10 slot class feature")
             }
 
             Spacer(Modifier.width(20.dp))
 
-            LabeledCheckbox(secondTenthSlot, { secondTenthSlot = it }) {
+            LabeledCheckbox(form.tenthSlotFeat.underlying, { form.tenthSlotFeat.underlying = it }) {
                 Text("Rank 10 slot feat")
-            }
-        }
-
-        LaunchedEffect(slotsPerRank, tenthSlot, secondTenthSlot) {
-            if (slotsPerRank != null) {
-                if (isBounded) {
-                    setAmount(SpellcastingAmount.Bounded(slotsPerRank!!))
-                } else {
-                    setAmount(SpellcastingAmount.Full(slotsPerRank!!, tenthSlot, secondTenthSlot))
-                }
             }
         }
     }
 }
 
 @Composable
-private fun ArchetypeAmountForm(isBounded: Boolean, setAmount: (SpellcastingAmount) -> Unit) {
+private fun ArchetypeAmountForm(form: SpellcastingAmountForm.BoundedArchetypeForm) {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        var dedicationTakenAt by remember { mutableStateOf<Int?>(null) }
-        var basicTakenAt by remember { mutableStateOf<Int?>(null) }
-        var expertTakenAt by remember { mutableStateOf<Int?>(null) }
-        var masterTakenAt by remember { mutableStateOf<Int?>(null) }
-        var breadthTakenAt by remember { mutableStateOf<Int?>(null) }
-
-        SideEffect {
-            if (dedicationTakenAt == null) {
-                basicTakenAt = null
-                expertTakenAt = null
-                masterTakenAt = null
-                breadthTakenAt = null
-            }
-            if (basicTakenAt == null) {
-                expertTakenAt = null
-                masterTakenAt = null
-            }
-            if (expertTakenAt == null) {
-                masterTakenAt = null
-            }
-        }
-
-        LaunchedEffect(dedicationTakenAt, basicTakenAt, expertTakenAt, masterTakenAt, breadthTakenAt) {
-            val takenAtMap = mutableMapOf<SpellcastingArchetypeFeat, Int>()
-            if (dedicationTakenAt != null) {
-                takenAtMap[SpellcastingArchetypeFeat.Dedication] = dedicationTakenAt!!
-                if (basicTakenAt != null) {
-                    takenAtMap[SpellcastingArchetypeFeat.Basic] = basicTakenAt!!
-                    if (expertTakenAt != null) {
-                        takenAtMap[SpellcastingArchetypeFeat.Expert] = expertTakenAt!!
-                        if (masterTakenAt != null) {
-                            takenAtMap[SpellcastingArchetypeFeat.Master] = masterTakenAt!!
-                        }
-                    }
-                }
-                if (isBounded)
-                    setAmount(SpellcastingAmount.BoundedArchetype(takenAtMap.toImmutableMap()))
-                else
-                    setAmount(SpellcastingAmount.FullArchetype(breadthTakenAt, takenAtMap.toImmutableMap()))
-            }
-        }
-
         Column {
             IntField(
-                dedicationTakenAt,
-                { dedicationTakenAt = it },
-                minimum = LevelMap.MIN_LEVEL,
-                maximum = LevelMap.MAX_LEVEL,
-                label = { Text("Dedication feat taken at") },
+                form.dedicationAt,
+                label = { RequiredText("Dedication feat taken at") },
+                visualTransformation = PlaceholderTransformation,
             )
-
             IntField(
-                basicTakenAt,
-                { basicTakenAt = it },
-                minimum = dedicationTakenAt,
-                maximum = LevelMap.MAX_LEVEL,
-                label = { Text("Basic spellcasting feat taken at") },
-                enabled = dedicationTakenAt != null,
+                form.basicAt,
+                label = { Text("Basic feat taken at") },
+                visualTransformation = PlaceholderTransformation,
             )
-
             IntField(
-                expertTakenAt,
-                { expertTakenAt = it },
-                minimum = basicTakenAt,
-                maximum = LevelMap.MAX_LEVEL,
-                label = { Text("Expert spellcasting feat taken at") },
-                enabled = basicTakenAt != null,
+                form.expertAt,
+                label = { Text("Expert feat taken at") },
+                visualTransformation = PlaceholderTransformation,
             )
-
             IntField(
-                masterTakenAt,
-                { masterTakenAt = it },
-                minimum = expertTakenAt,
-                maximum = LevelMap.MAX_LEVEL,
-                label = { Text("Master spellcasting feat taken at") },
-                enabled = expertTakenAt != null,
+                form.masterAt,
+                label = { Text("Master feat taken at") },
+                visualTransformation = PlaceholderTransformation,
             )
         }
 
-        if (!isBounded) {
+        if (form is SpellcastingAmountForm.FullArchetypeForm) {
             IntField(
-                breadthTakenAt,
-                { breadthTakenAt = it },
-                minimum = dedicationTakenAt,
-                maximum = LevelMap.MAX_LEVEL,
+                form.breadthAt,
                 label = { Text("Breadth feat taken at") },
-                enabled = dedicationTakenAt != null,
+                visualTransformation = PlaceholderTransformation,
             )
         }
     }

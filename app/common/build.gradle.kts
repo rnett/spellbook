@@ -15,11 +15,6 @@ idea {
     }
 }
 
-compose {
-    kotlinCompilerPlugin.set(dependencies.compiler.forKotlin("1.9.21"))
-    kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=1.9.22")
-}
-
 kotlin {
     jvmToolchain(21)
     jvm {
@@ -44,13 +39,19 @@ kotlin {
 
                 implementation(compose.materialIconsExtended)
 
-                implementation(libs.bundles.voyager)
+                implementation(libs.compose.viewmodel)
+                implementation(libs.compose.navigation)
+
+//                implementation(libs.bundles.voyager)
 //                @OptIn(ExperimentalComposeLibrary::class)
 //                api(compose.desktop.components.splitPane)
 
                 api(libs.kotlinx.datetime)
+                api(libs.bundles.kotlinx.serialization)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.collections.immutable)
 
-                implementation(project(":shared"))
+//                implementation(project(":shared"))
 //                implementation(project(":common"))
             }
         }

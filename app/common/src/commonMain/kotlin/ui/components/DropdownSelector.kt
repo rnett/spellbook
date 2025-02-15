@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlin.enums.enumEntries
 
@@ -25,6 +26,7 @@ inline fun <T> DropdownSelector(
     crossinline text: (T) -> String,
     noinline label: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     crossinline onSelected: (T) -> Unit
 ) {
     var dropdownExpanded by remember { mutableStateOf(false) }
@@ -39,7 +41,8 @@ inline fun <T> DropdownSelector(
             readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
             modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true),
-            singleLine = true
+            singleLine = true,
+            visualTransformation = visualTransformation
         )
 
         ExposedDropdownMenu(dropdownExpanded && enabled, { dropdownExpanded = false }) {
@@ -63,7 +66,8 @@ inline fun <reified T : Enum<T>> DropdownSelector(
     noinline label: (@Composable () -> Unit)? = null,
     crossinline text: (T) -> String = { it.name },
     enabled: Boolean = true,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     crossinline onSelected: (T) -> Unit
 ) {
-    DropdownSelector(enumEntries<T>(), selected, text, label, enabled, onSelected)
+    DropdownSelector(enumEntries<T>(), selected, text, label, enabled, visualTransformation, onSelected)
 }

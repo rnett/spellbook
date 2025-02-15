@@ -20,8 +20,8 @@ sealed interface SpellcastingAmount {
 
     @Serializable
     data class FullArchetype(
+        val dedicationTakenAt: Int, val basicTakenAt: Int?, val expertTakenAt: Int?, val masterTakenAt: Int?,
         val breadthTakenAt: Int?,
-        val featsTakenAt: SerializableImmutableMap<SpellcastingArchetypeFeat, Int>
     ) :
         SpellcastingAmount
 
@@ -29,7 +29,12 @@ sealed interface SpellcastingAmount {
     data class Bounded(val slotsPerRank: Int) : SpellcastingAmount
 
     @Serializable
-    data class BoundedArchetype(val featsTakenAt: SerializableImmutableMap<SpellcastingArchetypeFeat, Int>) :
+    data class BoundedArchetype(
+        val dedicationTakenAt: Int,
+        val basicTakenAt: Int?,
+        val expertTakenAt: Int?,
+        val masterTakenAt: Int?
+    ) :
         SpellcastingAmount
 }
 

@@ -1,18 +1,20 @@
 [versions]
-kotlin = "2.0.0"
+kotlin = "2.1.10"
 
-kotlinx-coroutines = "1.9.0-RC"
-kotlinx-serialization = "1.7.1"
-kotlinx-collections-immutable = "0.3.7"
-kotlinx-datetime = "0.6.0"
-ktor = "2.3.12"
-jsoup = "1.17.2"
+kotlinx-coroutines = "1.10.1"
+kotlinx-serialization = "1.8.0"
+kotlinx-collections-immutable = "0.3.8"
+kotlinx-datetime = "0.6.2"
+ktor = "3.1.0"
+jsoup = "1.18.3"
 exposed = "0.52.0"
 pgjdbc_ng = "0.8.4"
 h2 = "2.2.224"
 voyager = "1.1.0-beta02"
 
-compose = "1.7.0-alpha01"
+compose = "1.8.0-alpha03"
+compose-lifecycle = "2.9.0-alpha03"
+compose-navigation = "2.8.0-alpha13"
 
 [libraries]
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
@@ -49,6 +51,11 @@ voyager-koin = { module = "cafe.adriel.voyager:voyager-koin", version.ref = "voy
 voyager-hilt = { module = "cafe.adriel.voyager:voyager-hilt", version.ref = "voyager" }
 voyager-kodein = { module = "cafe.adriel.voyager:voyager-kodein", version.ref = "voyager" }
 voyager-rxjava = { module = "cafe.adriel.voyager:voyager-rxjava", version.ref = "voyager" }
+
+compose-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "compose-lifecycle" }
+compose-lifecycle = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compose-lifecycle" }
+
+compose-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
 
 [bundles]
 kotlinx-serialization = ["kotlinx-serialization-core", "kotlinx-serialization-json"]
