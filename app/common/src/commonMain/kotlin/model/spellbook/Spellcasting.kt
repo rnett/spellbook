@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 data class Spellcasting(
     val defaultKnownSlot: KnownSpellSlot?,
     val globalKnown: SerializableImmutableList<KnownSpellSlot>,
-    val ranks: List<SpellRank>
+    val ranks: List<SpellcastingRank>
 ) {
     fun known(ref: SpellRankRef): KnownSpellSlot? {
         val rank = ranks.getOrNull(ref.rank) ?: return null
@@ -30,7 +30,7 @@ data class SpellRankRef(val rank: Int, val index: Int) {
 }
 
 @Serializable
-data class SpellRank(
+data class SpellcastingRank(
     val known: SerializableImmutableList<KnownSpellSlot>,
     val slots: SerializableImmutableList<SpellSlot>
 )

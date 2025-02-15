@@ -42,7 +42,6 @@ kotlin {
                 implementation(libs.compose.viewmodel)
                 implementation(libs.compose.navigation)
 
-//                implementation(libs.bundles.voyager)
 //                @OptIn(ExperimentalComposeLibrary::class)
 //                api(compose.desktop.components.splitPane)
 
@@ -50,9 +49,6 @@ kotlin {
                 api(libs.bundles.kotlinx.serialization)
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.collections.immutable)
-
-//                implementation(project(":shared"))
-//                implementation(project(":common"))
             }
         }
         jvmMain {

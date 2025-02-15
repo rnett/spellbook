@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.rnett.spellbook.model.spellbook.SpellReference
+import com.rnett.spellbook.model.spell.SpellRef
 import com.rnett.spellbook.ui.cart.CartControl
 import com.rnett.spellbook.utils.surfaceVariantColorAtElevation
 
@@ -40,7 +40,7 @@ fun SpellInfoCard(
 
 @Composable
 fun SpellInfo(
-    spellReference: SpellReference,
+    spellReference: SpellRef,
     modifier: Modifier = Modifier,
     enableCart: Boolean = true,
     selected: Boolean = false,
@@ -49,7 +49,7 @@ fun SpellInfo(
 ) {
     SpellInfoCard(modifier, selected) {
         prefix.invoke()
-        Text(spellReference.name)
+        Text(spellReference.spellName)
         Spacer(Modifier.weight(1f))
         if (enableCart) {
             CartControl(spellReference)

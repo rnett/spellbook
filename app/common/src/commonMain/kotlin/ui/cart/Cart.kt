@@ -2,53 +2,53 @@ package com.rnett.spellbook.ui.cart
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.rnett.spellbook.model.spellbook.SpellReference
+import com.rnett.spellbook.model.spell.SpellRef
 
 @Stable
 class Cart(
 ) {
-    private val _spells: SnapshotStateList<SpellReference> = mutableStateListOf()
-    private var _selectedSpell by mutableStateOf<SpellReference?>(null)
+    private val _spells: SnapshotStateList<SpellRef> = mutableStateListOf()
+    private var _selectedSpell by mutableStateOf<SpellRef?>(null)
 
-    val selectedSpell: SpellReference? get() = _selectedSpell
+    val selectedSpell: SpellRef? get() = _selectedSpell
 
-    operator fun contains(spellReference: SpellReference) = spellReference in _spells
-    operator fun plusAssign(spellReference: SpellReference) {
-        if (spellReference !in this)
-            _spells.add(spellReference)
+    operator fun contains(spellRef: SpellRef) = spellRef in _spells
+    operator fun plusAssign(spellRef: SpellRef) {
+        if (spellRef !in this)
+            _spells.add(spellRef)
     }
 
-    operator fun minusAssign(spellReference: SpellReference) {
-        _spells.remove(spellReference)
+    operator fun minusAssign(spellRef: SpellRef) {
+        _spells.remove(spellRef)
     }
 
-    fun select(spellReference: SpellReference) {
-        if (spellReference in this)
-            _selectedSpell = spellReference
+    fun select(spellRef: SpellRef) {
+        if (spellRef in this)
+            _selectedSpell = spellRef
     }
 
-    fun deselect(spellReference: SpellReference) {
-        if (spellReference in this)
+    fun deselect(spellRef: SpellRef) {
+        if (spellRef in this)
             _selectedSpell = null
     }
 
-    fun toggleSelection(spellReference: SpellReference) {
-        if (spellReference in this) {
-            _selectedSpell = if (selectedSpell == spellReference) null else spellReference
+    fun toggleSelection(spellRef: SpellRef) {
+        if (spellRef in this) {
+            _selectedSpell = if (selectedSpell == spellRef) null else spellRef
 
         }
     }
 
-    fun addOrRemove(spellReference: SpellReference) {
-        if (spellReference in this)
-            this -= spellReference
+    fun addOrRemove(spellRef: SpellRef) {
+        if (spellRef in this)
+            this -= spellRef
         else
-            this += spellReference
+            this += spellRef
     }
 
-    fun selected(spellReference: SpellReference): Boolean = selectedSpell == spellReference
+    fun selected(spellRef: SpellRef): Boolean = selectedSpell == spellRef
 
-    val spells: List<SpellReference> = _spells
+    val spells: List<SpellRef> = _spells
 }
 
 val LocalCart = staticCompositionLocalOf { Cart() }

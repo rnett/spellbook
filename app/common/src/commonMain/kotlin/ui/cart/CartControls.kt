@@ -6,7 +6,7 @@ import androidx.compose.material.icons.filled.RemoveShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import com.rnett.spellbook.model.spellbook.SpellReference
+import com.rnett.spellbook.model.spell.SpellRef
 
 @Composable
 fun CartIcon(inCart: Boolean) {
@@ -25,7 +25,7 @@ fun CartButton(inCart: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun CartControl(spellReference: SpellReference) {
+fun CartControl(spellReference: SpellRef) {
     val cart = LocalCart.current
     CartButton(spellReference in cart) {
         cart.addOrRemove(spellReference)

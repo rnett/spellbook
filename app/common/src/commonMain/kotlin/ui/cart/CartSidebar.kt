@@ -1,7 +1,11 @@
 package com.rnett.spellbook.ui.cart
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
@@ -25,8 +29,8 @@ object CartSidebar : Sidebar {
         val cart = LocalCart.current
         Surface(Modifier.fillMaxSize(), tonalElevation = 3.dp) {
             LazyColumn(Modifier.padding(20.dp).selectableGroup(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(cart.spells, { it.name }) { spell ->
-                    Box(Modifier.animateItemPlacement()) {
+                items(cart.spells, { it.spellName }) { spell ->
+                    Box(Modifier.animateItem()) {
                         val selected = cart.selected(spell)
                         SpellInfo(
                             spell,

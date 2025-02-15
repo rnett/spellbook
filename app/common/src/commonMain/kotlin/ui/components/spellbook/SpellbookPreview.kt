@@ -44,7 +44,7 @@ fun SpellbookPreview(
 
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 spellbook.spellcastings.forEach {
-                    Text(it.name)
+//                    Text(it.name)
                 }
             }
         }
