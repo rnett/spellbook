@@ -10,18 +10,8 @@ import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
-actual object SpellbookDaoLoader {
-    actual val daos: List<SpellbooksDao> by lazy {
-        listOf(
-            FileSpellbooksDao(
-                "Local",
-                FileSystemView.getFileSystemView().defaultDirectory.toPath().resolve("PF2E-Spellbook")
-            )
-        )
-    }
-}
-
-class FileSpellbooksDao(override val name: String, val baseDir: Path) : SpellbooksDao {
+class FileSpellbooksDao(override val key: SpellbookDaoKey, override val name: String, val baseDir: Path) :
+    SpellbooksDao {
     companion object {
         const val suffix: String = ".spellbook.json"
     }
@@ -34,7 +24,7 @@ class FileSpellbooksDao(override val name: String, val baseDir: Path) : Spellboo
         return baseDir.listDirectoryEntries("*$suffix").mapNotNull { file ->
             SpellbookSerialization.tryRead(file.readText())?.let { it to file }
         }.map {
-            LoadedSpellbook(SpellbookReference(this, it.first.name), it.first)
+            LoadedSpellbook(SpellbookReference(this.key, it.first.name), it.first)
         }
     }
 
@@ -45,7 +35,7 @@ class FileSpellbooksDao(override val name: String, val baseDir: Path) : Spellboo
         if (!file.exists())
             return null
         return SpellbookSerialization.tryRead(file.readText())
-            ?.let { LoadedSpellbook(SpellbookReference(this, key), it) }
+            ?.let { LoadedSpellbook(SpellbookReference(this.key, key), it) }
     }
 
     override suspend fun isNewNameValid(name: String): Boolean {
@@ -69,7 +59,7 @@ class FileSpellbooksDao(override val name: String, val baseDir: Path) : Spellboo
                 oldFile.deleteIfExists()
             }
 
-            return LoadedSpellbook(SpellbookReference(this, newName), spellbook)
+            return LoadedSpellbook(SpellbookReference(this.key, newName), spellbook)
         }
         return null
     }
@@ -78,3 +68,11 @@ class FileSpellbooksDao(override val name: String, val baseDir: Path) : Spellboo
         file(name).deleteIfExists()
     }
 }
+
+actual fun spellbookDaos(): List<SpellbooksDao> = listOf(
+    FileSpellbooksDao(
+        SpellbookDaoKey("local-files"),
+        "Local",
+        FileSystemView.getFileSystemView().defaultDirectory.toPath().resolve("PF2E-Spellbook")
+    )
+)

@@ -22,7 +22,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,6 +45,7 @@ import com.rnett.spellbook.data.SpellbookReference
 import com.rnett.spellbook.data.SpellbooksDao
 import com.rnett.spellbook.model.spellbook.Spellbook
 import com.rnett.spellbook.model.spellbook.dao.DaoSelector
+import com.rnett.spellbook.ui.components.IconButtonWithTooltip
 import com.rnett.spellbook.ui.components.PlaceholderTransformation
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.GlobalScope
@@ -158,9 +158,11 @@ private fun SpellbookLoader(dao: SpellbooksDao, load: (SpellbookReference) -> Un
                                     Modifier.clickable { load(it.reference) },
                                     buttons = {
                                         if (supportDelete) {
-                                            IconButton({ deleting = it.reference }) {
-                                                Icon(Icons.Outlined.Delete, "Delete spellbook", tint = Color.Red)
-                                            }
+                                            IconButtonWithTooltip(
+                                                Icons.Outlined.Delete,
+                                                "Delete spellbook",
+                                                tint = Color.Red
+                                            ) { deleting = it.reference }
                                         }
                                     },
                                     dao = it.reference.dao
@@ -189,12 +191,12 @@ private fun Creator(dao: SpellbooksDao, create: (SpellbookReference) -> Unit) {
             Text("Create a new spellbook")
             Spacer(Modifier.height(10.dp))
 
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().height(80.dp)) {
 
                 fun submit() {
                     if (nameIsValid == true) {
                         val book = Spellbook(editingName, persistentListOf())
-                        create(SpellbookReference(dao, editingName))
+                        create(SpellbookReference(dao.key, editingName))
                         GlobalScope.launch {
                             dao.saveSpellbook(null, book)
                         }
@@ -203,12 +205,11 @@ private fun Creator(dao: SpellbooksDao, create: (SpellbookReference) -> Unit) {
                     }
                 }
 
-                IconButton(
-                    { submit() },
+                IconButtonWithTooltip(
+                    Icons.Default.CheckCircle,
+                    "Create spellbook",
                     enabled = nameIsValid == true
-                ) {
-                    Icon(Icons.Default.CheckCircle, "Create")
-                }
+                ) { submit() }
 
                 Spacer(Modifier.width(10.dp))
 

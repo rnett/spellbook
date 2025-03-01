@@ -3,6 +3,9 @@ package com.rnett.spellbook.model.spellbook
 import com.rnett.spellbook.model.spell.SpellDefLookup
 import com.rnett.spellbook.model.spell.SpellRef
 import com.rnett.spellbook.utils.SerializableImmutableList
+import com.rnett.spellbook.utils.SerializableImmutableMap
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -40,16 +43,27 @@ fun interface SpellcastingModifier {
 }
 
 @Serializable
-data class SpellcastingDef(val base: Spellcasting, val modifiers: SerializableImmutableList<SpellcastingModifier>) {
+data class SpellcastingDef(
+    val name: String,
+    val base: Spellcasting,
+    val modifiers: SerializableImmutableList<SpellcastingModifier>
+) {
     val finalSpellcasting by lazy { runCatching { modifiers.fold(base) { b, it -> it.transform(b) } } }
+
+    fun inflate(): SpellcastingAndSpells = SpellcastingAndSpells(
+        this,
+        persistentMapOf(),
+        persistentMapOf(),
+        persistentListOf()
+    )
 }
 
 @Serializable
 data class SpellcastingAndSpells(
     val spellcastingDef: SpellcastingDef,
-    val slottedSpells: Map<SpellRankRef, SerializableImmutableList<SpellRef>>,
-    val knownSpells: Map<SpellRankRef, SpellRef>,
-    val globalKnownSpells: List<SpellRef>
+    val slottedSpells: SerializableImmutableMap<SpellRankRef, SerializableImmutableList<SpellRef>>,
+    val knownSpells: SerializableImmutableMap<SpellRankRef, SpellRef>,
+    val globalKnownSpells: SerializableImmutableList<SpellRef>
 ) {
 
     val knownForRank: List<List<Pair<KnownSpellSlot, SpellRef>>> by lazy {

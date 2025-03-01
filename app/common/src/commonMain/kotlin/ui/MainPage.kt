@@ -20,12 +20,12 @@ import com.rnett.spellbook.ui.sidebar.LocalSidebarState
 import com.rnett.spellbook.ui.theme.AppTheme
 import kotlinx.serialization.Serializable
 
-object TabsNav {
+data object TabsNav {
     @Serializable
-    object Spellbook
+    data object Spellbook
 
     @Serializable
-    object Search
+    data object Search
 }
 
 @Composable

@@ -2,10 +2,19 @@ package com.rnett.spellbook.data
 
 import androidx.compose.runtime.Composable
 import com.rnett.spellbook.model.spellbook.Spellbook
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class LoadedSpellbook(val reference: SpellbookReference, val spellbook: Spellbook)
 
-data class SpellbookReference(val dao: SpellbooksDao, val name: String) {
+@Serializable
+data class SpellbookDaoKey(val key: String)
+
+@Serializable
+data class SpellbookReference(val daoKey: SpellbookDaoKey, val name: String) {
+
+    val dao by lazy { SpellbookDaoLoader[daoKey] }
+
     suspend fun load(): Spellbook? = dao.loadSpellbook(name)?.spellbook
     suspend fun save(spellbook: Spellbook): LoadedSpellbook? {
         require(spellbook.name == name) { "Can't save a different spellbook" }
@@ -20,12 +29,26 @@ data class SpellbookDaoDisplay(
     val trainingIcon: (@Composable () -> Unit)? = null,
 )
 
-expect object SpellbookDaoLoader {
-    val daos: List<SpellbooksDao>
+object SpellbookDaoLoader {
+    val daos: List<SpellbooksDao> = spellbookDaos()
+    val daosByKey = daos.associateBy { it.key }
+
+    operator fun get(key: SpellbookDaoKey): SpellbooksDao =
+        daosByKey[key] ?: throw IllegalStateException("No spellbook dao for key $key")
+
+    init {
+        val tooMany = daos.groupBy { it.key }.filter { it.value.size > 1 }
+        if (tooMany.isNotEmpty()) {
+            throw IllegalStateException("Some spellbook daos have duplicate keys: $tooMany")
+        }
+    }
 }
+
+internal expect fun spellbookDaos(): List<SpellbooksDao>
 
 interface SpellbooksDao {
     val name: String
+    val key: SpellbookDaoKey
 
     val display: SpellbookDaoDisplay get() = SpellbookDaoDisplay()
 

@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Spellbook(
     val name: String,
-    val spellcastings: SerializableImmutableList<SpellcastingDef>,
+    val spellcastings: SerializableImmutableList<SpellcastingAndSpells>,
 )
 

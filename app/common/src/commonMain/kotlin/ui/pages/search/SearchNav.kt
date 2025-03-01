@@ -6,7 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 
-object SearchRoutes {
+data object SearchRoutes {
     @Serializable
     data class Search(val name: String)
 }
